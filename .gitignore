@@ -1,0 +1,28 @@
+# Virtual environment
+.venv/
+
+# Data files — never commit raw or processed data
+data/
+
+# Environment variables — keep secrets local
+.env
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Jupyter / Databricks notebooks checkpoints
+.ipynb_checkpoints/
+*.ipynb
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/settings.json
+.idea/
