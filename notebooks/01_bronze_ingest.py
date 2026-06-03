@@ -6,25 +6,24 @@
 # MAGIC # Bronze Layer: Raw Data Ingestion
 # MAGIC
 # MAGIC Fetches raw market and macroeconomic data from external APIs and writes to Delta tables.
+# MAGIC No transformations — data is stored exactly as received.
 # MAGIC
-# MAGIC | Source | Ticker / Series | Frequency |
-# MAGIC |--------|----------------|-----------|
-# MAGIC | yfinance | `^GSPC` (S&P 500) | Daily OHLCV |
-# MAGIC | yfinance | `^VIX` | Daily close |
-# MAGIC | FRED | `FEDFUNDS` | Monthly |
-# MAGIC
-# MAGIC **Output tables:** `bronze_sp500`, `bronze_vix`, `bronze_fed_rate`
+# MAGIC | Source | Ticker / Series | Frequency | Table |
+# MAGIC |--------|----------------|-----------|-------|
+# MAGIC | yfinance | `^GSPC` S&P 500 | Daily OHLCV | `bronze_sp500` |
+# MAGIC | yfinance | `^STOXX50E` Euro Stoxx 50 | Daily close | `bronze_eurostoxx` |
+# MAGIC | yfinance | `^VIX` | Daily close | `bronze_vix` |
+# MAGIC | FRED | `FEDFUNDS` US Fed Funds Rate | Monthly | `bronze_fed_rate` |
+# MAGIC | FRED | `ECBDFR` ECB Deposit Facility Rate | Monthly | `bronze_ecb_rate` |
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ## One-time setup: save FRED API key to DBFS
-# MAGIC
-# MAGIC Run this cell once with your key, then comment it out. The key persists in DBFS across sessions and is never committed to git.
+# MAGIC Uncomment, paste your key, run once, re-comment. Key persists across sessions and is never committed to git.
 
 # COMMAND ----------
 
-# Uncomment, fill in your key, run once, then re-comment.
 # dbutils.fs.put("/config/fred_api_key.txt", "PASTE_YOUR_KEY_HERE", overwrite=True)
 # print("Key saved to DBFS.")
 
@@ -52,12 +51,12 @@ print(f"Date range: {START_DATE} → {END_DATE}")
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## S&P 500 — daily OHLCV
+# MAGIC ## Shared utilities
 
 # COMMAND ----------
 
-def _flatten_yf(raw: pd.DataFrame) -> pd.DataFrame:
-    """Normalise yfinance output: flatten MultiIndex columns, lowercase names, string date."""
+def flatten_yf(raw: pd.DataFrame) -> pd.DataFrame:
+    """Flatten yfinance MultiIndex columns, lowercase names, return string date."""
     if isinstance(raw.columns, pd.MultiIndex):
         raw.columns = [col[0] for col in raw.columns]
     df = raw.reset_index()
@@ -67,7 +66,32 @@ def _flatten_yf(raw: pd.DataFrame) -> pd.DataFrame:
     df["date"] = pd.to_datetime(df["date"]).dt.date.astype(str)
     return df
 
-sp500_pd = _flatten_yf(
+def fetch_close_only(ticker: str, col_name: str) -> pd.DataFrame:
+    """Download a single ticker and return date + one close column."""
+    raw = yf.download(ticker, start=START_DATE, end=END_DATE, auto_adjust=True, progress=False)
+    if isinstance(raw.columns, pd.MultiIndex):
+        raw.columns = [col[0] for col in raw.columns]
+    df = raw[["Close"]].reset_index()
+    df.columns = ["date", col_name]
+    df["date"] = pd.to_datetime(df["date"]).dt.date.astype(str)
+    return df
+
+def fetch_fred_series(series_id: str, col_name: str) -> pd.DataFrame:
+    """Fetch a FRED series and return date + value column."""
+    s = fred.get_series(series_id, observation_start=START_DATE, observation_end=END_DATE)
+    df = s.reset_index()
+    df.columns = ["date", col_name]
+    df["date"] = pd.to_datetime(df["date"]).dt.date.astype(str)
+    return df
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## S&P 500 — daily OHLCV
+
+# COMMAND ----------
+
+sp500_pd = flatten_yf(
     yf.download("^GSPC", start=START_DATE, end=END_DATE, auto_adjust=True, progress=False)
 )
 print(f"S&P 500: {len(sp500_pd):,} rows | columns: {list(sp500_pd.columns)}")
@@ -75,7 +99,7 @@ display(sp500_pd.head(3))
 
 # COMMAND ----------
 
-sp500_df = (
+(
     spark.createDataFrame(sp500_pd)
     .withColumn("date",   F.col("date").cast(DateType()))
     .withColumn("open",   F.col("open").cast(DoubleType()))
@@ -84,10 +108,31 @@ sp500_df = (
     .withColumn("close",  F.col("close").cast(DoubleType()))
     .withColumn("volume", F.col("volume").cast(DoubleType()))
     .withColumn("ingested_at", F.current_timestamp())
+    .write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("bronze_sp500")
 )
-
-sp500_df.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("bronze_sp500")
 print(f"Saved bronze_sp500: {spark.table('bronze_sp500').count():,} rows")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Euro Stoxx 50 — daily close
+
+# COMMAND ----------
+
+eurostoxx_pd = fetch_close_only("^STOXX50E", "eurostoxx_close")
+print(f"Euro Stoxx 50: {len(eurostoxx_pd):,} rows")
+display(eurostoxx_pd.head(3))
+
+# COMMAND ----------
+
+(
+    spark.createDataFrame(eurostoxx_pd)
+    .withColumn("date",            F.col("date").cast(DateType()))
+    .withColumn("eurostoxx_close", F.col("eurostoxx_close").cast(DoubleType()))
+    .withColumn("ingested_at",     F.current_timestamp())
+    .write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("bronze_eurostoxx")
+)
+print(f"Saved bronze_eurostoxx: {spark.table('bronze_eurostoxx').count():,} rows")
 
 # COMMAND ----------
 
@@ -96,54 +141,64 @@ print(f"Saved bronze_sp500: {spark.table('bronze_sp500').count():,} rows")
 
 # COMMAND ----------
 
-vix_raw = yf.download("^VIX", start=START_DATE, end=END_DATE, auto_adjust=True, progress=False)
-if isinstance(vix_raw.columns, pd.MultiIndex):
-    vix_raw.columns = [col[0] for col in vix_raw.columns]
-vix_pd = vix_raw[["Close"]].reset_index()
-vix_pd.columns = ["date", "vix_close"]
-vix_pd["date"] = pd.to_datetime(vix_pd["date"]).dt.date.astype(str)
-
+vix_pd = fetch_close_only("^VIX", "vix_close")
 print(f"VIX: {len(vix_pd):,} rows")
 display(vix_pd.head(3))
 
 # COMMAND ----------
 
-vix_df = (
+(
     spark.createDataFrame(vix_pd)
     .withColumn("date",      F.col("date").cast(DateType()))
     .withColumn("vix_close", F.col("vix_close").cast(DoubleType()))
     .withColumn("ingested_at", F.current_timestamp())
+    .write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("bronze_vix")
 )
-
-vix_df.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("bronze_vix")
 print(f"Saved bronze_vix: {spark.table('bronze_vix').count():,} rows")
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Federal Funds Rate — monthly
+# MAGIC ## US Federal Funds Rate — monthly
 
 # COMMAND ----------
 
-fed_series = fred.get_series("FEDFUNDS", observation_start=START_DATE, observation_end=END_DATE)
-fed_pd = fed_series.reset_index()
-fed_pd.columns = ["date", "fed_rate"]
-fed_pd["date"] = pd.to_datetime(fed_pd["date"]).dt.date.astype(str)
-
-print(f"Fed Rate: {len(fed_pd):,} rows")
+fed_pd = fetch_fred_series("FEDFUNDS", "fed_rate")
+print(f"Fed Funds Rate: {len(fed_pd):,} rows")
 display(fed_pd.head(3))
 
 # COMMAND ----------
 
-fed_df = (
+(
     spark.createDataFrame(fed_pd)
     .withColumn("date",     F.col("date").cast(DateType()))
     .withColumn("fed_rate", F.col("fed_rate").cast(DoubleType()))
     .withColumn("ingested_at", F.current_timestamp())
+    .write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("bronze_fed_rate")
 )
-
-fed_df.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("bronze_fed_rate")
 print(f"Saved bronze_fed_rate: {spark.table('bronze_fed_rate').count():,} rows")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## ECB Deposit Facility Rate — monthly
+
+# COMMAND ----------
+
+ecb_pd = fetch_fred_series("ECBDFR", "ecb_rate")
+print(f"ECB Rate: {len(ecb_pd):,} rows")
+display(ecb_pd.head(3))
+
+# COMMAND ----------
+
+(
+    spark.createDataFrame(ecb_pd)
+    .withColumn("date",     F.col("date").cast(DateType()))
+    .withColumn("ecb_rate", F.col("ecb_rate").cast(DoubleType()))
+    .withColumn("ingested_at", F.current_timestamp())
+    .write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("bronze_ecb_rate")
+)
+print(f"Saved bronze_ecb_rate: {spark.table('bronze_ecb_rate').count():,} rows")
 
 # COMMAND ----------
 
@@ -152,7 +207,7 @@ print(f"Saved bronze_fed_rate: {spark.table('bronze_fed_rate').count():,} rows")
 
 # COMMAND ----------
 
+tables = ["bronze_sp500", "bronze_eurostoxx", "bronze_vix", "bronze_fed_rate", "bronze_ecb_rate"]
 print("Bronze ingestion complete.")
-print(f"  bronze_sp500:    {spark.table('bronze_sp500').count():,} rows")
-print(f"  bronze_vix:      {spark.table('bronze_vix').count():,} rows")
-print(f"  bronze_fed_rate: {spark.table('bronze_fed_rate').count():,} rows")
+for t in tables:
+    print(f"  {t}: {spark.table(t).count():,} rows")
