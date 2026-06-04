@@ -312,24 +312,6 @@ if page == "Analytics Dashboard":
     st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
 
     st.markdown("---")
-
-    # --- Pipeline output: current classifications ---
-    st.subheader("Current Market Regimes")
-    st.caption(f"Gold layer output · {latest['date'].strftime('%d %b %Y')}")
-    divergence_labels = {
-        "us_significantly_higher": "US >> EU",
-        "us_higher": "US > EU",
-        "eu_higher": "EU > US",
-        "aligned": "Aligned",
-    }
-    vix_labels = {"calm": "Calm", "elevated": "Elevated", "stress": "Stress"}
-    rc1, rc2, rc3, rc4 = st.columns(4)
-    rc1.metric("US Rate Regime",  latest["us_rate_regime"].capitalize())
-    rc2.metric("EU Rate Regime",  latest["eu_rate_regime"].capitalize())
-    rc3.metric("US vs EU Rates",  divergence_labels.get(latest["policy_divergence"], latest["policy_divergence"]))
-    rc4.metric("Market Stress",   vix_labels.get(latest["vix_regime"], latest["vix_regime"]))
-
-    st.markdown("---")
     st.subheader("Explore the data")
     st.info(
         "Try **March 2020** (COVID crash), **2022** (fastest rate rises in decades), "
