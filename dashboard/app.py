@@ -153,35 +153,31 @@ if page == "Home":
 
     col_a, col_b = st.columns(2)
 
+    CARD = (
+        "background:#F8FAFC;border:1px solid #E2E8F0;"
+        "border-top:3px solid #3B82F6;border-radius:10px;"
+        "padding:22px 24px;min-height:300px;box-sizing:border-box;"
+    )
+    TD = "border:none;padding:6px 12px 6px 0;vertical-align:top;"
+    BADGE = "color:white;padding:2px 10px;border-radius:4px;font-size:0.85em;white-space:nowrap;"
+
     with col_a:
         st.markdown(
             f"""
-            <div style="{CARD_STYLE}">
+            <div style="{CARD}">
                 <h3 style="color:#1E3A5F;margin-top:0;">The Pipeline</h3>
-                <p style="color:#374151;margin-bottom:16px;">
-                    15 years of US and European market data, processed on Databricks through three Delta Lake layers:
+                <p style="color:#374151;margin-bottom:14px;">
+                    15 years of US and European market data processed on Databricks through three Delta Lake layers:
                 </p>
-                <table style="border-collapse:collapse;width:100%;font-size:0.9em;">
-                    <tr style="vertical-align:top;">
-                        <td style="padding:4px 10px 4px 0;white-space:nowrap;">
-                            <span style="background:#7C3D12;color:white;padding:2px 9px;border-radius:4px;">Bronze</span>
-                        </td>
-                        <td style="padding:4px 0;color:#374151;">S&amp;P 500, Euro Stoxx 50, VIX, US Fed Rate, ECB Rate — 5 raw Delta tables</td>
-                    </tr>
-                    <tr style="vertical-align:top;">
-                        <td style="padding:4px 10px 4px 0;white-space:nowrap;">
-                            <span style="background:#475569;color:white;padding:2px 9px;border-radius:4px;">Silver</span>
-                        </td>
-                        <td style="padding:4px 0;color:#374151;">Cleaned, quality-checked, joined into a daily time series</td>
-                    </tr>
-                    <tr style="vertical-align:top;">
-                        <td style="padding:4px 10px 4px 0;white-space:nowrap;">
-                            <span style="background:#B45309;color:white;padding:2px 9px;border-radius:4px;">Gold</span>
-                        </td>
-                        <td style="padding:4px 0;color:#374151;">Volatility, correlations, drawdown, regime classifications</td>
-                    </tr>
+                <table style="border-collapse:collapse;width:100%;font-size:0.9em;border:none;">
+                    <tr><td style="{TD}"><span style="background:#7C3D12;{BADGE}">Bronze</span></td>
+                        <td style="{TD}color:#374151;">5 raw Delta tables: S&amp;P 500, Euro Stoxx 50, VIX, US Fed Rate, ECB Rate</td></tr>
+                    <tr><td style="{TD}"><span style="background:#475569;{BADGE}">Silver</span></td>
+                        <td style="{TD}color:#374151;">Cleaned, quality-checked, joined into a single daily time series</td></tr>
+                    <tr><td style="{TD}"><span style="background:#B45309;{BADGE}">Gold</span></td>
+                        <td style="{TD}color:#374151;">Volatility, correlations, drawdown, regime classifications</td></tr>
                 </table>
-                <p style="color:#374151;margin-top:16px;margin-bottom:0;">
+                <p style="color:#374151;margin-top:14px;margin-bottom:0;">
                     The Analytics Dashboard shows the Gold layer output on real data.
                 </p>
             </div>
@@ -196,20 +192,17 @@ if page == "Home":
     with col_b:
         st.markdown(
             f"""
-            <div style="{CARD_STYLE}">
+            <div style="{CARD}">
                 <h3 style="color:#1E3A5F;margin-top:0;">The Migration Tool</h3>
                 <p style="color:#374151;margin-bottom:14px;">
                     Financial teams have years of SAS analytics code that needs to move to Databricks.
-                    This converter translates legacy SAS into PySpark or Databricks SQL automatically.
+                    This converter translates legacy SAS into PySpark, Databricks SQL, or dbt YAML automatically.
                 </p>
-                <p style="color:#374151;margin-bottom:14px;">
-                    Paste SAS code, choose a target format, get working code back.
-                    Common patterns are handled by a rule engine; complex code falls back to an AI model
-                    that flags anything needing review.
-                </p>
-                <p style="color:#374151;margin:0;">
-                    Tested with <strong>23 automated test cases</strong> covering every supported SAS pattern.
-                </p>
+                <table style="border-collapse:collapse;width:100%;font-size:0.9em;border:none;">
+                    <tr><td style="{TD}color:#374151;" colspan="2">Paste SAS code, choose a target format, get working code back.</td></tr>
+                    <tr><td style="{TD}color:#374151;" colspan="2">Common patterns use a built-in rule engine. Complex code falls back to an AI model that flags anything needing review.</td></tr>
+                    <tr><td style="{TD}color:#374151;" colspan="2">Tested with <strong>23 automated test cases</strong> covering every supported SAS pattern.</td></tr>
+                </table>
             </div>
             """,
             unsafe_allow_html=True,
