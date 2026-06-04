@@ -1,9 +1,9 @@
 # Cross-Market Macro Analysis Platform
 
-An end-to-end data engineering project built on Databricks, demonstrating a production-grade
-Medallion Architecture pipeline alongside an AI-powered legacy code migration tool.
+[![Tests](https://github.com/madhurima-nath/databricks-ai-automated-pipeline/actions/workflows/test.yml/badge.svg)](https://github.com/madhurima-nath/databricks-ai-automated-pipeline/actions/workflows/test.yml)
 
-## What this project does
+An end-to-end data engineering project on Databricks demonstrating a production-grade
+Medallion Architecture pipeline alongside an AI-powered legacy code migration tool.
 
 **Pipeline:** Ingests US and European market data — S&P 500, Euro Stoxx 50, VIX, US Federal
 Funds Rate, and ECB Deposit Facility Rate — through Bronze, Silver, and Gold Delta Lake layers.
@@ -12,7 +12,7 @@ divergence, and drawdown analysis via a Streamlit dashboard.
 
 **Migration tool:** A SAS → PySpark converter that translates legacy SAS code (PROC SORT,
 PROC MEANS, PROC SQL, DATA steps) to PySpark DataFrame API or Databricks SQL. Common patterns
-are handled by a deterministic rule engine; complex or ambiguous code is routed to Claude
+are handled by a deterministic rule engine; complex or ambiguous code falls back to Claude
 (claude-haiku-4-5) via the Anthropic API.
 
 ---
@@ -41,7 +41,7 @@ External APIs
               └───────┬────────┘
                       │
               ┌───────▼────────┐
-              │   Dashboard    │  Streamlit — market analysis + SAS converter
+              │   Dashboard    │  Streamlit — Market Analysis · Pipeline Control · SAS Converter
               └────────────────┘
 ```
 
@@ -118,7 +118,7 @@ print(result.notes)
 # ['PROC SORT → .orderBy()']
 ```
 
-Tested with 23 pytest cases covering all major SAS patterns.
+Tested with 33 pytest cases (23 SAS converter + 10 scripts).
 
 ---
 
@@ -133,6 +133,7 @@ This project runs on Databricks Community Edition. Compared to a full workspace:
 | Unity Catalog | ❌ | ✅ |
 | Delta Live Tables | ❌ | ✅ |
 | Databricks Apps | ❌ | ✅ |
+| Multi-task Jobs API | ❌ | ✅ |
 | Cluster auto-scaling | ❌ | ✅ |
 
 Code is written to be Unity Catalog-ready — adding catalog prefixes (`trading.bronze.sp500`)
@@ -144,20 +145,42 @@ is the only change required when migrating to a full workspace.
 
 ```
 databricks-ai-automated-pipeline/
-├── notebooks/
-│   ├── 00_quality_checks.py     # Reusable quality check functions (%run from other notebooks)
-│   ├── 01_bronze_ingest.py      # Raw ingestion — yfinance + FRED
-│   ├── 02_silver_transform.py   # Clean, join, forward-fill, derive returns
-│   └── 03_gold_analytics.py     # Rolling metrics, regimes, drawdown
+│
+├── notebooks/                          Databricks notebooks (sync via Repos)
+│   ├── 00_quality_checks.py            Reusable quality check module — imported by 02 and 03
+│   ├── 01_bronze_ingest.py             Raw ingestion from yfinance + FRED; writes 5 Delta tables
+│   ├── 02_silver_transform.py          Clean, join, forward-fill rates; derives log returns
+│   ├── 03_gold_analytics.py            Rolling vol, correlations, regimes, drawdown
+│   └── 04_export_parquet.py            Export gold_analytics to DBFS for local dashboard use
+│
 ├── src/
 │   └── converter/
-│       └── sas_to_pyspark.py    # SAS → PySpark / Databricks SQL converter
+│       ├── __init__.py
+│       └── sas_to_pyspark.py           SAS→PySpark/SQL converter — rule-based + LLM fallback
+│
 ├── dashboard/
-│   └── app.py                   # Streamlit dashboard (market analysis + converter UI)
+│   └── app.py                          Streamlit app — Market Analysis, Pipeline Control, SAS Converter
+│
 ├── tests/
-│   └── test_sas_converter.py    # 23 pytest cases — runs locally, no Spark needed
-├── config/                      # Reserved for schema DDLs and pipeline configs
-├── docs/                        # Architecture diagrams, article drafts
+│   ├── test_sas_converter.py           23 pytest cases for the SAS converter (all patterns)
+│   └── test_scripts.py                 10 pytest cases for run_pipeline.py + download_gold.py
+│
+├── scripts/
+│   ├── run_pipeline.py                 Submit the Databricks job and poll for completion
+│   └── download_gold.py                Download gold_analytics parquet from DBFS to data/
+│
+├── jobs/
+│   └── pipeline_job.json               Databricks Jobs API 2.1 job definition template
+│
+├── .github/
+│   └── workflows/
+│       └── test.yml                    GitHub Actions CI — runs pytest on push
+│
+├── config/                             Reserved for schema DDLs and pipeline configs
+├── docs/                               Architecture diagrams, article drafts
+├── data/                               Local parquet cache (gitignored) — populated by download_gold.py
+│
+├── .env.example                        Template for API keys (copy to .env — never commit .env)
 ├── requirements.txt
 ├── .gitignore
 └── README.md
@@ -181,7 +204,10 @@ Copy `.env.example` to `.env` and fill in your API keys:
 
 ```
 FRED_API_KEY=your_fred_key
-ANTHROPIC_API_KEY=your_anthropic_key   # optional — needed for complex SAS patterns
+ANTHROPIC_API_KEY=your_anthropic_key      # optional — needed for complex SAS patterns
+DATABRICKS_HOST=https://your-workspace.azuredatabricks.net
+DATABRICKS_TOKEN=your_personal_access_token
+DATABRICKS_JOB_ID=12345                   # set after registering the job below
 ```
 
 Run tests:
@@ -189,16 +215,67 @@ Run tests:
 pytest tests/ -v
 ```
 
-Run dashboard locally (requires `data/gold_analytics.parquet` — export from Databricks first):
+### Databricks
+
+**First time:**
+
+1. Go to **Repos → Add Repo** and enter this repository URL.
+2. Open `notebooks/01_bronze_ingest.py`, uncomment the DBFS key setup cell, paste your FRED key, run once, then re-comment.
+3. Register the pipeline job:
+   ```bash
+   databricks jobs create --json @jobs/pipeline_job.json
+   ```
+   Note the returned job ID and add it to `.env` as `DATABRICKS_JOB_ID`.
+
+**Subsequent runs:**
+
 ```bash
+python scripts/run_pipeline.py --job-id 12345
+```
+
+Or use the **Pipeline Control** page in the Streamlit dashboard to trigger and monitor stages from a browser.
+
+**Export data to local dashboard:**
+
+```bash
+# 1. In Databricks: run notebooks/04_export_parquet.py
+# 2. Locally:
+python scripts/download_gold.py
 streamlit run dashboard/app.py
 ```
 
-### Databricks
+---
 
-1. In your Databricks workspace, go to **Repos → Add Repo** and enter this repository URL.
-2. Open `notebooks/01_bronze_ingest.py`, uncomment the DBFS key setup cell, paste your FRED key, run once, then re-comment.
-3. Run notebooks in order: `01` → `02` → `03`.
+## Running the pipeline
+
+### Via CLI script
+
+```bash
+python scripts/run_pipeline.py --job-id 12345
+```
+
+Output:
+```
+[09:14:22] Submitting job 12345...
+[09:14:23] Run ID  : 789
+[09:14:23] Track at: https://your-workspace.azuredatabricks.net/#job/12345/run/789
+
+[09:14:53] RUNNING  [⏳ bronze_ingest: RUNNING | 🔒 silver_transform: BLOCKED | 🔒 gold_analytics: BLOCKED]
+[09:16:23] RUNNING  [✅ bronze_ingest: TERMINATED/SUCCESS | ⏳ silver_transform: RUNNING | 🔒 gold_analytics: BLOCKED]
+[09:17:53] TERMINATED/SUCCESS  [✅ bronze_ingest: TERMINATED/SUCCESS | ✅ silver_transform: TERMINATED/SUCCESS | ✅ gold_analytics: TERMINATED/SUCCESS]
+
+[09:17:53] ✅ Pipeline SUCCESS in 214s
+
+Task results:
+  ✅  bronze_ingest                  SUCCESS       110s
+  ✅  silver_transform               SUCCESS       56s
+  ✅  gold_analytics                 SUCCESS       48s
+```
+
+### Via Streamlit dashboard
+
+Open the **Pipeline Control** page, fill in your workspace host, token, and job ID, then click
+**Run full pipeline**. The page shows task-level status and links directly to the Databricks run UI.
 
 ---
 

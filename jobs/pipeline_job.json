@@ -1,0 +1,83 @@
+{
+  "_comment": [
+    "Databricks Jobs API 2.1 — multi-task job definition.",
+    "Register once with: databricks jobs create --json @jobs/pipeline_job.json",
+    "Then trigger with: python scripts/run_pipeline.py --job-id <JOB_ID>",
+    "",
+    "Replace these placeholders before registering:",
+    "  {{NOTEBOOK_BASE_PATH}} — e.g. /Repos/your@email.com/databricks-ai-automated-pipeline/notebooks",
+    "  {{CLUSTER_ID}}         — all-purpose cluster ID (Community Edition uses all-purpose clusters only)",
+    "  {{NOTIFICATION_EMAIL}} — email address for failure alerts",
+    "",
+    "For a full Databricks workspace, replace existing_cluster_id with a new_cluster block",
+    "using job_clusters (see commented section below) for cost-efficient isolated runs."
+  ],
+  "name": "cross-market-macro-analysis",
+  "max_concurrent_runs": 1,
+  "timeout_seconds": 7200,
+  "email_notifications": {
+    "on_failure": ["{{NOTIFICATION_EMAIL}}"],
+    "no_alert_for_skipped_runs": true
+  },
+  "tasks": [
+    {
+      "task_key": "bronze_ingest",
+      "description": "Ingest raw S&P 500, Euro Stoxx 50, VIX, US Fed Rate, ECB Rate from yfinance and FRED",
+      "existing_cluster_id": "{{CLUSTER_ID}}",
+      "notebook_task": {
+        "notebook_path": "{{NOTEBOOK_BASE_PATH}}/01_bronze_ingest",
+        "source": "WORKSPACE"
+      },
+      "timeout_seconds": 1800,
+      "max_retries": 1,
+      "min_retry_interval_millis": 60000
+    },
+    {
+      "task_key": "silver_transform",
+      "description": "Clean, join, forward-fill rates, compute log returns and policy differential",
+      "depends_on": [{"task_key": "bronze_ingest"}],
+      "existing_cluster_id": "{{CLUSTER_ID}}",
+      "notebook_task": {
+        "notebook_path": "{{NOTEBOOK_BASE_PATH}}/02_silver_transform",
+        "source": "WORKSPACE"
+      },
+      "timeout_seconds": 1800,
+      "max_retries": 0
+    },
+    {
+      "task_key": "gold_analytics",
+      "description": "Rolling volatility, correlations, drawdown, regime classifications",
+      "depends_on": [{"task_key": "silver_transform"}],
+      "existing_cluster_id": "{{CLUSTER_ID}}",
+      "notebook_task": {
+        "notebook_path": "{{NOTEBOOK_BASE_PATH}}/03_gold_analytics",
+        "source": "WORKSPACE"
+      },
+      "timeout_seconds": 1800,
+      "max_retries": 0
+    }
+  ],
+  "run_as": {
+    "user_name": "{{NOTIFICATION_EMAIL}}"
+  },
+
+  "_new_cluster_example": {
+    "_note": "On Databricks Premium/Standard, replace existing_cluster_id with job_clusters + new_cluster for isolated per-run clusters.",
+    "job_clusters": [
+      {
+        "job_cluster_key": "pipeline_cluster",
+        "new_cluster": {
+          "spark_version": "15.4.x-scala2.12",
+          "node_type_id": "i3.xlarge",
+          "num_workers": 0,
+          "spark_conf": {
+            "spark.databricks.cluster.profile": "singleNode",
+            "spark.master": "local[*]"
+          },
+          "custom_tags": {"ResourceClass": "SingleNode"},
+          "autotermination_minutes": 30
+        }
+      }
+    ]
+  }
+}
