@@ -23,6 +23,9 @@ build/
 # macOS
 .DS_Store
 
+# Streamlit secrets — keep local, set via Streamlit Cloud UI
+.streamlit/secrets.toml
+
 # IDE
 .vscode/settings.json
 .idea/

@@ -9,8 +9,8 @@ Three pages:
 Run locally:
     streamlit run dashboard/app.py
 
-On Databricks Apps:
-    Point the app config to this file and set secrets in the Databricks secrets store.
+On Streamlit Community Cloud:
+    Deploy from GitHub. Add secrets under Settings → Secrets (see .streamlit/secrets.toml.example).
 """
 
 import os
@@ -21,6 +21,14 @@ import requests
 import streamlit as st
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+
+
+def _secret(key: str, default: str = "") -> str:
+    """Read from Streamlit secrets (Cloud) with fallback to environment variables (local)."""
+    try:
+        return st.secrets.get(key, os.getenv(key, default))
+    except Exception:
+        return os.getenv(key, default)
 
 st.set_page_config(
     page_title="Cross-Market Macro Analysis",
@@ -234,19 +242,19 @@ elif page == "Pipeline Control":
     with st.expander("Databricks connection", expanded=True):
         host  = st.text_input(
             "Workspace host",
-            value=os.getenv("DATABRICKS_HOST", ""),
+            value=_secret("DATABRICKS_HOST"),
             placeholder="https://adb-1234567890.12.azuredatabricks.net",
             help="Your Databricks workspace URL.",
         )
         token = st.text_input(
             "Personal access token",
             type="password",
-            value=os.getenv("DATABRICKS_TOKEN", ""),
+            value=_secret("DATABRICKS_TOKEN"),
             help="Generate from User Settings → Access tokens in Databricks.",
         )
         job_id_str = st.text_input(
             "Job ID",
-            value=os.getenv("DATABRICKS_JOB_ID", ""),
+            value=_secret("DATABRICKS_JOB_ID"),
             placeholder="12345",
             help="Register the job once with jobs/pipeline_job.json, then paste the ID here.",
         )
@@ -404,9 +412,9 @@ elif page == "SAS → PySpark Converter":
         api_key = st.text_input(
             "Anthropic API key (for complex patterns)",
             type="password",
-            value=os.getenv("ANTHROPIC_API_KEY", ""),
+            value=_secret("ANTHROPIC_API_KEY"),
             help="Required only for patterns not covered by built-in rules. "
-                 "Set ANTHROPIC_API_KEY in .env to avoid pasting it here.",
+                 "Set ANTHROPIC_API_KEY in Streamlit secrets or .env to avoid pasting it here.",
         )
         sas_input = st.text_area(
             "Paste SAS code here",
