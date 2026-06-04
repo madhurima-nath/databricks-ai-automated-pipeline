@@ -38,6 +38,30 @@ st.set_page_config(
     layout="wide",
 )
 
+st.markdown("""
+<style>
+[data-testid="metric-container"] {
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: 14px 18px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.insight-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 12px;
+}
+.insight-card {
+    border-radius: 8px;
+    padding: 16px 18px;
+    font-size: 0.93em;
+    line-height: 1.5;
+}
+</style>
+""", unsafe_allow_html=True)
+
 # ---------------------------------------------------------------------------
 # Sidebar navigation
 # ---------------------------------------------------------------------------
@@ -46,6 +70,7 @@ page = st.sidebar.radio(
     "Navigation",
     ["Home", "Analytics Dashboard", "SAS → PySpark Converter"],
     index=0,
+    key="nav_page",
 )
 
 st.sidebar.markdown("---")
@@ -108,49 +133,80 @@ def _run_status_emoji(life_cycle: str, result: str = "") -> str:
 # ---------------------------------------------------------------------------
 
 if page == "Home":
-    st.title("Financial Analytics Pipeline on Databricks")
     st.markdown(
-        "Financial teams at large organisations have been running market analytics in SAS for years. "
-        "Moving those teams to Databricks requires two things: a modern pipeline to replace the old one, "
-        "and a tool to migrate the legacy code. **This project builds both** — and uses real market data to show it working end to end."
+        '<h1 style="margin-bottom:4px;">Financial Analytics Pipeline on Databricks</h1>',
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        '<p style="font-size:1.1em;color:#555;margin-top:0;">How financial teams move from SAS to Databricks — '
+        'a working pipeline on real market data, and a tool to migrate the legacy code.</p>',
+        unsafe_allow_html=True,
     )
 
     st.markdown("---")
     col_a, col_b = st.columns(2)
 
     with col_a:
-        st.subheader("The Pipeline — Analytics Dashboard")
         st.markdown(
-            "An end-to-end medallion pipeline on Databricks that ingests 15 years of US and European "
-            "market data and processes it through three Delta Lake layers:\n\n"
-            "- **Bronze** — 5 raw Delta tables: S&P 500, Euro Stoxx 50, VIX, US Fed Funds Rate, ECB Deposit Facility Rate\n"
-            "- **Silver** — data cleaned, quality-checked, and joined into a single daily time series\n"
-            "- **Gold** — analytics-ready metrics: volatility, correlations, drawdown, and regime classifications\n\n"
-            "The Analytics Dashboard shows the Gold layer output — proof the pipeline works on real data."
+            """
+            <div style="background:linear-gradient(135deg,#EFF6FF,#DBEAFE);
+                        border-top:4px solid #2563EB;border-radius:10px;padding:22px 24px;">
+                <h3 style="color:#1D4ED8;margin-top:0;">The Pipeline</h3>
+                <p style="color:#374151;margin-bottom:14px;">
+                    15 years of US and European market data, processed on Databricks through three Delta Lake layers:
+                </p>
+                <p style="line-height:2.4;margin:0;">
+                    <span style="background:#7C3D12;color:white;padding:3px 10px;border-radius:4px;font-size:0.85em;">Bronze</span>
+                    &nbsp;5 raw tables — S&amp;P 500, Euro Stoxx 50, VIX, US Fed Rate, ECB Rate<br>
+                    <span style="background:#475569;color:white;padding:3px 10px;border-radius:4px;font-size:0.85em;">Silver</span>
+                    &nbsp;Cleaned, quality-checked, joined into a daily time series<br>
+                    <span style="background:#B45309;color:white;padding:3px 10px;border-radius:4px;font-size:0.85em;">Gold</span>
+                    &nbsp;Volatility, correlations, drawdown, regime classifications
+                </p>
+                <p style="color:#374151;margin-top:14px;margin-bottom:0;">
+                    The Analytics Dashboard shows the Gold layer output on real data.
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
-        if st.button("Open Analytics Dashboard →", use_container_width=True):
-            st.session_state["_nav"] = "Analytics Dashboard"
+        st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
+        if st.button("Open Analytics Dashboard →", use_container_width=True, type="primary"):
+            st.session_state["nav_page"] = "Analytics Dashboard"
             st.rerun()
 
     with col_b:
-        st.subheader("The Migration Tool — SAS → PySpark Converter")
         st.markdown(
-            "Building a new pipeline is only half the problem. Financial teams also have years of existing "
-            "SAS analytics code that needs to move to Databricks.\n\n"
-            "This converter translates legacy SAS code — PROC SORT, PROC MEANS, PROC SQL, DATA steps — "
-            "into PySpark DataFrame API, Databricks SQL, or dbt YAML automatically. "
-            "Common patterns are handled by a deterministic rule engine; "
-            "complex code falls back to an AI model that converts it and flags anything needing review.\n\n"
-            "It is tested with 23 automated test cases covering every supported SAS pattern."
+            """
+            <div style="background:linear-gradient(135deg,#F0FDF4,#DCFCE7);
+                        border-top:4px solid #16A34A;border-radius:10px;padding:22px 24px;">
+                <h3 style="color:#15803D;margin-top:0;">The Migration Tool</h3>
+                <p style="color:#374151;margin-bottom:14px;">
+                    Financial teams have years of SAS analytics code that needs to move to Databricks.
+                    This converter translates legacy SAS into PySpark or Databricks SQL automatically.
+                </p>
+                <p style="color:#374151;margin-bottom:14px;">
+                    Paste SAS code, choose a target format, get working code back.
+                    Common patterns are handled by a rule engine — complex code falls back to an AI model
+                    that flags anything needing review.
+                </p>
+                <p style="color:#374151;margin:0;">
+                    Tested with <strong>23 automated test cases</strong> covering every supported SAS pattern.
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
-        if st.button("Open SAS → PySpark Converter →", use_container_width=True):
-            st.session_state["_nav"] = "SAS → PySpark Converter"
+        st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
+        if st.button("Open SAS to PySpark Converter →", use_container_width=True, type="primary"):
+            st.session_state["nav_page"] = "SAS → PySpark Converter"
             st.rerun()
 
     st.markdown("---")
     st.markdown(
-        "**Stack:** Databricks · PySpark · Delta Lake · Python · Streamlit · Anthropic API\n\n"
-        "[View the full project on GitHub ↗](https://github.com/madhurima-nath/databricks-ai-automated-pipeline)"
+        '<p style="color:#888;font-size:0.9em;">Stack: Databricks · PySpark · Delta Lake · Python · Streamlit · Anthropic API &nbsp;|&nbsp; '
+        '<a href="https://github.com/madhurima-nath/databricks-ai-automated-pipeline" target="_blank">View on GitHub ↗</a></p>',
+        unsafe_allow_html=True,
     )
 
 
@@ -159,17 +215,13 @@ if page == "Home":
 # ---------------------------------------------------------------------------
 
 if page == "Analytics Dashboard":
-    st.title("Analytics Dashboard — Gold Layer Output")
+    st.title("Analytics Dashboard")
     st.markdown(
-        "The charts below are the output of the **Gold Delta table** on Databricks — "
-        "the final layer of the medallion pipeline. "
-        "Raw market data was ingested as CSV files, written to Bronze Delta tables, "
-        "cleaned and joined in Silver, then transformed into the analytics metrics you see here."
+        "How US and European markets and interest rates moved over 15 years — "
+        "pulled from the Databricks pipeline and ready to explore. "
+        "Use the date filters to zoom into any period."
     )
     st.info(
-        "**What this shows:** How US and European stock markets and central bank interest rates moved together "
-        "over 15 years — and what the pipeline surfaces from that data. "
-        "Use the date filters to zoom into any period. "
         "Try **March 2020** (COVID crash), **2022** (fastest rate rises in decades), "
         "or **2014–2022** (ECB held rates below zero for eight years)."
     )
@@ -209,9 +261,9 @@ if page == "Analytics Dashboard":
         )
         st.stop()
 
-    st.caption(
+    st.warning(
         "This dashboard connects live to Databricks. "
-        "The first load may take 20–30 seconds while the cluster wakes up — thank you for your patience."
+        "The first load may take 20–30 seconds while the cluster wakes up. Thank you for your patience."
     )
     with st.spinner("Loading data from Databricks..."):
         try:
@@ -221,18 +273,14 @@ if page == "Analytics Dashboard":
             if "cluster" in err_msg.lower() or "terminated" in err_msg.lower():
                 st.warning(
                     "The Databricks cluster appears to be stopped. "
-                    "Start it from the **Pipeline Control** page or from Databricks directly, "
-                    "then reload this page."
+                    "Start it from Databricks directly, then reload this page."
                 )
             else:
                 st.error(f"Could not load data from Databricks: {err_msg}")
             st.stop()
 
     if df is None or df.empty:
-        st.warning(
-            "The gold_analytics table is empty. "
-            "Run the pipeline first using the **Pipeline Control** page."
-        )
+        st.warning("The gold_analytics table is empty. Run the pipeline notebooks on Databricks first.")
         st.stop()
 
     import pandas as pd
@@ -263,6 +311,7 @@ if page == "Analytics Dashboard":
 
     # --- Metrics row ---
     latest = d.iloc[-1]
+    st.caption(f"As of {latest['date'].strftime('%d %b %Y')} — last day in selected range")
     m1, m2, m3, m4, m5 = st.columns(5)
     m1.metric("S&P 500",       f"{latest['sp500_close']:,.0f}")
     m2.metric("Euro Stoxx 50", f"{latest['eurostoxx_close']:,.0f}")
@@ -274,7 +323,7 @@ if page == "Analytics Dashboard":
     st.markdown("---")
 
     # --- Chart 1: Equity indices ---
-    st.subheader("Equity Indices")
+    st.markdown('<h3 style="color:#1f77b4;">Equity Indices</h3>', unsafe_allow_html=True)
     st.caption(
         "The S&P 500 tracks the 500 largest US companies; the Euro Stoxx 50 tracks the 50 largest in the Eurozone. "
         "Both fell sharply in March 2020 (COVID) and again in 2022 (rate hikes) — notice how closely they moved together."
@@ -296,7 +345,7 @@ if page == "Analytics Dashboard":
     )
 
     # --- Chart 2: Central bank rates + differential ---
-    st.subheader("Central Bank Policy Rates")
+    st.markdown('<h3 style="color:#ff7f0e;">Central Bank Policy Rates</h3>', unsafe_allow_html=True)
     st.caption(
         "Central banks raise rates to slow inflation and cut them to stimulate growth. "
         "The ECB rate was below zero from 2014 to 2022 — an unusual policy meaning banks were charged to hold cash. "
@@ -321,7 +370,7 @@ if page == "Analytics Dashboard":
         st.info(rate_msg)
 
     # --- Chart 3: Volatility ---
-    st.subheader("Realised Volatility (annualised)")
+    st.markdown('<h3 style="color:#2ca02c;">Realised Volatility</h3>', unsafe_allow_html=True)
     st.caption(
         "How much prices swung up and down each day — larger swings mean more uncertainty. "
         "Spikes here line up with the drops in the equity chart: COVID (2020) and the rate hike period (2022). "
@@ -348,7 +397,7 @@ if page == "Analytics Dashboard":
         st.info(f"**Most volatile period in this range:** {peak_row['date'].strftime('%b %Y')} — S&P 500 was swinging roughly **{peak_row['sp500_vol_20d']/16:.1%}** per day on average.")
 
     # --- Chart 4: US–EU correlation ---
-    st.subheader("60-Day Rolling Correlation: S&P 500 vs Euro Stoxx 50")
+    st.markdown('<h3 style="color:#9467bd;">US vs EU Equity Correlation</h3>', unsafe_allow_html=True)
     st.caption(
         "Shows whether the US and European markets moved in the same direction on any given day. "
         "A value near 1 means they moved together; near 0 means independently. "
@@ -371,7 +420,7 @@ if page == "Analytics Dashboard":
         )
 
     # --- Chart 5: S&P 500 drawdown ---
-    st.subheader("S&P 500 Drawdown from 52-Week High")
+    st.markdown('<h3 style="color:#d62728;">S&amp;P 500 Drawdown from 52-Week High</h3>', unsafe_allow_html=True)
     st.caption(
         "How far the US market has fallen from its highest point in the past year. "
         "A drop of 20% or more is commonly called a market downturn. "
@@ -417,27 +466,39 @@ if page == "Analytics Dashboard":
     rc4.metric("Market Stress", vix_labels.get(latest_regime["vix_regime"], latest_regime["vix_regime"]))
 
     st.markdown("---")
-    st.subheader("What the pipeline found")
+    st.markdown("### Key findings from the data")
     st.markdown(
-        "These are the patterns that emerge consistently from the full 2010–2026 dataset — "
-        "the output of running the Gold layer analytics over 15 years of daily market data:"
+        '<p style="color:#555;margin-bottom:12px;">Patterns that emerge consistently from 15 years of daily market data.</p>',
+        unsafe_allow_html=True,
     )
     st.markdown(
-        "**1. US and EU markets crash together.** "
-        "During the COVID crash (March 2020) and the 2022 rate shock, both markets fell simultaneously and by similar amounts. "
-        "Holding both gave little protection when it mattered most — correlation spiked toward 1 on the worst days.\n\n"
-        "**2. The ECB's eight years of negative rates were unprecedented.** "
-        "From 2014 to 2022, the ECB held its deposit rate below zero while the US kept rates near but above zero. "
-        "This was the longest and deepest negative-rate experiment by a major central bank. "
-        "European investors had no risk-free return for nearly a decade.\n\n"
-        "**3. The 2022 rate shock was the sharpest in four decades.** "
-        "Both the Fed and ECB raised rates from near zero to above 4% in roughly 18 months — "
-        "the fastest pace since the early 1980s. Both stock markets fell over 20% and volatility "
-        "reached its highest level since COVID.\n\n"
-        "**4. Recovery from COVID was unusually fast.** "
-        "Both markets recovered their pre-COVID highs within 12 months of the March 2020 crash — "
-        "faster than any comparable drop in the dataset."
+        """
+        <div class="insight-grid">
+            <div class="insight-card" style="background:#FEF9C3;border-left:4px solid #CA8A04;">
+                <strong style="color:#92400E;">Markets crash together</strong><br>
+                During COVID (March 2020) and the 2022 rate shock, US and EU markets fell at the same time
+                and by similar amounts. Correlation spiked toward 1 on the worst days — holding both gave little protection.
+            </div>
+            <div class="insight-card" style="background:#FEE2E2;border-left:4px solid #DC2626;">
+                <strong style="color:#991B1B;">ECB's 8 years of negative rates</strong><br>
+                2014 to 2022: the ECB held its deposit rate below zero. European banks were charged to hold cash
+                rather than earning interest. The longest negative-rate experiment by a major central bank.
+            </div>
+            <div class="insight-card" style="background:#E0F2FE;border-left:4px solid #0284C7;">
+                <strong style="color:#0C4A6E;">2022 rate shock: fastest in 4 decades</strong><br>
+                Both the Fed and ECB raised rates from near zero to above 4% in roughly 18 months —
+                the fastest pace since the early 1980s. Both stock markets fell over 20%.
+            </div>
+            <div class="insight-card" style="background:#F0FDF4;border-left:4px solid #16A34A;">
+                <strong style="color:#14532D;">COVID recovery was unusually fast</strong><br>
+                Both markets recovered their pre-COVID highs within 12 months of the March 2020 crash —
+                faster than any comparable drop in the dataset.
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
+    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
     st.caption("Data covers 2010 – June 2026. Produced by the Bronze → Silver → Gold medallion pipeline on Databricks.")
 
 
@@ -597,20 +658,9 @@ elif page == "Pipeline Control":
 elif page == "SAS → PySpark Converter":
     st.title("SAS → PySpark Converter")
     st.markdown(
-        "The **Analytics Dashboard** shows what financial analytics looks like after migrating to Databricks. "
-        "This page shows how to get there."
-    )
-    st.markdown(
-        "Many organisations built their financial analytics in SAS years ago. "
-        "Migrating that code to Databricks means rewriting it in PySpark or SQL — "
-        "a slow, error-prone process when done manually. "
-        "This tool automates the translation: paste SAS code, choose a target format, and get working code back."
-    )
-    st.markdown(
-        "**How it works:** Common SAS patterns (sorting, aggregation, filtering, data steps) are converted "
-        "by a built-in rule engine — fast, deterministic, no external calls. "
-        "Code that falls outside the rules is passed to an AI model, which handles more complex patterns "
-        "and flags anything that needs human review."
+        "Paste legacy SAS code and get the equivalent PySpark, Databricks SQL, or dbt YAML back automatically. "
+        "Common patterns — PROC SORT, PROC MEANS, DATA steps — are handled by a built-in rule engine. "
+        "Complex code falls back to an AI model that flags anything needing review."
     )
     st.markdown("---")
 
@@ -641,7 +691,7 @@ elif page == "SAS → PySpark Converter":
         ),
     }
 
-    st.subheader("Step 1 — Choose an example or paste your own SAS code")
+    st.subheader("Step 1: Choose an example or paste your own SAS code")
     example_choice = st.selectbox(
         "Load a sample pattern",
         list(EXAMPLES.keys()),
@@ -654,7 +704,7 @@ elif page == "SAS → PySpark Converter":
         placeholder="PROC SORT DATA=customers;\n    BY last_name first_name;\nRUN;",
     )
 
-    st.subheader("Step 2 — Choose target format and convert")
+    st.subheader("Step 2: Choose target format and convert")
     c1, c2 = st.columns([2, 1])
     with c1:
         target = st.selectbox(
@@ -674,7 +724,7 @@ elif page == "SAS → PySpark Converter":
         )
 
     st.markdown("---")
-    st.subheader("Step 3 — Converted output")
+    st.subheader("Step 3: Converted output")
 
     if convert_btn and sas_input.strip():
         with st.spinner("Converting..."):
