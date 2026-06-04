@@ -3,13 +3,13 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC # Export Gold Table to Parquet
+# MAGIC # Export Gold Table to Parquet (optional — not needed for the Streamlit dashboard)
 # MAGIC
-# MAGIC Writes `gold_analytics` as a single parquet file to DBFS so the local Streamlit
-# MAGIC dashboard can load it without a live Spark connection.
+# MAGIC **This notebook is not part of the main pipeline.**
+# MAGIC The Streamlit dashboard reads `gold_analytics` live via the Databricks SQL connector.
 # MAGIC
-# MAGIC Run this once after `03_gold_analytics.py` has completed successfully.
-# MAGIC Then run locally: `python scripts/download_gold.py`
+# MAGIC Only run this if you want a local `.parquet` snapshot of the Gold table.
+# MAGIC Requires DBFS to be enabled in your workspace — if you get a DBFS_DISABLED error, skip this notebook.
 
 # COMMAND ----------
 
