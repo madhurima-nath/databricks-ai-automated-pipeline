@@ -115,14 +115,21 @@ def _run_status_emoji(life_cycle: str, result: str = "") -> str:
 
 if page == "Analytics Dashboard":
     st.title("Analytics Dashboard")
-    st.info(
-        "**How to use this dashboard** \n\n"
-        "The charts below show how US and European stock markets and interest rates moved over 15 years — "
-        "and how they influenced each other.\n\n"
-        "1. Set the **date range** below to focus on a period of interest.\n"
-        "2. Read each chart top to bottom — they build on each other: market prices → interest rates → how much markets swung → how connected they were.\n"
-        "3. Suggested periods to explore: **March 2020** (COVID crash) · **2022–2023** (fastest rate rises in decades) · **2014–2022** (ECB negative rates)."
+    st.markdown(
+        "When central banks raise or cut interest rates, stock markets react — "
+        "but not always in the same way or at the same time. "
+        "This dashboard lets you explore that relationship across the US and Europe using 15 years of real market data. "
+        "You can see exactly when markets fell, by how much, and what interest rates were doing at the same time."
     )
+    with st.expander("What will I learn from this?"):
+        st.markdown(
+            "- Did the US and European markets fall at the same time during major events — or did one hold up while the other dropped?\n"
+            "- When the ECB held interest rates below zero for eight years (2014–2022), how did European stocks behave compared to US stocks?\n"
+            "- How quickly did markets recover after the COVID crash in 2020?\n"
+            "- In 2022, both the US and EU raised rates at the fastest pace in decades — what happened to markets?\n\n"
+            "**Where to start:** Use the date filters below. Each chart builds on the one above — "
+            "start with stock prices, then look at interest rates, then see how much markets were swinging day to day."
+        )
 
     host      = _secret("DATABRICKS_HOST")
     token     = _secret("DATABRICKS_TOKEN")
