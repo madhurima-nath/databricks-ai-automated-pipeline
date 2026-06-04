@@ -5,8 +5,8 @@
 # MAGIC %md
 # MAGIC # Bronze Layer: Raw Data Ingestion
 # MAGIC
-# MAGIC Fetches raw market and macroeconomic data from external APIs and writes to Delta tables.
-# MAGIC No transformations — data is stored exactly as received.
+# MAGIC Reads pre-downloaded CSV files from `data/raw/` (synced via Databricks Repos) and
+# MAGIC writes to Delta tables. No transformations — data is stored exactly as received.
 # MAGIC
 # MAGIC | Source | Ticker / Series | Frequency | Table |
 # MAGIC |--------|----------------|-----------|-------|
@@ -15,92 +15,24 @@
 # MAGIC | yfinance | `^VIX` | Daily close | `bronze_vix` |
 # MAGIC | FRED | `FEDFUNDS` US Fed Funds Rate | Monthly | `bronze_fed_rate` |
 # MAGIC | FRED | `ECBDFR` ECB Deposit Facility Rate | Monthly | `bronze_ecb_rate` |
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ## Setup: FRED API key
 # MAGIC
-# MAGIC A widget will appear at the top of this notebook after running the next cell.
-# MAGIC Paste your FRED API key there before running the rest of the notebook.
-# MAGIC The key is never saved to a file or committed to git.
-# MAGIC
-# MAGIC Get a free key at [fred.stlouisfed.org/docs/api/api_key.html](https://fred.stlouisfed.org/docs/api/api_key.html).
-# MAGIC
-# MAGIC **Note:** This project requires a full Databricks workspace (free trial or paid).
-# MAGIC Serverless compute, SQL Warehouses, and Databricks Apps are not available on Community Edition.
+# MAGIC **Data source:** CSV files in `data/raw/` — downloaded locally via `scripts/download_data.py`
+# MAGIC and committed to the repo. Serverless compute has no outbound internet access, so
+# MAGIC data is fetched on a laptop and synced here via Repos.
 
 # COMMAND ----------
 
-dbutils.widgets.text("FRED_API_KEY", "", "FRED API Key")
-
-# COMMAND ----------
-
-# MAGIC %pip install yfinance==1.4.1 fredapi==0.5.2 --quiet
-
-# COMMAND ----------
-
-import datetime
-import os
 import pandas as pd
-import yfinance as yf
-from fredapi import Fred
 from pyspark.sql import functions as F
 from pyspark.sql.types import DateType, DoubleType
 
-START_DATE = "2010-01-01"
-END_DATE   = datetime.date.today().isoformat()
+# Derive the repo root from this notebook's path in Databricks Repos
+_nb_path  = dbutils.notebook.getContext().notebookPath().get()
+# _nb_path = /Repos/<email>/databricks-ai-automated-pipeline/notebooks/01_bronze_ingest
+_repo_root = "/Workspace/" + "/".join(_nb_path.lstrip("/").split("/")[:-2])
+DATA_DIR   = _repo_root + "/data/raw"
 
-fred_api_key = dbutils.widgets.get("FRED_API_KEY").strip()
-if not fred_api_key:
-    try:
-        fred_api_key = dbutils.secrets.get(scope="project-secrets", key="fred_api_key")
-    except Exception:
-        pass
-if not fred_api_key:
-    raise ValueError(
-        "FRED API key not found. Paste it in the FRED_API_KEY widget at the top of this notebook."
-    )
-
-fred = Fred(api_key=fred_api_key)
-
-print(f"Date range: {START_DATE} → {END_DATE}")
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ## Shared utilities
-
-# COMMAND ----------
-
-def flatten_yf(raw: pd.DataFrame) -> pd.DataFrame:
-    """Flatten yfinance MultiIndex columns, lowercase names, return string date."""
-    if isinstance(raw.columns, pd.MultiIndex):
-        raw.columns = [col[0] for col in raw.columns]
-    df = raw.reset_index()
-    df.columns = [c.lower().replace(" ", "_") for c in df.columns]
-    date_col = next(c for c in df.columns if c in ("date", "datetime", "price"))
-    df = df.rename(columns={date_col: "date"})
-    df["date"] = pd.to_datetime(df["date"]).dt.date.astype(str)
-    return df
-
-def fetch_close_only(ticker: str, col_name: str) -> pd.DataFrame:
-    """Download a single ticker and return date + one close column."""
-    raw = yf.download(ticker, start=START_DATE, end=END_DATE, auto_adjust=True, progress=False)
-    if isinstance(raw.columns, pd.MultiIndex):
-        raw.columns = [col[0] for col in raw.columns]
-    df = raw[["Close"]].reset_index()
-    df.columns = ["date", col_name]
-    df["date"] = pd.to_datetime(df["date"]).dt.date.astype(str)
-    return df
-
-def fetch_fred_series(series_id: str, col_name: str) -> pd.DataFrame:
-    """Fetch a FRED series and return date + value column."""
-    s = fred.get_series(series_id, observation_start=START_DATE, observation_end=END_DATE)
-    df = s.reset_index()
-    df.columns = ["date", col_name]
-    df["date"] = pd.to_datetime(df["date"]).dt.date.astype(str)
-    return df
+print(f"Reading CSVs from: {DATA_DIR}")
 
 # COMMAND ----------
 
@@ -109,9 +41,7 @@ def fetch_fred_series(series_id: str, col_name: str) -> pd.DataFrame:
 
 # COMMAND ----------
 
-sp500_pd = flatten_yf(
-    yf.download("^GSPC", start=START_DATE, end=END_DATE, auto_adjust=True, progress=False)
-)
+sp500_pd = pd.read_csv(f"{DATA_DIR}/sp500.csv")
 print(f"S&P 500: {len(sp500_pd):,} rows | columns: {list(sp500_pd.columns)}")
 display(sp500_pd.head(3))
 
@@ -137,7 +67,7 @@ print(f"Saved bronze_sp500: {spark.table('bronze_sp500').count():,} rows")
 
 # COMMAND ----------
 
-eurostoxx_pd = fetch_close_only("^STOXX50E", "eurostoxx_close")
+eurostoxx_pd = pd.read_csv(f"{DATA_DIR}/eurostoxx.csv")
 print(f"Euro Stoxx 50: {len(eurostoxx_pd):,} rows")
 display(eurostoxx_pd.head(3))
 
@@ -159,7 +89,7 @@ print(f"Saved bronze_eurostoxx: {spark.table('bronze_eurostoxx').count():,} rows
 
 # COMMAND ----------
 
-vix_pd = fetch_close_only("^VIX", "vix_close")
+vix_pd = pd.read_csv(f"{DATA_DIR}/vix.csv")
 print(f"VIX: {len(vix_pd):,} rows")
 display(vix_pd.head(3))
 
@@ -181,7 +111,7 @@ print(f"Saved bronze_vix: {spark.table('bronze_vix').count():,} rows")
 
 # COMMAND ----------
 
-fed_pd = fetch_fred_series("FEDFUNDS", "fed_rate")
+fed_pd = pd.read_csv(f"{DATA_DIR}/fed_rate.csv")
 print(f"Fed Funds Rate: {len(fed_pd):,} rows")
 display(fed_pd.head(3))
 
@@ -203,7 +133,7 @@ print(f"Saved bronze_fed_rate: {spark.table('bronze_fed_rate').count():,} rows")
 
 # COMMAND ----------
 
-ecb_pd = fetch_fred_series("ECBDFR", "ecb_rate")
+ecb_pd = pd.read_csv(f"{DATA_DIR}/ecb_rate.csv")
 print(f"ECB Rate: {len(ecb_pd):,} rows")
 display(ecb_pd.head(3))
 

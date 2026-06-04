@@ -1,8 +1,9 @@
 # Virtual environment
 .venv/
 
-# Data files — never commit raw or processed data
-data/
+# Data files — commit CSVs in data/raw/ only
+data/processed/
+data/*.parquet
 
 # Environment variables — keep secrets local
 .env
