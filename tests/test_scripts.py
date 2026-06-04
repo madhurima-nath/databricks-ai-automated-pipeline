@@ -1,11 +1,10 @@
 """
-Tests for scripts/run_pipeline.py and scripts/download_gold.py.
+Tests for scripts/run_pipeline.py.
 
 Uses unittest.mock to intercept HTTP calls — no real Databricks connection needed.
 Run with: pytest tests/test_scripts.py -v
 """
 
-import base64
 import importlib.util
 import os
 import sys
@@ -26,8 +25,7 @@ def _load_script(name: str) -> types.ModuleType:
     return mod
 
 
-run_pipeline   = _load_script("run_pipeline.py")
-download_gold  = _load_script("download_gold.py")
+run_pipeline = _load_script("run_pipeline.py")
 
 
 # ---------------------------------------------------------------------------
@@ -145,51 +143,3 @@ class TestRunPipelineSubmit:
         assert exc.value.code == 1
 
 
-# ---------------------------------------------------------------------------
-# download_gold: DBFS read
-# ---------------------------------------------------------------------------
-
-class TestDownloadGold:
-    def _make_dbfs_chunk(self, data: bytes, bytes_read: int) -> dict:
-        return {
-            "data":       base64.b64encode(data).decode(),
-            "bytes_read": bytes_read,
-        }
-
-    def test_downloads_single_chunk(self, tmp_path):
-        payload = b"parquet-data-here"
-        chunk_response = _mock_response(self._make_dbfs_chunk(payload, len(payload)))
-
-        with (
-            patch.dict(os.environ, {"DATABRICKS_HOST": "https://test.databricks.com", "DATABRICKS_TOKEN": "tok"}, clear=False),
-            patch("requests.get", return_value=chunk_response),
-            patch("os.makedirs"),
-            patch("builtins.open", create=True) as mock_open,
-        ):
-            mock_file = MagicMock()
-            mock_open.return_value.__enter__ = MagicMock(return_value=mock_file)
-            mock_open.return_value.__exit__  = MagicMock(return_value=False)
-            download_gold.main()
-            mock_file.write.assert_called_once_with(payload)
-
-    def test_404_exits_one(self):
-        not_found = _mock_response({}, status_code=404)
-        not_found.raise_for_status = MagicMock()  # 404 handled before raise_for_status
-        not_found.status_code = 404
-
-        with (
-            patch.dict(os.environ, {"DATABRICKS_HOST": "https://test.databricks.com", "DATABRICKS_TOKEN": "tok"}, clear=False),
-            patch("requests.get", return_value=not_found),
-            pytest.raises(SystemExit) as exc,
-        ):
-            download_gold.main()
-        assert exc.value.code == 1
-
-    def test_missing_credentials_exits_one(self):
-        env = {k: v for k, v in os.environ.items() if k not in ("DATABRICKS_HOST", "DATABRICKS_TOKEN")}
-        with (
-            patch.dict(os.environ, env, clear=True),
-            pytest.raises(SystemExit) as exc,
-        ):
-            download_gold.main()
-        assert exc.value.code == 1

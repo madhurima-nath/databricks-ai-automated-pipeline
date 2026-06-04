@@ -150,8 +150,7 @@ databricks-ai-automated-pipeline/
 │   ├── 00_quality_checks.py            Reusable quality check module — imported by 02 and 03
 │   ├── 01_bronze_ingest.py             Raw ingestion from yfinance + FRED; writes 5 Delta tables
 │   ├── 02_silver_transform.py          Clean, join, forward-fill rates; derives log returns
-│   ├── 03_gold_analytics.py            Rolling vol, correlations, regimes, drawdown
-│   └── 04_export_parquet.py            Export gold_analytics to DBFS for local dashboard use
+│   └── 03_gold_analytics.py            Rolling vol, correlations, regimes, drawdown
 │
 ├── src/
 │   └── converter/
@@ -166,8 +165,7 @@ databricks-ai-automated-pipeline/
 │   └── test_scripts.py                 10 pytest cases for run_pipeline.py + download_gold.py
 │
 ├── scripts/
-│   ├── run_pipeline.py                 Submit the Databricks job and poll for completion
-│   └── download_gold.py                Download gold_analytics parquet from DBFS to data/
+│   └── run_pipeline.py                 Submit the Databricks job and poll for completion
 │
 ├── jobs/
 │   └── pipeline_job.json               Databricks Jobs API 2.1 job definition template
@@ -178,7 +176,6 @@ databricks-ai-automated-pipeline/
 │
 ├── config/                             Reserved for schema DDLs and pipeline configs
 ├── docs/                               Architecture diagrams, article drafts
-├── data/                               Local parquet cache (gitignored) — populated by download_gold.py
 │
 ├── .env.example                        Template for API keys (copy to .env — never commit .env)
 ├── requirements.txt
@@ -237,15 +234,6 @@ python scripts/run_pipeline.py --job-id 12345
 ```
 
 Or use the **Pipeline Control** page in the Streamlit dashboard to trigger and monitor stages from a browser.
-
-**Export data to local dashboard:**
-
-```bash
-# 1. In Databricks: run notebooks/04_export_parquet.py
-# 2. Locally:
-python scripts/download_gold.py
-streamlit run dashboard/app.py
-```
 
 ---
 
