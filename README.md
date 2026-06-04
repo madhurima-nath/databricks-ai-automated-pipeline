@@ -276,5 +276,7 @@ Task results:
 
 ## Related
 
+- Portfolio: [Financial Analytics Pipeline on Databricks](https://madhurima-nath.github.io/project_related_files/data_migration.html)
+- Dashboard: [financial-analytics-databricks.streamlit.app](https://financial-analytics-databricks.streamlit.app)
 - Medium: *Aligning Mixed-Frequency Central Bank Rates with Daily Equity Data on Databricks* (forthcoming)
 - Medium: *From SAS to PySpark: Migrating Legacy Financial Analytics Code to a Modern Lakehouse* (forthcoming)
