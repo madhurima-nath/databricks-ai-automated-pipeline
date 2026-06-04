@@ -151,12 +151,12 @@ if page == "Home":
                 <h3 style="color:#1E3A5F;margin-top:0;">The Migration Tool</h3>
                 <p style="color:#374151;margin-bottom:12px;">
                     Financial teams have years of SAS analytics code that needs to move to Databricks.
-                    This converter translates legacy SAS into PySpark, Databricks SQL, or dbt YAML automatically.
+                    This converter translates legacy SAS into PySpark or Databricks SQL automatically.
                 </p>
                 <ul style="color:#374151;margin:0;padding-left:18px;line-height:1.9;">
                     <li>Paste SAS code, choose a target format, get working code back</li>
                     <li>Common patterns handled by a rule engine — no API key needed</li>
-                    <li>Complex code falls back to an AI model that flags anything needing review</li>
+                    <li>Unrecognised patterns are sent to Claude AI, which converts and flags anything needing a human check</li>
                     <li>Tested with <strong>23 automated test cases</strong></li>
                 </ul>
             </div>
@@ -499,10 +499,10 @@ elif page == "SAS → PySpark Converter":
             st.rerun()
     st.title("SAS → PySpark Converter")
     st.markdown(
-        "Paste legacy SAS code and get the equivalent PySpark, Databricks SQL, or dbt YAML back automatically. "
+        "Paste legacy SAS code and get the equivalent PySpark or Databricks SQL back automatically. "
         "Common patterns — PROC SORT, PROC MEANS, DATA steps — are handled by a built-in rule engine: "
         "deterministic, no API key needed, same output every time. "
-        "Complex code falls back to an AI model that flags anything needing review."
+        "SAS code the rule engine does not recognise is sent to Claude AI, which converts it and adds a note on anything that needs a human check."
     )
     st.markdown("---")
 
@@ -556,8 +556,8 @@ elif page == "SAS → PySpark Converter":
     with c1:
         target = st.selectbox(
             "Convert to",
-            ["pyspark", "databricks_sql", "yaml"],
-            help="PySpark: DataFrame API code · Databricks SQL: SQL statements · YAML: dbt model definition",
+            ["pyspark", "databricks_sql"],
+            help="PySpark: DataFrame API code · Databricks SQL: SQL statements",
         )
     with c2:
         convert_btn = st.button("Convert →", type="primary", use_container_width=True)
