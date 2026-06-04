@@ -124,7 +124,7 @@ if page == "Analytics Dashboard":
         import pandas as pd
 
         conn_args = dict(
-            server_hostname=host.replace("https://", "").replace("http://", ""),
+            server_hostname=host.replace("https://", ""),
             http_path=http_path,
             access_token=token,
         )
