@@ -175,7 +175,6 @@ databricks-ai-automated-pipeline/
 │       └── test.yml                    GitHub Actions CI — runs pytest on push
 │
 ├── config/                             Reserved for schema DDLs and pipeline configs
-├── docs/                               Architecture diagrams, article drafts
 │
 ├── .env.example                        Template for API keys (copy to .env — never commit .env)
 ├── requirements.txt
