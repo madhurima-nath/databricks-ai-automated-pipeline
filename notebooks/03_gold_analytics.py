@@ -187,3 +187,30 @@ result.groupBy("vix_regime") \
 
 print("\nMost recent 5 rows:")
 result.orderBy(F.col("date").desc()).show(5, truncate=False)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Pipeline run log
+
+# COMMAND ----------
+
+log_pipeline_run(spark, "gold", "gold_analytics", result)
+
+print("\nFull pipeline run log:")
+spark.table("pipeline_run_log").orderBy("run_timestamp", ascending=False).show(20, truncate=False)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Delta table version history
+# MAGIC
+# MAGIC Delta Lake records every write to gold_analytics as a new version.
+# MAGIC Use `VERSION AS OF` or `TIMESTAMP AS OF` to query any prior state.
+
+# COMMAND ----------
+
+print("gold_analytics version history:")
+spark.sql("DESCRIBE HISTORY gold_analytics").select(
+    "version", "timestamp", "operation", "operationMetrics"
+).show(10, truncate=False)

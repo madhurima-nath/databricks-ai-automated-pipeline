@@ -166,3 +166,15 @@ result = spark.table("silver_market")
 print(f"Saved silver_market: {result.count():,} rows")
 result.orderBy("date").show(5, truncate=False)
 result.printSchema()
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Pipeline run log
+
+# COMMAND ----------
+
+log_pipeline_run(spark, "silver", "silver_market", result)
+
+print("\nRun log (most recent entries):")
+spark.table("pipeline_run_log").orderBy("run_timestamp", ascending=False).show(10, truncate=False)

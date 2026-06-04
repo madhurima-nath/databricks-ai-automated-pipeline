@@ -176,3 +176,16 @@ tables = ["bronze_sp500", "bronze_eurostoxx", "bronze_vix", "bronze_fed_rate", "
 print("Bronze ingestion complete.")
 for t in tables:
     print(f"  {t}: {spark.table(t).count():,} rows")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Pipeline run log
+
+# COMMAND ----------
+
+for t in tables:
+    log_pipeline_run(spark, "bronze", t, spark.table(t))
+
+print("\nRun log (most recent entries):")
+spark.table("pipeline_run_log").orderBy("run_timestamp", ascending=False).show(10, truncate=False)

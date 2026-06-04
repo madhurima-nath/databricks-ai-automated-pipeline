@@ -127,3 +127,41 @@ def run_quality_checks(
         check_date_gaps(df, table_name, max_gap_days=max_gap_days)
 
     print(f"  All checks passed for {table_name}\n")
+
+
+def log_pipeline_run(spark, stage: str, table_name: str, df: DataFrame, date_col: str = "date"):
+    """
+    Append one row to pipeline_run_log after a successful table write.
+
+    pipeline_run_log is a Delta table in the Hive Metastore — it persists across
+    cluster restarts and accumulates a full history of every pipeline execution.
+    Works on Databricks Community Edition (standard Delta Lake, no premium features needed).
+    """
+    from datetime import datetime, timezone
+    import pyspark.sql.types as T
+
+    schema = T.StructType([
+        T.StructField("run_timestamp", T.TimestampType(), False),
+        T.StructField("stage",         T.StringType(),    False),
+        T.StructField("table_name",    T.StringType(),    False),
+        T.StructField("rows_written",  T.LongType(),      False),
+        T.StructField("date_min",      T.StringType(),    True),
+        T.StructField("date_max",      T.StringType(),    True),
+        T.StructField("status",        T.StringType(),    False),
+    ])
+
+    row_count = df.count()
+    date_min = date_max = None
+    if date_col in df.columns:
+        stats = df.agg(
+            F.min(date_col).cast("string").alias("mn"),
+            F.max(date_col).cast("string").alias("mx"),
+        ).collect()[0]
+        date_min, date_max = stats["mn"], stats["mx"]
+
+    log_row = spark.createDataFrame(
+        [(datetime.now(timezone.utc), stage, table_name, row_count, date_min, date_max, "SUCCESS")],
+        schema=schema,
+    )
+    log_row.write.format("delta").mode("append").saveAsTable("pipeline_run_log")
+    print(f"  [pipeline_run_log] {stage} | {table_name}: {row_count:,} rows | {date_min} → {date_max}")
