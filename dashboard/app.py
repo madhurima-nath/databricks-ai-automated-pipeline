@@ -44,18 +44,23 @@ st.set_page_config(
 
 page = st.sidebar.radio(
     "Navigation",
-    ["Analytics Dashboard", "SAS → PySpark Converter"],
+    ["Home", "Analytics Dashboard", "SAS → PySpark Converter"],
     index=0,
 )
 
 st.sidebar.markdown("---")
 st.sidebar.markdown(
     "**About this app**\n\n"
-    "This is the output of a data engineering pipeline built on Databricks. "
-    "Market data is processed through three layers — Bronze (raw), Silver (cleaned), Gold (analytics-ready) — "
-    "and served here.\n\n"
-    "**Data covers 2010 – June 2026**\n\n"
-    "**Sources:**\n"
+    "Financial institutions have run analytics in SAS for decades. "
+    "Moving to a modern platform like Databricks requires two things: "
+    "a new pipeline, and a way to migrate the old code.\n\n"
+    "This app demonstrates both:\n\n"
+    "**Analytics Dashboard** — 15 years of US and European market data, "
+    "processed through a Databricks medallion pipeline (Bronze → Silver → Gold) "
+    "and ready to explore.\n\n"
+    "**SAS → PySpark Converter** — paste legacy SAS analytics code and get "
+    "the equivalent PySpark or Databricks SQL back automatically.\n\n"
+    "**Data covers 2010 – June 2026**\n"
     "- S&P 500 (US stock index)\n"
     "- Euro Stoxx 50 (European stock index)\n"
     "- VIX (market uncertainty index)\n"
@@ -110,26 +115,75 @@ def _run_status_emoji(life_cycle: str, result: str = "") -> str:
 
 
 # ---------------------------------------------------------------------------
-# Page 1: Analytics Dashboard
+# Home
+# ---------------------------------------------------------------------------
+
+if page == "Home":
+    st.title("Financial Analytics Pipeline on Databricks")
+    st.markdown(
+        "Financial teams at large organisations have been running market analytics in SAS for years. "
+        "Moving those teams to Databricks requires two things: a modern pipeline to replace the old one, "
+        "and a tool to migrate the legacy code. **This project builds both** — and uses real market data to show it working end to end."
+    )
+
+    st.markdown("---")
+    col_a, col_b = st.columns(2)
+
+    with col_a:
+        st.subheader("The Pipeline — Analytics Dashboard")
+        st.markdown(
+            "An end-to-end medallion pipeline on Databricks that ingests 15 years of US and European "
+            "market data and processes it through three Delta Lake layers:\n\n"
+            "- **Bronze** — 5 raw Delta tables: S&P 500, Euro Stoxx 50, VIX, US Fed Funds Rate, ECB Deposit Facility Rate\n"
+            "- **Silver** — data cleaned, quality-checked, and joined into a single daily time series\n"
+            "- **Gold** — analytics-ready metrics: volatility, correlations, drawdown, and regime classifications\n\n"
+            "The Analytics Dashboard shows the Gold layer output — proof the pipeline works on real data."
+        )
+        if st.button("Open Analytics Dashboard →", use_container_width=True):
+            st.session_state["_nav"] = "Analytics Dashboard"
+            st.rerun()
+
+    with col_b:
+        st.subheader("The Migration Tool — SAS → PySpark Converter")
+        st.markdown(
+            "Building a new pipeline is only half the problem. Financial teams also have years of existing "
+            "SAS analytics code that needs to move to Databricks.\n\n"
+            "This converter translates legacy SAS code — PROC SORT, PROC MEANS, PROC SQL, DATA steps — "
+            "into PySpark DataFrame API, Databricks SQL, or dbt YAML automatically. "
+            "Common patterns are handled by a deterministic rule engine; "
+            "complex code falls back to an AI model that converts it and flags anything needing review.\n\n"
+            "It is tested with 23 automated test cases covering every supported SAS pattern."
+        )
+        if st.button("Open SAS → PySpark Converter →", use_container_width=True):
+            st.session_state["_nav"] = "SAS → PySpark Converter"
+            st.rerun()
+
+    st.markdown("---")
+    st.markdown(
+        "**Stack:** Databricks · PySpark · Delta Lake · Python · Streamlit · Anthropic API\n\n"
+        "[View the full project on GitHub ↗](https://github.com/madhurima-nath/databricks-ai-automated-pipeline)"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Page 2: Analytics Dashboard
 # ---------------------------------------------------------------------------
 
 if page == "Analytics Dashboard":
-    st.title("Analytics Dashboard")
+    st.title("Analytics Dashboard — Gold Layer Output")
     st.markdown(
-        "When central banks raise or cut interest rates, stock markets react — "
-        "but not always in the same way or at the same time. "
-        "This dashboard lets you explore that relationship across the US and Europe using 15 years of real market data. "
-        "You can see exactly when markets fell, by how much, and what interest rates were doing at the same time."
+        "The charts below are the output of the **Gold Delta table** on Databricks — "
+        "the final layer of the medallion pipeline. "
+        "Raw market data was ingested as CSV files, written to Bronze Delta tables, "
+        "cleaned and joined in Silver, then transformed into the analytics metrics you see here."
     )
-    with st.expander("What will I learn from this?"):
-        st.markdown(
-            "- Did the US and European markets fall at the same time during major events — or did one hold up while the other dropped?\n"
-            "- When the ECB held interest rates below zero for eight years (2014–2022), how did European stocks behave compared to US stocks?\n"
-            "- How quickly did markets recover after the COVID crash in 2020?\n"
-            "- In 2022, both the US and EU raised rates at the fastest pace in decades — what happened to markets?\n\n"
-            "**Where to start:** Use the date filters below. Each chart builds on the one above — "
-            "start with stock prices, then look at interest rates, then see how much markets were swinging day to day."
-        )
+    st.info(
+        "**What this shows:** How US and European stock markets and central bank interest rates moved together "
+        "over 15 years — and what the pipeline surfaces from that data. "
+        "Use the date filters to zoom into any period. "
+        "Try **March 2020** (COVID crash), **2022** (fastest rate rises in decades), "
+        "or **2014–2022** (ECB held rates below zero for eight years)."
+    )
 
     host      = _secret("DATABRICKS_HOST")
     token     = _secret("DATABRICKS_TOKEN")
@@ -240,6 +294,14 @@ if page == "Analytics Dashboard":
     fig.update_yaxes(title_text="Euro Stoxx 50", secondary_y=True)
     st.plotly_chart(fig, use_container_width=True)
 
+    sp_ret = (d.iloc[-1]["sp500_close"] / d.iloc[0]["sp500_close"] - 1) * 100
+    eu_ret = (d.iloc[-1]["eurostoxx_close"] / d.iloc[0]["eurostoxx_close"] - 1) * 100
+    better = "S&P 500" if sp_ret > eu_ret else "Euro Stoxx 50"
+    st.info(
+        f"**In the selected period:** S&P 500 {sp_ret:+.1f}% · Euro Stoxx 50 {eu_ret:+.1f}%. "
+        f"**{better} outperformed** over this window."
+    )
+
     # --- Chart 2: Central bank rates + differential ---
     st.subheader("Central Bank Policy Rates")
     st.caption(
@@ -254,6 +316,16 @@ if page == "Analytics Dashboard":
     fig2.update_layout(height=300, margin=dict(t=10, b=10),
                        yaxis_title="Rate (%)", legend=dict(orientation="h", y=1.05))
     st.plotly_chart(fig2, use_container_width=True)
+
+    d_rates = d.dropna(subset=["fed_rate", "ecb_rate"])
+    if not d_rates.empty:
+        peak_fed = d_rates["fed_rate"].max()
+        peak_fed_date = d_rates.loc[d_rates["fed_rate"].idxmax(), "date"].strftime("%b %Y")
+        neg_days = int((d_rates["ecb_rate"] < 0).sum())
+        rate_msg = f"**US rates peaked at {peak_fed:.2f}% ({peak_fed_date}) in this period.**"
+        if neg_days > 0:
+            rate_msg += f" The ECB rate was negative on **{neg_days:,} trading days** — European banks were charged to hold cash rather than earning interest on it."
+        st.info(rate_msg)
 
     # --- Chart 3: Volatility ---
     st.subheader("Realised Volatility (annualised)")
@@ -277,6 +349,11 @@ if page == "Analytics Dashboard":
         fig3b.update_layout(title="Euro Stoxx 50", height=280, margin=dict(t=30, b=10))
         st.plotly_chart(fig3b, use_container_width=True)
 
+    d_vol = d.dropna(subset=["sp500_vol_20d"])
+    if not d_vol.empty:
+        peak_row = d_vol.loc[d_vol["sp500_vol_20d"].idxmax()]
+        st.info(f"**Most volatile period in this range:** {peak_row['date'].strftime('%b %Y')} — S&P 500 was swinging roughly **{peak_row['sp500_vol_20d']/16:.1%}** per day on average.")
+
     # --- Chart 4: US–EU correlation ---
     st.subheader("60-Day Rolling Correlation: S&P 500 vs Euro Stoxx 50")
     st.caption(
@@ -291,6 +368,15 @@ if page == "Analytics Dashboard":
     fig4.update_layout(height=260, margin=dict(t=10, b=10), yaxis_title="Correlation", yaxis_range=[-1, 1])
     st.plotly_chart(fig4, use_container_width=True)
 
+    d_corr = d.dropna(subset=["us_eu_equity_corr_60d"])
+    if not d_corr.empty:
+        avg_corr = d_corr["us_eu_equity_corr_60d"].mean()
+        st.info(
+            f"**Average correlation in this period: {avg_corr:.2f}.** "
+            + ("The two markets moved in the same direction on most days — holding both offered limited protection during downturns." if avg_corr > 0.6
+               else "The two markets showed meaningful independence — holding both would have reduced risk compared to holding either alone.")
+        )
+
     # --- Chart 5: S&P 500 drawdown ---
     st.subheader("S&P 500 Drawdown from 52-Week High")
     st.caption(
@@ -303,6 +389,14 @@ if page == "Analytics Dashboard":
                               line=dict(color="#d62728"), fill="tozeroy", fillcolor="rgba(214,39,40,0.15)"))
     fig5.update_layout(height=250, margin=dict(t=10, b=10), yaxis_title="Drawdown (%)")
     st.plotly_chart(fig5, use_container_width=True)
+
+    worst_dd = d["sp500_drawdown_52w"].min()
+    worst_dd_date = d.loc[d["sp500_drawdown_52w"].idxmin(), "date"].strftime("%b %Y")
+    current_dd = d.iloc[-1]["sp500_drawdown_52w"]
+    st.info(
+        f"**Worst drop in this period: {worst_dd:.1f}% ({worst_dd_date}).** "
+        f"Current position: **{current_dd:.1f}%** from its recent high."
+    )
 
     # --- Regime summary ---
     st.subheader("Current Environment")
@@ -328,6 +422,30 @@ if page == "Analytics Dashboard":
     rc2.metric("EU Interest Rate", latest_regime["eu_rate_regime"].capitalize())
     rc3.metric("US vs EU Rates", divergence_labels.get(latest_regime["policy_divergence"], latest_regime["policy_divergence"]))
     rc4.metric("Market Stress", vix_labels.get(latest_regime["vix_regime"], latest_regime["vix_regime"]))
+
+    st.markdown("---")
+    st.subheader("What the pipeline found")
+    st.markdown(
+        "These are the patterns that emerge consistently from the full 2010–2026 dataset — "
+        "the output of running the Gold layer analytics over 15 years of daily market data:"
+    )
+    st.markdown(
+        "**1. US and EU markets crash together.** "
+        "During the COVID crash (March 2020) and the 2022 rate shock, both markets fell simultaneously and by similar amounts. "
+        "Holding both gave little protection when it mattered most — correlation spiked toward 1 on the worst days.\n\n"
+        "**2. The ECB's eight years of negative rates were unprecedented.** "
+        "From 2014 to 2022, the ECB held its deposit rate below zero while the US kept rates near but above zero. "
+        "This was the longest and deepest negative-rate experiment by a major central bank. "
+        "European investors had no risk-free return for nearly a decade.\n\n"
+        "**3. The 2022 rate shock was the sharpest in four decades.** "
+        "Both the Fed and ECB raised rates from near zero to above 4% in roughly 18 months — "
+        "the fastest pace since the early 1980s. Both stock markets fell over 20% and volatility "
+        "reached its highest level since COVID.\n\n"
+        "**4. Recovery from COVID was unusually fast.** "
+        "Both markets recovered their pre-COVID highs within 12 months of the March 2020 crash — "
+        "faster than any comparable drop in the dataset."
+    )
+    st.caption("Data covers 2010 – June 2026. Produced by the Bronze → Silver → Gold medallion pipeline on Databricks.")
 
 
 # ---------------------------------------------------------------------------
@@ -485,16 +603,28 @@ elif page == "Pipeline Control":
 
 elif page == "SAS → PySpark Converter":
     st.title("SAS → PySpark Converter")
-    st.caption(
-        "Converts legacy SAS code to PySpark DataFrame API, Databricks SQL, or dbt YAML. "
-        "Common patterns are handled by rules; complex code uses Claude (claude-haiku-4-5) "
-        "via the Anthropic API."
+    st.markdown(
+        "The **Analytics Dashboard** shows what financial analytics looks like after migrating to Databricks. "
+        "This page shows how to get there."
     )
+    st.markdown(
+        "Many organisations built their financial analytics in SAS years ago. "
+        "Migrating that code to Databricks means rewriting it in PySpark or SQL — "
+        "a slow, error-prone process when done manually. "
+        "This tool automates the translation: paste SAS code, choose a target format, and get working code back."
+    )
+    st.markdown(
+        "**How it works:** Common SAS patterns (sorting, aggregation, filtering, data steps) are converted "
+        "by a built-in rule engine — fast, deterministic, no external calls. "
+        "Code that falls outside the rules is passed to an AI model, which handles more complex patterns "
+        "and flags anything that needs human review."
+    )
+    st.markdown("---")
 
     from converter.sas_to_pyspark import convert
 
     EXAMPLES = {
-        "(none)": "",
+        "(none — paste your own)": "",
         "PROC SORT — sort customers by name": (
             "PROC SORT DATA=customers OUT=customers_sorted;\n"
             "    BY last_name first_name;\n"
@@ -518,58 +648,77 @@ elif page == "SAS → PySpark Converter":
         ),
     }
 
-    col_left, col_right = st.columns(2)
+    st.subheader("Step 1 — Choose an example or paste your own SAS code")
+    example_choice = st.selectbox(
+        "Load a sample pattern",
+        list(EXAMPLES.keys()),
+        help="Select an example to see how the converter works, or choose '(none)' and paste your own code below.",
+    )
+    sas_input = st.text_area(
+        "SAS code",
+        value=EXAMPLES[example_choice],
+        height=200,
+        placeholder="PROC SORT DATA=customers;\n    BY last_name first_name;\nRUN;",
+    )
 
-    with col_left:
-        target = st.selectbox("Target format", ["pyspark", "databricks_sql", "yaml"])
-        example_choice = st.selectbox("Load an example", list(EXAMPLES.keys()))
+    st.subheader("Step 2 — Choose target format and convert")
+    c1, c2 = st.columns([2, 1])
+    with c1:
+        target = st.selectbox(
+            "Convert to",
+            ["pyspark", "databricks_sql", "yaml"],
+            help="PySpark: DataFrame API code · Databricks SQL: SQL statements · YAML: dbt model definition",
+        )
+    with c2:
+        convert_btn = st.button("Convert →", type="primary", use_container_width=True)
+
+    with st.expander("Advanced — Anthropic API key (for complex patterns only)"):
         api_key = st.text_input(
-            "Anthropic API key (for complex patterns)",
+            "API key",
             type="password",
             value=_secret("ANTHROPIC_API_KEY"),
-            help="Required only for patterns not covered by built-in rules. "
-                 "Set ANTHROPIC_API_KEY in Streamlit secrets or .env to avoid pasting it here.",
+            help="Only needed for SAS code that the built-in rules cannot handle. Leave blank to use rules only.",
         )
-        sas_input = st.text_area(
-            "Paste SAS code here",
-            value=EXAMPLES[example_choice],
-            height=320,
-            placeholder="PROC SORT DATA=customers;\n    BY last_name first_name;\nRUN;",
-        )
-        convert_btn = st.button("Convert", type="primary", use_container_width=True)
 
-    with col_right:
-        if convert_btn and sas_input.strip():
-            with st.spinner("Converting..."):
-                result = convert(sas_input, target=target, api_key=api_key or None)
+    st.markdown("---")
+    st.subheader("Step 3 — Converted output")
 
-            st.text_area("Converted code", value=result.output, height=320)
+    if convert_btn and sas_input.strip():
+        with st.spinner("Converting..."):
+            result = convert(sas_input, target=target, api_key=api_key or None)
 
+        st.text_area("", value=result.output, height=250)
+
+        col_n, col_m = st.columns(2)
+        with col_n:
             if result.notes:
-                st.markdown("**Conversion notes:**")
+                st.markdown("**Notes:**")
                 for n in result.notes:
                     st.markdown(f"- {n}")
-
+        with col_m:
             if result.warnings:
-                st.warning("**Review required:**")
+                st.warning("**Needs review:**")
                 for w in result.warnings:
                     st.markdown(f"- {w}")
 
-            st.caption(f"Method: `{result.method}` · Target: `{result.target}`")
+        st.caption(f"Method: `{result.method}` · Target: `{result.target}`")
 
-        elif convert_btn:
-            st.info("Paste some SAS code on the left to convert.")
+    elif convert_btn:
+        st.info("Paste some SAS code above to convert.")
+    else:
+        st.info("Select an example above and click **Convert →** to see the output here.")
 
-    with st.expander("Example SAS patterns and their equivalents"):
+    with st.expander("What SAS patterns are supported?"):
         st.markdown("""
-| SAS construct | PySpark equivalent |
+| SAS construct | Converts to |
 |---|---|
 | `PROC SORT DATA=x; BY col; RUN;` | `x_df.orderBy("col")` |
 | `PROC MEANS DATA=x; CLASS g; VAR v; RUN;` | `x_df.groupBy("g").agg(F.mean("v"))` |
 | `PROC SQL; SELECT ... QUIT;` | `spark.sql("SELECT ...")` |
 | `DATA out; SET in; KEEP a b; RUN;` | `in_df.select("a", "b")` |
 | `IF x > 0 THEN y = 1; ELSE y = 0;` | `.withColumn("y", F.when(x > 0, 1).otherwise(0))` |
-| `RETAIN running_total;` | `F.last(..., True).over(Window.unboundedPreceding...)` |
 | `WHERE date = TODAY();` | `.filter(F.col("date") == F.current_date())` |
 | `RENAME old=new;` | `.withColumnRenamed("old", "new")` |
+
+Patterns not in this list are handled by the AI fallback, which will flag anything requiring manual review.
         """)
