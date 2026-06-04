@@ -149,12 +149,6 @@ if page == "Home":
 
     st.markdown("---")
 
-    CARD_STYLE = (
-        "background:#F8FAFC;border:1px solid #E2E8F0;"
-        "border-top:3px solid #3B82F6;border-radius:10px;"
-        "padding:22px 24px;height:100%;box-sizing:border-box;"
-    )
-
     col_a, col_b = st.columns(2)
 
     CARD = (
@@ -325,17 +319,17 @@ if page == "Analytics Dashboard":
     st.subheader("Current Environment")
     st.caption("Where things stand as of the last pipeline run — interest rate regimes and market stress level.")
     divergence_labels = {
-        "us_significantly_higher": "US rates much higher than EU",
-        "us_higher": "US rates higher than EU",
-        "eu_higher": "EU rates higher than US",
-        "aligned": "US and EU rates roughly equal",
+        "us_significantly_higher": "US >> EU",
+        "us_higher": "US > EU",
+        "eu_higher": "EU > US",
+        "aligned": "Aligned",
     }
     vix_labels = {"calm": "Calm", "elevated": "Elevated", "stress": "Stress"}
     rc1, rc2, rc3, rc4 = st.columns(4)
-    rc1.metric("US Interest Rate", latest["us_rate_regime"].capitalize())
-    rc2.metric("EU Interest Rate", latest["eu_rate_regime"].capitalize())
-    rc3.metric("US vs EU Rates",   divergence_labels.get(latest["policy_divergence"], latest["policy_divergence"]))
-    rc4.metric("Market Stress",    vix_labels.get(latest["vix_regime"], latest["vix_regime"]))
+    rc1.metric("US Rate Regime",  latest["us_rate_regime"].capitalize())
+    rc2.metric("EU Rate Regime",  latest["eu_rate_regime"].capitalize())
+    rc3.metric("US vs EU Rates",  divergence_labels.get(latest["policy_divergence"], latest["policy_divergence"]))
+    rc4.metric("Market Stress",   vix_labels.get(latest["vix_regime"], latest["vix_regime"]))
 
     st.markdown("---")
 
