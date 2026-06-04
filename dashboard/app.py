@@ -207,6 +207,11 @@ if page == "Analytics Dashboard":
 
     # --- Chart 1: Equity indices ---
     st.subheader("Equity Indices")
+    st.caption(
+        "Daily closing prices for the S&P 500 (US, left axis) and Euro Stoxx 50 (EU, right axis). "
+        "The two axes are scaled independently so the shape of each index is visible — "
+        "the gap in levels does not mean one market outperformed the other."
+    )
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     fig.add_trace(go.Scatter(x=d["date"], y=d["sp500_close"],     name="S&P 500",      line=dict(color="#1f77b4")), secondary_y=False)
     fig.add_trace(go.Scatter(x=d["date"], y=d["eurostoxx_close"], name="Euro Stoxx 50", line=dict(color="#ff7f0e")), secondary_y=True)
@@ -217,6 +222,11 @@ if page == "Analytics Dashboard":
 
     # --- Chart 2: Central bank rates + differential ---
     st.subheader("Central Bank Policy Rates")
+    st.caption(
+        "The US Federal Reserve sets the Fed Funds Rate; the European Central Bank sets the ECB Deposit Facility Rate. "
+        "The dotted line shows the differential (US minus ECB) — positive values mean US rates are higher. "
+        "The ECB rate was negative from 2014 to 2022, meaning banks were charged to park cash overnight."
+    )
     fig2 = go.Figure()
     fig2.add_trace(go.Scatter(x=d["date"], y=d["fed_rate"],         name="US Fed Funds Rate",       line=dict(color="#1f77b4")))
     fig2.add_trace(go.Scatter(x=d["date"], y=d["ecb_rate"],         name="ECB Deposit Rate",        line=dict(color="#ff7f0e")))
@@ -227,6 +237,12 @@ if page == "Analytics Dashboard":
 
     # --- Chart 3: Volatility ---
     st.subheader("Realised Volatility (annualised)")
+    st.caption(
+        "Realised volatility measures how much daily returns varied over a rolling window — "
+        "20 trading days (~1 month) and 60 trading days (~3 months) — scaled to an annual figure. "
+        "Higher values mean more turbulence. The VIX (divided by 100) is overlaid on the S&P 500 panel: "
+        "VIX above 20 signals elevated uncertainty; above 30 is typically associated with market stress."
+    )
     col_a, col_b = st.columns(2)
     with col_a:
         fig3a = go.Figure()
@@ -244,6 +260,11 @@ if page == "Analytics Dashboard":
 
     # --- Chart 4: US–EU correlation ---
     st.subheader("60-Day Rolling Correlation: S&P 500 vs Euro Stoxx 50")
+    st.caption(
+        "Correlation ranges from −1 to +1. A value near +1 means US and EU markets moved in the same direction "
+        "on most days over the past 60 trading days. A value near 0 means they moved independently. "
+        "High correlation reduces the diversification benefit of holding both markets."
+    )
     fig4 = go.Figure()
     fig4.add_trace(go.Scatter(x=d["date"], y=d["us_eu_equity_corr_60d"], name="Return correlation",
                               line=dict(color="#9467bd"), fill="tozeroy", fillcolor="rgba(148,103,189,0.1)"))
@@ -253,6 +274,11 @@ if page == "Analytics Dashboard":
 
     # --- Chart 5: S&P 500 drawdown ---
     st.subheader("S&P 500 Drawdown from 52-Week High")
+    st.caption(
+        "How far the S&P 500 is below its highest closing price in the past 52 weeks, expressed as a percentage. "
+        "A drawdown of −20% or worse is commonly called a bear market. "
+        "A reading near 0% means the index is close to its recent peak."
+    )
     fig5 = go.Figure()
     fig5.add_trace(go.Scatter(x=d["date"], y=d["sp500_drawdown_52w"], name="Drawdown %",
                               line=dict(color="#d62728"), fill="tozeroy", fillcolor="rgba(214,39,40,0.15)"))
@@ -261,6 +287,11 @@ if page == "Analytics Dashboard":
 
     # --- Regime summary ---
     st.subheader("Current Regimes")
+    st.caption(
+        "A snapshot of the current market environment based on the most recent day in the selected range. "
+        "Rate regimes (low / medium / high / negative) are based on the absolute level of each central bank rate. "
+        "Policy divergence reflects the US−ECB rate gap. VIX regime classifies market stress: calm (<20), elevated (20–30), stress (>30)."
+    )
     regime_cols = ["us_rate_regime", "eu_rate_regime", "policy_divergence", "vix_regime"]
     st.dataframe(
         d[regime_cols + ["date"]].tail(1).set_index("date").T.rename(columns=lambda c: str(c.date())),
