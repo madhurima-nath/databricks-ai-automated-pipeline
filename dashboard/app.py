@@ -1,10 +1,9 @@
 """
 Streamlit Dashboard — Financial Analytics Pipeline on Databricks
 =====================================================
-Three pages:
+Two pages:
   1. Analytics Dashboard     — equity indices, rates, volatility, regimes (reads live from Databricks)
-  2. Pipeline Control        — trigger and monitor Bronze→Silver→Gold jobs on Databricks
-  3. SAS → PySpark Converter — convert legacy SAS code to PySpark or Databricks SQL
+  2. SAS → PySpark Converter — convert legacy SAS code to PySpark or Databricks SQL
 
 Run locally:
     streamlit run dashboard/app.py
@@ -196,9 +195,11 @@ if page == "Home":
 # ---------------------------------------------------------------------------
 
 if page == "Analytics Dashboard":
-    if st.button("← Home", key="home_from_analytics"):
-        st.session_state["_nav_target"] = "Home"
-        st.rerun()
+    _bk, _ = st.columns([1, 5])
+    with _bk:
+        if st.button("← Home", key="home_from_analytics", use_container_width=True):
+            st.session_state["_nav_target"] = "Home"
+            st.rerun()
     st.title("Analytics Dashboard")
     st.markdown(
         "**Bronze** ingests raw market data into Delta tables. "
@@ -260,7 +261,7 @@ if page == "Analytics Dashboard":
                 )
             else:
                 st.error(f"Could not load data from Databricks: {err_msg}")
-            if st.button("← Back to Home"):
+            if st.button("← Home"):
                 st.session_state["_nav_target"] = "Home"
                 st.rerun()
             st.stop()
@@ -491,9 +492,11 @@ if page == "Analytics Dashboard":
 # ---------------------------------------------------------------------------
 
 elif page == "SAS → PySpark Converter":
-    if st.button("← Home", key="home_from_converter"):
-        st.session_state["_nav_target"] = "Home"
-        st.rerun()
+    _bk, _ = st.columns([1, 5])
+    with _bk:
+        if st.button("← Home", key="home_from_converter", use_container_width=True):
+            st.session_state["_nav_target"] = "Home"
+            st.rerun()
     st.title("SAS → PySpark Converter")
     st.markdown(
         "Paste legacy SAS code and get the equivalent PySpark, Databricks SQL, or dbt YAML back automatically. "
