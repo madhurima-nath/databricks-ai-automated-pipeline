@@ -382,22 +382,17 @@ elif page == "Pipeline Control":
                     })
                 st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
 
-                # --- Task breakdown for selected run ---
-                select_run_id = st.selectbox(
-                    "View task details",
-                    [r["run_id"] for r in runs],
-                    index=0,
-                    format_func=str,
-                )
+                # --- Task breakdown for most recent run (always shown) ---
+                latest_run_id = runs[0]["run_id"]
                 run_detail, detail_err = _db_api(
-                    "get", f"2.1/jobs/runs/get?run_id={select_run_id}", host, token
+                    "get", f"2.1/jobs/runs/get?run_id={latest_run_id}", host, token
                 )
                 if detail_err:
                     st.error(f"Could not fetch run details: {detail_err}")
                 elif run_detail:
                     tasks = run_detail.get("tasks", [])
                     if tasks:
-                        st.markdown("**Task breakdown**")
+                        st.markdown("**Latest run — task breakdown**")
                         task_rows = []
                         for t in tasks:
                             ts  = t["state"]
@@ -412,7 +407,7 @@ elif page == "Pipeline Control":
                             })
                         st.dataframe(pd.DataFrame(task_rows), use_container_width=True, hide_index=True)
 
-                    run_url = f"{host}/#job/{job_id}/run/{select_run_id}"
+                    run_url = f"{host}/#job/{job_id}/run/{latest_run_id}"
                     st.markdown(f"[Open in Databricks UI ↗]({run_url})")
 
         st.markdown("---")
@@ -436,10 +431,36 @@ elif page == "SAS → PySpark Converter":
 
     from converter.sas_to_pyspark import convert
 
+    EXAMPLES = {
+        "(none)": "",
+        "PROC SORT — sort customers by name": (
+            "PROC SORT DATA=customers OUT=customers_sorted;\n"
+            "    BY last_name first_name;\n"
+            "RUN;"
+        ),
+        "PROC MEANS — regional sales summary": (
+            "PROC MEANS DATA=sales MEAN STD MIN MAX;\n"
+            "    CLASS region;\n"
+            "    VAR revenue units;\n"
+            "RUN;"
+        ),
+        "DATA step — tiering with IF-THEN-ELSE": (
+            "DATA output;\n"
+            "    SET input;\n"
+            "    IF revenue > 1000000 THEN tier = 'platinum';\n"
+            "    ELSE IF revenue > 500000 THEN tier = 'gold';\n"
+            "    ELSE tier = 'standard';\n"
+            "    WHERE year = YEAR(TODAY());\n"
+            "    KEEP customer_id revenue tier;\n"
+            "RUN;"
+        ),
+    }
+
     col_left, col_right = st.columns(2)
 
     with col_left:
         target = st.selectbox("Target format", ["pyspark", "databricks_sql", "yaml"])
+        example_choice = st.selectbox("Load an example", list(EXAMPLES.keys()))
         api_key = st.text_input(
             "Anthropic API key (for complex patterns)",
             type="password",
@@ -449,6 +470,7 @@ elif page == "SAS → PySpark Converter":
         )
         sas_input = st.text_area(
             "Paste SAS code here",
+            value=EXAMPLES[example_choice],
             height=320,
             placeholder="PROC SORT DATA=customers;\n    BY last_name first_name;\nRUN;",
         )
