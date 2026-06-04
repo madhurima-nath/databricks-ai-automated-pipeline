@@ -66,6 +66,10 @@ st.markdown("""
 # Sidebar navigation
 # ---------------------------------------------------------------------------
 
+# Apply any pending navigation before the radio widget renders
+if st.session_state.get("_nav_target"):
+    st.session_state["nav_page"] = st.session_state.pop("_nav_target")
+
 page = st.sidebar.radio(
     "Navigation",
     ["Home", "Analytics Dashboard", "SAS → PySpark Converter"],
@@ -133,37 +137,51 @@ def _run_status_emoji(life_cycle: str, result: str = "") -> str:
 # ---------------------------------------------------------------------------
 
 if page == "Home":
+    st.title("Financial Analytics Pipeline on Databricks")
     st.markdown(
-        '<h1 style="margin-bottom:4px;">Financial Analytics Pipeline on Databricks</h1>',
-        unsafe_allow_html=True,
-    )
-    st.markdown(
-        '<p style="font-size:1.1em;color:#555;margin-top:0;">How financial teams move from SAS to Databricks — '
-        'a working pipeline on real market data, and a tool to migrate the legacy code.</p>',
-        unsafe_allow_html=True,
+        "How financial teams move from SAS to Databricks: "
+        "a working pipeline on real market data, and a tool to migrate the legacy code."
     )
 
     st.markdown("---")
+
+    CARD_STYLE = (
+        "background:#F8FAFC;border:1px solid #E2E8F0;"
+        "border-top:3px solid #3B82F6;border-radius:10px;"
+        "padding:22px 24px;height:100%;box-sizing:border-box;"
+    )
+
     col_a, col_b = st.columns(2)
 
     with col_a:
         st.markdown(
-            """
-            <div style="background:linear-gradient(135deg,#EFF6FF,#DBEAFE);
-                        border-top:4px solid #2563EB;border-radius:10px;padding:22px 24px;">
-                <h3 style="color:#1D4ED8;margin-top:0;">The Pipeline</h3>
-                <p style="color:#374151;margin-bottom:14px;">
+            f"""
+            <div style="{CARD_STYLE}">
+                <h3 style="color:#1E3A5F;margin-top:0;">The Pipeline</h3>
+                <p style="color:#374151;margin-bottom:16px;">
                     15 years of US and European market data, processed on Databricks through three Delta Lake layers:
                 </p>
-                <p style="line-height:2.4;margin:0;">
-                    <span style="background:#7C3D12;color:white;padding:3px 10px;border-radius:4px;font-size:0.85em;">Bronze</span>
-                    &nbsp;5 raw tables — S&amp;P 500, Euro Stoxx 50, VIX, US Fed Rate, ECB Rate<br>
-                    <span style="background:#475569;color:white;padding:3px 10px;border-radius:4px;font-size:0.85em;">Silver</span>
-                    &nbsp;Cleaned, quality-checked, joined into a daily time series<br>
-                    <span style="background:#B45309;color:white;padding:3px 10px;border-radius:4px;font-size:0.85em;">Gold</span>
-                    &nbsp;Volatility, correlations, drawdown, regime classifications
-                </p>
-                <p style="color:#374151;margin-top:14px;margin-bottom:0;">
+                <table style="border-collapse:collapse;width:100%;font-size:0.9em;">
+                    <tr style="vertical-align:top;">
+                        <td style="padding:4px 10px 4px 0;white-space:nowrap;">
+                            <span style="background:#7C3D12;color:white;padding:2px 9px;border-radius:4px;">Bronze</span>
+                        </td>
+                        <td style="padding:4px 0;color:#374151;">S&amp;P 500, Euro Stoxx 50, VIX, US Fed Rate, ECB Rate — 5 raw Delta tables</td>
+                    </tr>
+                    <tr style="vertical-align:top;">
+                        <td style="padding:4px 10px 4px 0;white-space:nowrap;">
+                            <span style="background:#475569;color:white;padding:2px 9px;border-radius:4px;">Silver</span>
+                        </td>
+                        <td style="padding:4px 0;color:#374151;">Cleaned, quality-checked, joined into a daily time series</td>
+                    </tr>
+                    <tr style="vertical-align:top;">
+                        <td style="padding:4px 10px 4px 0;white-space:nowrap;">
+                            <span style="background:#B45309;color:white;padding:2px 9px;border-radius:4px;">Gold</span>
+                        </td>
+                        <td style="padding:4px 0;color:#374151;">Volatility, correlations, drawdown, regime classifications</td>
+                    </tr>
+                </table>
+                <p style="color:#374151;margin-top:16px;margin-bottom:0;">
                     The Analytics Dashboard shows the Gold layer output on real data.
                 </p>
             </div>
@@ -171,23 +189,22 @@ if page == "Home":
             unsafe_allow_html=True,
         )
         st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
-        if st.button("Open Analytics Dashboard →", use_container_width=True, type="primary"):
-            st.session_state["nav_page"] = "Analytics Dashboard"
+        if st.button("Open Analytics Dashboard →", use_container_width=True):
+            st.session_state["_nav_target"] = "Analytics Dashboard"
             st.rerun()
 
     with col_b:
         st.markdown(
-            """
-            <div style="background:linear-gradient(135deg,#F0FDF4,#DCFCE7);
-                        border-top:4px solid #16A34A;border-radius:10px;padding:22px 24px;">
-                <h3 style="color:#15803D;margin-top:0;">The Migration Tool</h3>
+            f"""
+            <div style="{CARD_STYLE}">
+                <h3 style="color:#1E3A5F;margin-top:0;">The Migration Tool</h3>
                 <p style="color:#374151;margin-bottom:14px;">
                     Financial teams have years of SAS analytics code that needs to move to Databricks.
                     This converter translates legacy SAS into PySpark or Databricks SQL automatically.
                 </p>
                 <p style="color:#374151;margin-bottom:14px;">
                     Paste SAS code, choose a target format, get working code back.
-                    Common patterns are handled by a rule engine — complex code falls back to an AI model
+                    Common patterns are handled by a rule engine; complex code falls back to an AI model
                     that flags anything needing review.
                 </p>
                 <p style="color:#374151;margin:0;">
@@ -198,15 +215,14 @@ if page == "Home":
             unsafe_allow_html=True,
         )
         st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
-        if st.button("Open SAS to PySpark Converter →", use_container_width=True, type="primary"):
-            st.session_state["nav_page"] = "SAS → PySpark Converter"
+        if st.button("Open SAS to PySpark Converter →", use_container_width=True):
+            st.session_state["_nav_target"] = "SAS → PySpark Converter"
             st.rerun()
 
     st.markdown("---")
-    st.markdown(
-        '<p style="color:#888;font-size:0.9em;">Stack: Databricks · PySpark · Delta Lake · Python · Streamlit · Anthropic API &nbsp;|&nbsp; '
-        '<a href="https://github.com/madhurima-nath/databricks-ai-automated-pipeline" target="_blank">View on GitHub ↗</a></p>',
-        unsafe_allow_html=True,
+    st.caption(
+        "Databricks · PySpark · Delta Lake · Python · Streamlit · Claude AI  |  "
+        "[View on GitHub ↗](https://github.com/madhurima-nath/databricks-ai-automated-pipeline)"
     )
 
 
@@ -277,6 +293,9 @@ if page == "Analytics Dashboard":
                 )
             else:
                 st.error(f"Could not load data from Databricks: {err_msg}")
+            if st.button("← Back to Home"):
+                st.session_state["_nav_target"] = "Home"
+                st.rerun()
             st.stop()
 
     if df is None or df.empty:
