@@ -226,8 +226,10 @@ if page == "Home":
 if page == "Analytics Dashboard":
     st.title("Analytics Dashboard")
     st.markdown(
-        "How US and European markets and interest rates moved over 15 years — "
-        "pulled from the Databricks pipeline and ready to explore. "
+        "These charts show the output of the **Gold Delta table** on Databricks — "
+        "the final step of the medallion pipeline. "
+        "Raw market data was ingested into Bronze, cleaned and joined in Silver, "
+        "then transformed into the analytics metrics you see here. "
         "Use the date filters to zoom into any period."
     )
     st.info(
