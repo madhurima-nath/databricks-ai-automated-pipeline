@@ -226,11 +226,6 @@ if page == "Analytics Dashboard":
         "**Gold** computes the analytics metrics — rolling volatility, correlations, drawdown, and regime classifications. "
         "The patterns and charts below are the output of that pipeline."
     )
-    st.info(
-        "Try **March 2020** (COVID crash), **2022** (fastest rate rises in decades), "
-        "or **2014–2022** (ECB held rates below zero for eight years)."
-    )
-
     host      = _secret("DATABRICKS_HOST")
     token     = _secret("DATABRICKS_TOKEN")
     http_path = _secret("DATABRICKS_HTTP_PATH")
@@ -364,7 +359,10 @@ if page == "Analytics Dashboard":
 
     st.markdown("---")
     st.subheader("Explore the data")
-    st.caption("Use the date filters to zoom in. Try March 2020 (COVID crash), 2022 (rate shock), or 2014–2022 (ECB negative rates).")
+    st.info(
+        "Try **March 2020** (COVID crash), **2022** (fastest rate rises in decades), "
+        "or **2014–2022** (ECB held rates below zero for eight years)."
+    )
 
     # --- Date filter ---
     col1, col2 = st.columns(2)
