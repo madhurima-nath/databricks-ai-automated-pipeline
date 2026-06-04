@@ -64,13 +64,16 @@ run_quality_checks(ecb,       "bronze_ecb_rate", min_rows=100,  null_cols=["ecb_
 # COMMAND ----------
 
 fill_window = Window.orderBy("date").rowsBetween(Window.unboundedPreceding, Window.currentRow)
+back_window = Window.orderBy("date").rowsBetween(Window.currentRow, Window.unboundedFollowing)
 
 def forward_fill_rate(daily_df, monthly_df, rate_col):
-    """Left-join monthly rate onto daily date spine, then forward-fill nulls."""
+    """Left-join monthly rate onto daily date spine, forward-fill, then backward-fill.
+    Backward-fill handles leading nulls when the first rate date falls on a non-trading day."""
     joined = daily_df.join(monthly_df, on="date", how="left")
-    return joined.withColumn(
-        rate_col,
-        F.last(F.col(rate_col), ignorenulls=True).over(fill_window)
+    return (
+        joined
+        .withColumn(rate_col, F.last(F.col(rate_col),  ignorenulls=True).over(fill_window))
+        .withColumn(rate_col, F.first(F.col(rate_col), ignorenulls=True).over(back_window))
     )
 
 sp500_with_rates = forward_fill_rate(sp500, fed, "fed_rate")
