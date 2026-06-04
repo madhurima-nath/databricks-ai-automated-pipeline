@@ -686,19 +686,19 @@ elif page == "SAS → PySpark Converter":
     from converter.sas_to_pyspark import convert
 
     EXAMPLES = {
-        "(none — paste your own)": "",
-        "PROC SORT — sort customers by name": (
+        "Paste your own SAS code": "",
+        "PROC SORT: sort customers by name": (
             "PROC SORT DATA=customers OUT=customers_sorted;\n"
             "    BY last_name first_name;\n"
             "RUN;"
         ),
-        "PROC MEANS — regional sales summary": (
+        "PROC MEANS: regional sales summary": (
             "PROC MEANS DATA=sales MEAN STD MIN MAX;\n"
             "    CLASS region;\n"
             "    VAR revenue units;\n"
             "RUN;"
         ),
-        "DATA step — tiering with IF-THEN-ELSE": (
+        "DATA step: customer tiering with IF-THEN-ELSE": (
             "DATA output;\n"
             "    SET input;\n"
             "    IF revenue > 1000000 THEN tier = 'platinum';\n"
@@ -711,18 +711,15 @@ elif page == "SAS → PySpark Converter":
     }
 
     st.info(
-        "**The three examples below work without any API key** — they are converted by a built-in rule engine "
-        "and the output is accurate. The same applies to any custom SAS code that uses standard PROC or DATA step patterns.\n\n"
-        "If you paste SAS code that falls outside the supported patterns, the converter needs an Anthropic API key "
-        "to attempt a conversion (enter it in the Advanced section below). "
-        "Without a key, unrecognised patterns return a placeholder comment rather than working code."
+        "The three examples convert accurately without any API key — handled by a built-in rule engine. "
+        "For custom SAS code outside the supported patterns, enter your own Anthropic API key in the Advanced section below. "
+        "Without one, unrecognised patterns return a placeholder comment."
     )
 
     st.subheader("Step 1: Choose an example or paste your own SAS code")
     example_choice = st.selectbox(
-        "Load a sample pattern",
+        "Select an example or start from scratch",
         list(EXAMPLES.keys()),
-        help="Select an example to see how the converter works, or choose '(none)' and paste your own code below.",
     )
     sas_input = st.text_area(
         "SAS code",
