@@ -314,7 +314,7 @@ if page == "Analytics Dashboard":
     st.markdown("---")
 
     # --- Pipeline output: current classifications ---
-    st.subheader("What the pipeline classifies today")
+    st.subheader("Current Market Regimes")
     st.caption(f"Gold layer output · {latest['date'].strftime('%d %b %Y')}")
     divergence_labels = {
         "us_significantly_higher": "US >> EU",
