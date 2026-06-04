@@ -22,15 +22,32 @@
 
 # COMMAND ----------
 
+import glob
+import os
 import pandas as pd
 from pyspark.sql import functions as F
 from pyspark.sql.types import DateType, DoubleType
 
-# Derive the repo root from this notebook's path in Databricks Repos
-_nb_path  = dbutils.notebook.getContext().notebookPath().get()
-# _nb_path = /Repos/<email>/databricks-ai-automated-pipeline/notebooks/01_bronze_ingest
-_repo_root = "/Workspace/" + "/".join(_nb_path.lstrip("/").split("/")[:-2])
-DATA_DIR   = _repo_root + "/data/raw"
+# Locate data/raw — works on serverless where notebookPath() is unavailable
+DATA_DIR = None
+
+# Method 1: notebook context (classic compute)
+try:
+    _nb_path = dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get()
+    _root    = "/Workspace/" + "/".join(_nb_path.lstrip("/").split("/")[:-2])
+    if os.path.exists(_root + "/data/raw"):
+        DATA_DIR = _root + "/data/raw"
+except Exception:
+    pass
+
+# Method 2: search Repos by repo name (serverless)
+if not DATA_DIR:
+    matches = glob.glob("/Workspace/Repos/*/databricks-ai-automated-pipeline/data/raw")
+    if matches:
+        DATA_DIR = matches[0]
+
+if not DATA_DIR:
+    raise RuntimeError("Cannot find data/raw. Pull the latest repo changes in Databricks Repos.")
 
 print(f"Reading CSVs from: {DATA_DIR}")
 
