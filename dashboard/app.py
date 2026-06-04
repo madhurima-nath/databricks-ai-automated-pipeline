@@ -499,10 +499,9 @@ elif page == "SAS → PySpark Converter":
             st.rerun()
     st.title("SAS → PySpark Converter")
     st.markdown(
-        "Paste legacy SAS code and get the equivalent PySpark or Databricks SQL back automatically. "
-        "Common patterns — PROC SORT, PROC MEANS, DATA steps — are handled by a built-in rule engine: "
-        "deterministic, no API key needed, same output every time. "
-        "SAS code the rule engine does not recognise is sent to Claude AI, which converts it and adds a note on anything that needs a human check."
+        "Paste legacy SAS code and get the equivalent PySpark or Databricks SQL back. "
+        "Common patterns — PROC SORT, PROC MEANS, DATA steps — are handled by a built-in rule engine with no API key needed. "
+        "Anything outside those patterns is sent to Claude AI."
     )
     st.markdown("---")
 
@@ -534,14 +533,13 @@ elif page == "SAS → PySpark Converter":
     }
 
     st.info(
-        "The three examples convert accurately without any API key — handled by a built-in rule engine. "
-        "For custom SAS code outside the supported patterns, enter your own Anthropic API key in the Advanced section below. "
-        "Without one, unrecognised patterns return a placeholder comment."
+        "The three examples work without an API key. "
+        "To convert your own SAS code that falls outside the supported patterns, "
+        "add your Anthropic API key in the Advanced section below."
     )
 
-    st.subheader("Step 1: Choose an example or paste your own SAS code")
     example_choice = st.selectbox(
-        "Select an example or start from scratch",
+        "Choose an example or paste your own",
         list(EXAMPLES.keys()),
     )
     sas_input = st.text_area(
@@ -551,7 +549,6 @@ elif page == "SAS → PySpark Converter":
         placeholder="PROC SORT DATA=customers;\n    BY last_name first_name;\nRUN;",
     )
 
-    st.subheader("Step 2: Choose target format and convert")
     c1, c2 = st.columns([2, 1])
     with c1:
         target = st.selectbox(
@@ -562,22 +559,21 @@ elif page == "SAS → PySpark Converter":
     with c2:
         convert_btn = st.button("Convert →", type="primary", use_container_width=True)
 
-    with st.expander("Advanced: Anthropic API key (for complex patterns outside the rule engine)"):
+    with st.expander("Advanced: Anthropic API key (for patterns outside the rule engine)"):
         api_key = st.text_input(
             "API key",
             type="password",
             value=_secret("ANTHROPIC_API_KEY"),
-            help="Only needed for SAS code the built-in rules cannot handle. The three built-in examples do not need this.",
+            help="Only needed for SAS code the built-in rules cannot handle.",
         )
 
     st.markdown("---")
-    st.subheader("Step 3: Converted output")
 
     if convert_btn and sas_input.strip():
         with st.spinner("Converting..."):
             result = convert(sas_input, target=target, api_key=api_key or None)
 
-        st.text_area("", value=result.output, height=250)
+        st.text_area("Output", value=result.output, height=250)
 
         col_n, col_m = st.columns(2)
         with col_n:
