@@ -121,7 +121,7 @@ if page == "Home":
                 <div style="font-size:0.9em;">
                     <div style="display:flex;align-items:flex-start;padding:5px 0;gap:10px;">
                         <span style="background:#7C3D12;{BADGE}">Bronze</span>
-                        <span style="color:#374151;flex:1;">5 raw Delta tables: S&amp;P 500, Euro Stoxx 50, VIX, US Fed Rate, ECB Rate</span>
+                        <span style="color:#374151;flex:1;">S&amp;P 500 · Euro Stoxx 50 · VIX · Fed Rate · ECB Rate</span>
                     </div>
                     <div style="display:flex;align-items:flex-start;padding:5px 0;gap:10px;">
                         <span style="background:#475569;{BADGE}">Silver</span>
