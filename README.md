@@ -41,7 +41,7 @@ External APIs
               └───────┬────────┘
                       │
               ┌───────▼────────┐
-              │   Dashboard    │  Streamlit — Analytics Dashboard · Pipeline Control · SAS Converter
+              │   Dashboard    │  Streamlit — Home · Analytics Dashboard · SAS → PySpark Converter
               └────────────────┘
 ```
 
@@ -230,7 +230,7 @@ pytest tests/ -v
 python scripts/run_pipeline.py --job-id 12345
 ```
 
-Or use the **Pipeline Control** page in the Streamlit dashboard to trigger and monitor stages from a browser.
+The Streamlit dashboard is at [financial-analytics-databricks.streamlit.app](https://financial-analytics-databricks.streamlit.app).
 
 ---
 
@@ -259,11 +259,6 @@ Task results:
   ✅  silver_transform               SUCCESS       56s
   ✅  gold_analytics                 SUCCESS       48s
 ```
-
-### Via Streamlit dashboard
-
-Open the **Pipeline Control** page, fill in your workspace host, token, and job ID, then click
-**Run full pipeline**. The page shows task-level status and links directly to the Databricks run UI.
 
 ---
 

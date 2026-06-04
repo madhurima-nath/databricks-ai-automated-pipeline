@@ -49,24 +49,13 @@ page = st.sidebar.radio(
 )
 
 st.sidebar.markdown("---")
+st.sidebar.markdown("**Data** · 2010 – June 2026")
+st.sidebar.caption(
+    "S&P 500 · Euro Stoxx 50 · VIX\n"
+    "US Fed Rate · ECB Rate"
+)
 st.sidebar.markdown(
-    "**About this app**\n\n"
-    "Financial institutions have run analytics in SAS for decades. "
-    "Moving to a modern platform like Databricks requires two things: "
-    "a new pipeline, and a way to migrate the old code.\n\n"
-    "This app demonstrates both:\n\n"
-    "**Analytics Dashboard** — 15 years of US and European market data, "
-    "processed through a Databricks medallion pipeline (Bronze → Silver → Gold) "
-    "and ready to explore.\n\n"
-    "**SAS → PySpark Converter** — paste legacy SAS analytics code and get "
-    "the equivalent PySpark or Databricks SQL back automatically.\n\n"
-    "**Data covers 2010 – June 2026**\n"
-    "- S&P 500 (US stock index)\n"
-    "- Euro Stoxx 50 (European stock index)\n"
-    "- VIX (market uncertainty index)\n"
-    "- US Federal Funds Rate\n"
-    "- ECB Deposit Facility Rate\n\n"
-    "[View project on GitHub ↗](https://github.com/madhurima-nath/databricks-ai-automated-pipeline)"
+    "[View on GitHub ↗](https://github.com/madhurima-nath/databricks-ai-automated-pipeline)"
 )
 
 
