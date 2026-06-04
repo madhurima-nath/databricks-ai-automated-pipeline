@@ -710,6 +710,14 @@ elif page == "SAS → PySpark Converter":
         ),
     }
 
+    st.info(
+        "**The three examples below work without any API key** — they are converted by a built-in rule engine "
+        "and the output is accurate. The same applies to any custom SAS code that uses standard PROC or DATA step patterns.\n\n"
+        "If you paste SAS code that falls outside the supported patterns, the converter needs an Anthropic API key "
+        "to attempt a conversion (enter it in the Advanced section below). "
+        "Without a key, unrecognised patterns return a placeholder comment rather than working code."
+    )
+
     st.subheader("Step 1: Choose an example or paste your own SAS code")
     example_choice = st.selectbox(
         "Load a sample pattern",
@@ -734,12 +742,12 @@ elif page == "SAS → PySpark Converter":
     with c2:
         convert_btn = st.button("Convert →", type="primary", use_container_width=True)
 
-    with st.expander("Advanced — Anthropic API key (for complex patterns only)"):
+    with st.expander("Advanced: Anthropic API key (for complex patterns outside the rule engine)"):
         api_key = st.text_input(
             "API key",
             type="password",
             value=_secret("ANTHROPIC_API_KEY"),
-            help="Only needed for SAS code that the built-in rules cannot handle. Leave blank to use rules only.",
+            help="Only needed for SAS code the built-in rules cannot handle. The three built-in examples do not need this.",
         )
 
     st.markdown("---")
