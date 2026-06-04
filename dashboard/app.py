@@ -44,14 +44,20 @@ st.set_page_config(
 
 page = st.sidebar.radio(
     "Navigation",
-    ["Analytics Dashboard", "Pipeline Control", "SAS → PySpark Converter"],
+    ["Analytics Dashboard", "SAS → PySpark Converter"],
     index=0,
 )
 
 st.sidebar.markdown("---")
 st.sidebar.markdown(
-    "**Data sources:** S&P 500, Euro Stoxx 50, VIX (Yahoo Finance) · "
-    "US Fed Funds Rate, ECB Deposit Facility Rate (FRED)"
+    "**About this app**\n\n"
+    "This is the output of a data engineering pipeline built on Databricks. "
+    "Market data from Yahoo Finance and FRED (the US Federal Reserve's public data service) is processed through three layers — "
+    "Bronze (raw), Silver (cleaned and joined), Gold (analytics-ready) — "
+    "and served here for exploration.\n\n"
+    "**Data:** S&P 500 (US stocks) · Euro Stoxx 50 (European stocks) · VIX (market uncertainty index) · US Fed Funds Rate · ECB Deposit Facility Rate\n\n"
+    "**Period:** 2010 to present\n\n"
+    "[View project on GitHub ↗](https://github.com/madhurima-nath/databricks-ai-automated-pipeline)"
 )
 
 
@@ -105,9 +111,13 @@ def _run_status_emoji(life_cycle: str, result: str = "") -> str:
 
 if page == "Analytics Dashboard":
     st.title("Analytics Dashboard")
-    st.caption(
-        "US and EU equity markets alongside central bank policy rates — "
-        "2010 to present. Data read live from the Gold Delta table on Databricks."
+    st.info(
+        "**How to use this dashboard** \n\n"
+        "The charts below show how US and European stock markets and interest rates moved over 15 years — "
+        "and how they influenced each other.\n\n"
+        "1. Set the **date range** below to focus on a period of interest.\n"
+        "2. Read each chart top to bottom — they build on each other: market prices → interest rates → how much markets swung → how connected they were.\n"
+        "3. Suggested periods to explore: **March 2020** (COVID crash) · **2022–2023** (fastest rate rises in decades) · **2014–2022** (ECB negative rates)."
     )
 
     host      = _secret("DATABRICKS_HOST")
@@ -208,9 +218,8 @@ if page == "Analytics Dashboard":
     # --- Chart 1: Equity indices ---
     st.subheader("Equity Indices")
     st.caption(
-        "Daily closing prices for the S&P 500 (US, left axis) and Euro Stoxx 50 (EU, right axis). "
-        "The two axes are scaled independently so the shape of each index is visible — "
-        "the gap in levels does not mean one market outperformed the other."
+        "The S&P 500 tracks the 500 largest US companies; the Euro Stoxx 50 tracks the 50 largest in the Eurozone. "
+        "Both fell sharply in March 2020 (COVID) and again in 2022 (rate hikes) — notice how closely they moved together."
     )
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     fig.add_trace(go.Scatter(x=d["date"], y=d["sp500_close"],     name="S&P 500",      line=dict(color="#1f77b4")), secondary_y=False)
@@ -223,9 +232,9 @@ if page == "Analytics Dashboard":
     # --- Chart 2: Central bank rates + differential ---
     st.subheader("Central Bank Policy Rates")
     st.caption(
-        "The US Federal Reserve sets the Fed Funds Rate; the European Central Bank sets the ECB Deposit Facility Rate. "
-        "The dotted line shows the differential (US minus ECB) — positive values mean US rates are higher. "
-        "The ECB rate was negative from 2014 to 2022, meaning banks were charged to park cash overnight."
+        "Central banks raise rates to slow inflation and cut them to stimulate growth. "
+        "The ECB rate was below zero from 2014 to 2022 — an unusual policy meaning banks were charged to hold cash. "
+        "Both the US and EU raised rates sharply from 2022; compare this timing with the market drops in the chart above."
     )
     fig2 = go.Figure()
     fig2.add_trace(go.Scatter(x=d["date"], y=d["fed_rate"],         name="US Fed Funds Rate",       line=dict(color="#1f77b4")))
@@ -238,10 +247,9 @@ if page == "Analytics Dashboard":
     # --- Chart 3: Volatility ---
     st.subheader("Realised Volatility (annualised)")
     st.caption(
-        "Realised volatility measures how much daily returns varied over a rolling window — "
-        "20 trading days (~1 month) and 60 trading days (~3 months) — scaled to an annual figure. "
-        "Higher values mean more turbulence. The VIX (divided by 100) is overlaid on the S&P 500 panel: "
-        "VIX above 20 signals elevated uncertainty; above 30 is typically associated with market stress."
+        "How much prices swung up and down each day — larger swings mean more uncertainty. "
+        "Spikes here line up with the drops in the equity chart: COVID (2020) and the rate hike period (2022). "
+        "The VIX (dotted line) is a widely watched measure of expected market uncertainty — above 30 typically signals a crisis."
     )
     col_a, col_b = st.columns(2)
     with col_a:
@@ -261,9 +269,9 @@ if page == "Analytics Dashboard":
     # --- Chart 4: US–EU correlation ---
     st.subheader("60-Day Rolling Correlation: S&P 500 vs Euro Stoxx 50")
     st.caption(
-        "Correlation ranges from −1 to +1. A value near +1 means US and EU markets moved in the same direction "
-        "on most days over the past 60 trading days. A value near 0 means they moved independently. "
-        "High correlation reduces the diversification benefit of holding both markets."
+        "Shows whether the US and European markets moved in the same direction on any given day. "
+        "A value near 1 means they moved together; near 0 means independently. "
+        "During major global events, correlation tends to spike — both markets respond to the same news at the same time."
     )
     fig4 = go.Figure()
     fig4.add_trace(go.Scatter(x=d["date"], y=d["us_eu_equity_corr_60d"], name="Return correlation",
@@ -275,9 +283,9 @@ if page == "Analytics Dashboard":
     # --- Chart 5: S&P 500 drawdown ---
     st.subheader("S&P 500 Drawdown from 52-Week High")
     st.caption(
-        "How far the S&P 500 is below its highest closing price in the past 52 weeks, expressed as a percentage. "
-        "A drawdown of −20% or worse is commonly called a bear market. "
-        "A reading near 0% means the index is close to its recent peak."
+        "How far the US market has fallen from its highest point in the past year. "
+        "A drop of 20% or more is commonly called a market downturn. "
+        "A value near 0% means the market is close to its recent high."
     )
     fig5 = go.Figure()
     fig5.add_trace(go.Scatter(x=d["date"], y=d["sp500_drawdown_52w"], name="Drawdown %",
@@ -288,9 +296,9 @@ if page == "Analytics Dashboard":
     # --- Regime summary ---
     st.subheader("Current Regimes")
     st.caption(
-        "A snapshot of the current market environment based on the most recent day in the selected range. "
-        "Rate regimes (low / medium / high / negative) are based on the absolute level of each central bank rate. "
-        "Policy divergence reflects the US−ECB rate gap. VIX regime classifies market stress: calm (<20), elevated (20–30), stress (>30)."
+        "A summary of the current environment based on the last day in the selected date range — "
+        "whether interest rates are historically high or low, how far US and EU rates have diverged, "
+        "and whether markets are calm or stressed."
     )
     regime_cols = ["us_rate_regime", "eu_rate_regime", "policy_divergence", "vix_regime"]
     st.dataframe(
