@@ -78,10 +78,6 @@ page = st.sidebar.radio(
 )
 
 st.sidebar.markdown("---")
-if page != "Home":
-    if st.sidebar.button("← Home", use_container_width=True):
-        st.session_state["_nav_target"] = "Home"
-        st.rerun()
 st.sidebar.markdown("**Data** · 2010 – June 2026")
 st.sidebar.caption(
     "S&P 500 · Euro Stoxx 50 · VIX\n"
@@ -192,15 +188,16 @@ if page == "Home":
             f"""
             <div style="{CARD}">
                 <h3 style="color:#1E3A5F;margin-top:0;">The Migration Tool</h3>
-                <p style="color:#374151;margin-bottom:14px;">
+                <p style="color:#374151;margin-bottom:12px;">
                     Financial teams have years of SAS analytics code that needs to move to Databricks.
                     This converter translates legacy SAS into PySpark, Databricks SQL, or dbt YAML automatically.
                 </p>
-                <table style="border-collapse:collapse;width:100%;font-size:0.9em;border:none;">
-                    <tr><td style="{TD}color:#374151;" colspan="2">Paste SAS code, choose a target format, get working code back.</td></tr>
-                    <tr><td style="{TD}color:#374151;" colspan="2">Common patterns use a built-in rule engine. Complex code falls back to an AI model that flags anything needing review.</td></tr>
-                    <tr><td style="{TD}color:#374151;" colspan="2">Tested with <strong>23 automated test cases</strong> covering every supported SAS pattern.</td></tr>
-                </table>
+                <ul style="color:#374151;margin:0;padding-left:18px;line-height:1.9;">
+                    <li>Paste SAS code, choose a target format, get working code back</li>
+                    <li>Common patterns handled by a rule engine — no API key needed</li>
+                    <li>Complex code falls back to an AI model that flags anything needing review</li>
+                    <li>Tested with <strong>23 automated test cases</strong></li>
+                </ul>
             </div>
             """,
             unsafe_allow_html=True,
@@ -270,14 +267,17 @@ if page == "Analytics Dashboard":
         )
         st.stop()
 
-    st.warning(
+    _load_note = st.empty()
+    _load_note.warning(
         "This dashboard connects live to Databricks. "
         "The first load may take 20–30 seconds while the cluster wakes up. Thank you for your patience."
     )
     with st.spinner("Loading data from Databricks..."):
         try:
             df = load_gold(host, token, http_path)
+            _load_note.empty()
         except Exception as e:
+            _load_note.empty()
             err_msg = str(e)
             if "cluster" in err_msg.lower() or "terminated" in err_msg.lower():
                 st.warning(
@@ -302,9 +302,45 @@ if page == "Analytics Dashboard":
     df["date"] = pd.to_datetime(df["date"])
     df = df.sort_values("date")
 
-    # --- Current snapshot (always most recent row in dataset) ---
     latest = df.iloc[-1]
-    st.caption(f"As of {latest['date'].strftime('%d %b %Y')} — most recent data in the pipeline")
+
+    # --- Key findings first: this is the point of the dashboard ---
+    st.markdown("### Key patterns in the data")
+    st.caption("From 15 years of US and European market data, loaded into Delta Lake and transformed through the Databricks medallion pipeline.")
+    st.markdown(
+        """
+        <div class="insight-grid">
+            <div class="insight-card" style="background:#EFF6FF;border-left:4px solid #3B82F6;">
+                <strong style="color:#1E40AF;">Markets crash together</strong><br>
+                During COVID (March 2020) and the 2022 rate shock, US and EU markets fell at the same time
+                and by similar amounts. Correlation spiked toward 1 on the worst days.
+            </div>
+            <div class="insight-card" style="background:#FFFBEB;border-left:4px solid #D97706;">
+                <strong style="color:#92400E;">ECB's 8 years of negative rates</strong><br>
+                2014 to 2022: the ECB held its deposit rate below zero. European banks were charged to hold cash
+                rather than earning interest — the longest negative-rate experiment by a major central bank.
+            </div>
+            <div class="insight-card" style="background:#EFF6FF;border-left:4px solid #3B82F6;">
+                <strong style="color:#1E40AF;">2022 rate shock: fastest in 4 decades</strong><br>
+                Both the Fed and ECB raised rates from near zero to above 4% in roughly 18 months —
+                the fastest pace since the early 1980s. Both stock markets fell over 20%.
+            </div>
+            <div class="insight-card" style="background:#FFFBEB;border-left:4px solid #D97706;">
+                <strong style="color:#92400E;">COVID recovery was unusually fast</strong><br>
+                Both markets recovered their pre-COVID highs within 12 months of the March 2020 crash —
+                faster than any comparable drop in the dataset.
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+
+    st.markdown("---")
+
+    # --- Current state ---
+    st.subheader("Current State")
+    st.caption(f"As of {latest['date'].strftime('%d %b %Y')} · most recent pipeline run")
     m1, m2, m3, m4, m5 = st.columns(5)
     m1.metric("S&P 500",       f"{latest['sp500_close']:,.0f}")
     m2.metric("Euro Stoxx 50", f"{latest['eurostoxx_close']:,.0f}")
@@ -313,11 +349,7 @@ if page == "Analytics Dashboard":
     m4.metric("US Fed Rate",   f"{latest['fed_rate']:.2f}%")
     m5.metric("ECB Rate",      f"{latest['ecb_rate']:.2f}%")
 
-    st.markdown("---")
-
-    # --- Current Environment ---
-    st.subheader("Current Environment")
-    st.caption("Where things stand as of the last pipeline run — interest rate regimes and market stress level.")
+    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
     divergence_labels = {
         "us_significantly_higher": "US >> EU",
         "us_higher": "US > EU",
@@ -332,46 +364,8 @@ if page == "Analytics Dashboard":
     rc4.metric("Market Stress",   vix_labels.get(latest["vix_regime"], latest["vix_regime"]))
 
     st.markdown("---")
-
-    # --- Key findings ---
-    st.markdown("### Key findings from the data")
-    st.markdown(
-        '<p style="color:#555;margin-bottom:12px;">Patterns that emerge consistently from 15 years of daily market data.</p>',
-        unsafe_allow_html=True,
-    )
-    st.markdown(
-        """
-        <div class="insight-grid">
-            <div class="insight-card" style="background:#FEF9C3;border-left:4px solid #CA8A04;">
-                <strong style="color:#92400E;">Markets crash together</strong><br>
-                During COVID (March 2020) and the 2022 rate shock, US and EU markets fell at the same time
-                and by similar amounts. Correlation spiked toward 1 on the worst days — holding both gave little protection.
-            </div>
-            <div class="insight-card" style="background:#FEE2E2;border-left:4px solid #DC2626;">
-                <strong style="color:#991B1B;">ECB's 8 years of negative rates</strong><br>
-                2014 to 2022: the ECB held its deposit rate below zero. European banks were charged to hold cash
-                rather than earning interest. The longest negative-rate experiment by a major central bank.
-            </div>
-            <div class="insight-card" style="background:#E0F2FE;border-left:4px solid #0284C7;">
-                <strong style="color:#0C4A6E;">2022 rate shock: fastest in 4 decades</strong><br>
-                Both the Fed and ECB raised rates from near zero to above 4% in roughly 18 months —
-                the fastest pace since the early 1980s. Both stock markets fell over 20%.
-            </div>
-            <div class="insight-card" style="background:#F0FDF4;border-left:4px solid #16A34A;">
-                <strong style="color:#14532D;">COVID recovery was unusually fast</strong><br>
-                Both markets recovered their pre-COVID highs within 12 months of the March 2020 crash —
-                faster than any comparable drop in the dataset.
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
-    st.caption("Data covers 2010 – June 2026. Produced by the Bronze → Silver → Gold medallion pipeline on Databricks.")
-
-    st.markdown("---")
-    st.markdown("### Explore the data")
-    st.caption("Use the date filters to zoom into any period. Try March 2020 (COVID crash), 2022 (rate shock), or 2014–2022 (ECB negative rates).")
+    st.subheader("Explore the data")
+    st.caption("Use the date filters to zoom in. Try March 2020 (COVID crash), 2022 (rate shock), or 2014–2022 (ECB negative rates).")
 
     # --- Date filter ---
     col1, col2 = st.columns(2)
