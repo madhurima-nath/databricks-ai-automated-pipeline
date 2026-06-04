@@ -1,4 +1,4 @@
-# Cross-Market Macro Analysis Platform
+# Financial Analytics Pipeline on Databricks
 
 [![Tests](https://github.com/madhurima-nath/databricks-ai-automated-pipeline/actions/workflows/test.yml/badge.svg)](https://github.com/madhurima-nath/databricks-ai-automated-pipeline/actions/workflows/test.yml)
 
@@ -41,7 +41,7 @@ External APIs
               └───────┬────────┘
                       │
               ┌───────▼────────┐
-              │   Dashboard    │  Streamlit — Market Analysis · Pipeline Control · SAS Converter
+              │   Dashboard    │  Streamlit — Analytics Dashboard · Pipeline Control · SAS Converter
               └────────────────┘
 ```
 

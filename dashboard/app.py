@@ -1,16 +1,17 @@
 """
-Streamlit Dashboard — Cross-Market Macro Analysis Platform
-===========================================================
+Streamlit Dashboard — Financial Analytics Pipeline on Databricks
+=====================================================
 Three pages:
-  1. Market Analysis     — equity indices, rates, volatility, regimes
-  2. Pipeline Control    — trigger and monitor Bronze→Silver→Gold on Databricks
-  3. SAS → PySpark       — paste legacy SAS code, get PySpark or Databricks SQL
+  1. Analytics Dashboard     — equity indices, rates, volatility, regimes (reads live from Databricks)
+  2. Pipeline Control        — trigger and monitor Bronze→Silver→Gold jobs on Databricks
+  3. SAS → PySpark Converter — convert legacy SAS code to PySpark or Databricks SQL
 
 Run locally:
     streamlit run dashboard/app.py
 
-On Streamlit Community Cloud:
-    Deploy from GitHub. Add secrets under Settings → Secrets (see .streamlit/secrets.toml.example).
+Deploy to Streamlit Community Cloud:
+    Connect your GitHub repo at share.streamlit.io.
+    Add secrets under Settings → Secrets (see .streamlit/secrets.toml.example).
 """
 
 import os
@@ -30,8 +31,9 @@ def _secret(key: str, default: str = "") -> str:
     except Exception:
         return os.getenv(key, default)
 
+
 st.set_page_config(
-    page_title="Cross-Market Macro Analysis",
+    page_title="Financial Analytics Pipeline on Databricks",
     page_icon="📊",
     layout="wide",
 )
@@ -42,7 +44,7 @@ st.set_page_config(
 
 page = st.sidebar.radio(
     "Navigation",
-    ["Market Analysis", "Pipeline Control", "SAS → PySpark Converter"],
+    ["Analytics Dashboard", "Pipeline Control", "SAS → PySpark Converter"],
     index=0,
 )
 
@@ -54,7 +56,7 @@ st.sidebar.markdown(
 
 
 # ---------------------------------------------------------------------------
-# Shared Databricks API helper
+# Shared Databricks REST API helper (used by Pipeline Control)
 # ---------------------------------------------------------------------------
 
 def _db_api(method: str, path: str, host: str, token: str, **kwargs):
@@ -76,18 +78,18 @@ def _db_api(method: str, path: str, host: str, token: str, **kwargs):
 
 
 TASK_EMOJI = {
-    "SUCCESS":        "✅",
-    "FAILED":         "❌",
-    "TIMEDOUT":       "⏱",
-    "CANCELED":       "🚫",
-    "INTERNAL_ERROR": "💥",
-    "SKIPPED":        "⏭",
-    "RUNNING":        "⏳",
-    "PENDING":        "🔵",
-    "BLOCKED":        "🔒",
+    "SUCCESS":           "✅",
+    "FAILED":            "❌",
+    "TIMEDOUT":          "⏱",
+    "CANCELED":          "🚫",
+    "INTERNAL_ERROR":    "💥",
+    "SKIPPED":           "⏭",
+    "RUNNING":           "⏳",
+    "PENDING":           "🔵",
+    "BLOCKED":           "🔒",
     "WAITING_FOR_RETRY": "🔁",
-    "TERMINATING":    "🔶",
-    "QUEUED":         "🔵",
+    "TERMINATING":       "🔶",
+    "QUEUED":            "🔵",
 }
 
 
@@ -98,39 +100,70 @@ def _run_status_emoji(life_cycle: str, result: str = "") -> str:
 
 
 # ---------------------------------------------------------------------------
-# Page 1: Market Analysis
+# Page 1: Cross-Market Analytics
 # ---------------------------------------------------------------------------
 
-if page == "Market Analysis":
-    st.title("Cross-Market Macro Analysis")
+if page == "Analytics Dashboard":
+    st.title("Analytics Dashboard")
     st.caption(
         "US and EU equity markets alongside central bank policy rates — "
-        "2010 to present. Data served from the Gold Delta table."
+        "2010 to present. Data read live from the Gold Delta table on Databricks."
     )
 
-    @st.cache_data(ttl=3600)
-    def load_gold():
-        try:
-            import pandas as pd
-            parquet_path = os.path.join(
-                os.path.dirname(__file__), "..", "data", "gold_analytics.parquet"
-            )
-            if os.path.exists(parquet_path):
-                return pd.read_parquet(parquet_path)
-            return None
-        except Exception as e:
-            st.error(f"Could not load data: {e}")
-            return None
+    host      = _secret("DATABRICKS_HOST")
+    token     = _secret("DATABRICKS_TOKEN")
+    http_path = _secret("DATABRICKS_HTTP_PATH")
 
-    df = load_gold()
+    @st.cache_data(ttl=3600, show_spinner=False)
+    def load_gold(host: str, token: str, http_path: str):
+        """
+        Query gold_analytics directly from Databricks via the SQL connector.
+        Results are cached for 1 hour (ttl=3600).
+        """
+        from databricks import sql as dbsql
+        import pandas as pd
 
-    if df is None:
+        conn_args = dict(
+            server_hostname=host.replace("https://", "").replace("http://", ""),
+            http_path=http_path,
+            access_token=token,
+        )
+        with dbsql.connect(**conn_args) as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT * FROM gold_analytics ORDER BY date")
+                cols = [d[0] for d in cur.description]
+                rows = cur.fetchall()
+        return pd.DataFrame(rows, columns=cols)
+
+    if not (host and token and http_path):
         st.info(
-            "No data loaded. Run the pipeline on Databricks (use the **Pipeline Control** page), "
-            "then export the Gold table:\n\n"
-            "1. Run `notebooks/04_export_parquet.py` on Databricks\n"
-            "2. Locally: `python scripts/download_gold.py`\n"
-            "3. Reload this page"
+            "Databricks connection not configured. "
+            "Add **DATABRICKS_HOST**, **DATABRICKS_TOKEN**, and **DATABRICKS_HTTP_PATH** "
+            "to your Streamlit secrets (or `.env` locally).\n\n"
+            "Find HTTP_PATH in Databricks → Compute → your cluster → "
+            "Advanced Options → JDBC/ODBC."
+        )
+        st.stop()
+
+    with st.spinner("Loading data from Databricks..."):
+        try:
+            df = load_gold(host, token, http_path)
+        except Exception as e:
+            err_msg = str(e)
+            if "cluster" in err_msg.lower() or "terminated" in err_msg.lower():
+                st.warning(
+                    "The Databricks cluster appears to be stopped. "
+                    "Start it from the **Pipeline Control** page or from Databricks directly, "
+                    "then reload this page."
+                )
+            else:
+                st.error(f"Could not load data from Databricks: {err_msg}")
+            st.stop()
+
+    if df is None or df.empty:
+        st.warning(
+            "The gold_analytics table is empty. "
+            "Run the pipeline first using the **Pipeline Control** page."
         )
         st.stop()
 
@@ -141,13 +174,14 @@ if page == "Market Analysis":
     df["date"] = pd.to_datetime(df["date"])
     df = df.sort_values("date")
 
+    # --- Date filter ---
     col1, col2 = st.columns(2)
     min_date = df["date"].min().date()
     max_date = df["date"].max().date()
     with col1:
         start = st.date_input(
             "From", value=pd.to_datetime("2018-01-01").date(),
-            min_value=min_date, max_value=max_date
+            min_value=min_date, max_value=max_date,
         )
     with col2:
         end = st.date_input("To", value=max_date, min_value=min_date, max_value=max_date)
@@ -159,35 +193,39 @@ if page == "Market Analysis":
         st.warning("No data in selected range.")
         st.stop()
 
+    # --- Metrics row ---
     latest = d.iloc[-1]
     m1, m2, m3, m4, m5 = st.columns(5)
-    m1.metric("S&P 500",      f"{latest['sp500_close']:,.0f}")
-    m2.metric("Euro Stoxx 50",f"{latest['eurostoxx_close']:,.0f}")
-    m3.metric("VIX",          f"{latest['vix_close']:.1f}",
+    m1.metric("S&P 500",       f"{latest['sp500_close']:,.0f}")
+    m2.metric("Euro Stoxx 50", f"{latest['eurostoxx_close']:,.0f}")
+    m3.metric("VIX",           f"{latest['vix_close']:.1f}",
               help="Market stress: <20 calm, 20–30 elevated, >30 stress")
-    m4.metric("US Fed Rate",  f"{latest['fed_rate']:.2f}%")
-    m5.metric("ECB Rate",     f"{latest['ecb_rate']:.2f}%")
+    m4.metric("US Fed Rate",   f"{latest['fed_rate']:.2f}%")
+    m5.metric("ECB Rate",      f"{latest['ecb_rate']:.2f}%")
 
     st.markdown("---")
 
+    # --- Chart 1: Equity indices ---
     st.subheader("Equity Indices")
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     fig.add_trace(go.Scatter(x=d["date"], y=d["sp500_close"],     name="S&P 500",      line=dict(color="#1f77b4")), secondary_y=False)
     fig.add_trace(go.Scatter(x=d["date"], y=d["eurostoxx_close"], name="Euro Stoxx 50", line=dict(color="#ff7f0e")), secondary_y=True)
     fig.update_layout(height=350, margin=dict(t=10, b=10), legend=dict(orientation="h", y=1.05))
-    fig.update_yaxes(title_text="S&P 500",       secondary_y=False)
-    fig.update_yaxes(title_text="Euro Stoxx 50",  secondary_y=True)
+    fig.update_yaxes(title_text="S&P 500",      secondary_y=False)
+    fig.update_yaxes(title_text="Euro Stoxx 50", secondary_y=True)
     st.plotly_chart(fig, use_container_width=True)
 
+    # --- Chart 2: Central bank rates + differential ---
     st.subheader("Central Bank Policy Rates")
     fig2 = go.Figure()
-    fig2.add_trace(go.Scatter(x=d["date"], y=d["fed_rate"],        name="US Fed Funds Rate",      line=dict(color="#1f77b4")))
-    fig2.add_trace(go.Scatter(x=d["date"], y=d["ecb_rate"],        name="ECB Deposit Rate",       line=dict(color="#ff7f0e")))
-    fig2.add_trace(go.Scatter(x=d["date"], y=d["policy_rate_diff"],name="Differential (US − ECB)",line=dict(color="#2ca02c", dash="dot")))
+    fig2.add_trace(go.Scatter(x=d["date"], y=d["fed_rate"],         name="US Fed Funds Rate",       line=dict(color="#1f77b4")))
+    fig2.add_trace(go.Scatter(x=d["date"], y=d["ecb_rate"],         name="ECB Deposit Rate",        line=dict(color="#ff7f0e")))
+    fig2.add_trace(go.Scatter(x=d["date"], y=d["policy_rate_diff"], name="Differential (US − ECB)", line=dict(color="#2ca02c", dash="dot")))
     fig2.update_layout(height=300, margin=dict(t=10, b=10),
                        yaxis_title="Rate (%)", legend=dict(orientation="h", y=1.05))
     st.plotly_chart(fig2, use_container_width=True)
 
+    # --- Chart 3: Volatility ---
     st.subheader("Realised Volatility (annualised)")
     col_a, col_b = st.columns(2)
     with col_a:
@@ -204,6 +242,7 @@ if page == "Market Analysis":
         fig3b.update_layout(title="Euro Stoxx 50", height=280, margin=dict(t=30, b=10))
         st.plotly_chart(fig3b, use_container_width=True)
 
+    # --- Chart 4: US–EU correlation ---
     st.subheader("60-Day Rolling Correlation: S&P 500 vs Euro Stoxx 50")
     fig4 = go.Figure()
     fig4.add_trace(go.Scatter(x=d["date"], y=d["us_eu_equity_corr_60d"], name="Return correlation",
@@ -212,6 +251,7 @@ if page == "Market Analysis":
     fig4.update_layout(height=260, margin=dict(t=10, b=10), yaxis_title="Correlation", yaxis_range=[-1, 1])
     st.plotly_chart(fig4, use_container_width=True)
 
+    # --- Chart 5: S&P 500 drawdown ---
     st.subheader("S&P 500 Drawdown from 52-Week High")
     fig5 = go.Figure()
     fig5.add_trace(go.Scatter(x=d["date"], y=d["sp500_drawdown_52w"], name="Drawdown %",
@@ -219,6 +259,7 @@ if page == "Market Analysis":
     fig5.update_layout(height=250, margin=dict(t=10, b=10), yaxis_title="Drawdown (%)")
     st.plotly_chart(fig5, use_container_width=True)
 
+    # --- Regime summary ---
     st.subheader("Current Regimes")
     regime_cols = ["us_rate_regime", "eu_rate_regime", "policy_divergence", "vix_regime"]
     st.dataframe(
@@ -238,9 +279,8 @@ elif page == "Pipeline Control":
         "Requires a Databricks workspace with the pipeline job registered."
     )
 
-    # --- Connection settings ---
     with st.expander("Databricks connection", expanded=True):
-        host  = st.text_input(
+        host = st.text_input(
             "Workspace host",
             value=_secret("DATABRICKS_HOST"),
             placeholder="https://adb-1234567890.12.azuredatabricks.net",
@@ -262,29 +302,27 @@ elif page == "Pipeline Control":
     connected = bool(host and token and job_id_str and job_id_str.isdigit())
     job_id    = int(job_id_str) if connected else None
 
-    # --- Pipeline stage overview ---
     st.markdown("---")
     st.subheader("Pipeline stages")
     c1, c2, c3 = st.columns(3)
     with c1:
         st.markdown("**Bronze — Raw ingestion**")
-        st.caption("Fetches S&P 500, Euro Stoxx 50, VIX, US Fed Rate, ECB Rate from yfinance and FRED. "
-                   "Writes 5 raw Delta tables with no transformations.")
+        st.caption("Fetches S&P 500, Euro Stoxx 50, VIX, US Fed Rate, ECB Rate "
+                   "from yfinance and FRED. Writes 5 raw Delta tables.")
         st.code("01_bronze_ingest.py", language=None)
     with c2:
         st.markdown("**Silver — Clean & align**")
-        st.caption("Runs quality checks, forward-fills monthly rates to the daily equity spine, "
-                   "joins all sources, computes log returns and policy rate differential.")
+        st.caption("Quality checks, forward-fills monthly rates to daily spine, "
+                   "joins all sources, computes log returns and rate differential.")
         st.code("02_silver_transform.py", language=None)
     with c3:
         st.markdown("**Gold — Analytics**")
-        st.caption("Rolling volatility (20d/60d), US–EU equity correlations, S&P 500 drawdown, "
-                   "VIX regime, rate regime classification, and policy divergence.")
+        st.caption("Rolling volatility, US–EU equity correlations, S&P 500 drawdown, "
+                   "VIX regime, rate regime classification, policy divergence.")
         st.code("03_gold_analytics.py", language=None)
 
     st.markdown("---")
 
-    # --- Run controls ---
     if not connected:
         st.info("Fill in the connection settings above to enable run controls.")
     else:
@@ -306,52 +344,51 @@ elif page == "Pipeline Control":
                 st.success(f"Run submitted — Run ID: {run_id}")
                 st.rerun()
 
+        if refresh_btn:
+            st.rerun()
+
         # --- Recent runs ---
         st.subheader("Recent runs")
         runs_data, runs_err = _db_api(
             "get", f"2.1/jobs/runs/list?job_id={job_id}&limit=10&active_only=false",
-            host, token
+            host, token,
         )
         if runs_err:
             st.error(f"Could not fetch runs: {runs_err}")
         else:
             runs = runs_data.get("runs", [])
             if not runs:
-                st.info("No runs yet for this job. Click **Run full pipeline** to start.")
+                st.info("No runs yet. Click **Run full pipeline** to start.")
             else:
                 import pandas as pd
 
                 rows = []
                 for r in runs:
-                    s          = r["state"]
-                    lc         = s["life_cycle_state"]
-                    rs         = s.get("result_state", "")
-                    emoji      = _run_status_emoji(lc, rs)
-                    start_ms   = r.get("start_time", 0)
-                    start_str  = (
+                    s         = r["state"]
+                    lc        = s["life_cycle_state"]
+                    rs        = s.get("result_state", "")
+                    emoji     = _run_status_emoji(lc, rs)
+                    start_ms  = r.get("start_time", 0)
+                    start_str = (
                         datetime.datetime.fromtimestamp(start_ms / 1000).strftime("%Y-%m-%d %H:%M")
                         if start_ms else "—"
                     )
                     dur_ms  = r.get("execution_duration", 0)
-                    dur_str = f"{dur_ms // 1000}s" if dur_ms else "—"
                     rows.append({
-                        "Run ID":  r["run_id"],
-                        "Started": start_str,
-                        "Status":  f"{emoji} {rs or lc}",
-                        "Duration":dur_str,
+                        "Run ID":   r["run_id"],
+                        "Started":  start_str,
+                        "Status":   f"{emoji} {rs or lc}",
+                        "Duration": f"{dur_ms // 1000}s" if dur_ms else "—",
                     })
-
                 st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
 
-                # --- Drill into latest/selected run ---
-                latest_run_id = st.session_state.get("latest_run_id") or runs[0]["run_id"]
+                # --- Task breakdown for selected run ---
                 select_run_id = st.selectbox(
-                    "View task details for run",
+                    "View task details",
                     [r["run_id"] for r in runs],
                     index=0,
-                    format_func=lambda rid: str(rid),
+                    format_func=str,
                 )
-
                 run_detail, detail_err = _db_api(
                     "get", f"2.1/jobs/runs/get?run_id={select_run_id}", host, token
                 )
@@ -363,11 +400,11 @@ elif page == "Pipeline Control":
                         st.markdown("**Task breakdown**")
                         task_rows = []
                         for t in tasks:
-                            ts   = t["state"]
-                            tlc  = ts["life_cycle_state"]
-                            trs  = ts.get("result_state", "")
-                            em   = _run_status_emoji(tlc, trs)
-                            dur  = t.get("execution_duration", 0)
+                            ts  = t["state"]
+                            tlc = ts["life_cycle_state"]
+                            trs = ts.get("result_state", "")
+                            em  = _run_status_emoji(tlc, trs)
+                            dur = t.get("execution_duration", 0)
                             task_rows.append({
                                 "Task":     t["task_key"],
                                 "Status":   f"{em} {trs or tlc}",
@@ -375,20 +412,13 @@ elif page == "Pipeline Control":
                             })
                         st.dataframe(pd.DataFrame(task_rows), use_container_width=True, hide_index=True)
 
-                    # Link to run in Databricks UI
                     run_url = f"{host}/#job/{job_id}/run/{select_run_id}"
                     st.markdown(f"[Open in Databricks UI ↗]({run_url})")
 
-        # --- Post-pipeline export reminder ---
         st.markdown("---")
-        st.markdown("**After a successful run — get the data to the dashboard:**")
-        st.code(
-            "# 1. Run in Databricks:\n"
-            "#    notebooks/04_export_parquet.py\n\n"
-            "# 2. Locally:\n"
-            "python scripts/download_gold.py\n\n"
-            "# 3. Open the Market Analysis page",
-            language="bash",
+        st.caption(
+            "After a successful run, the **Analytics Dashboard** page reads the updated "
+            "Gold table automatically on next load."
         )
 
 
@@ -400,7 +430,8 @@ elif page == "SAS → PySpark Converter":
     st.title("SAS → PySpark Converter")
     st.caption(
         "Converts legacy SAS code to PySpark DataFrame API, Databricks SQL, or dbt YAML. "
-        "Common patterns are handled by rules; complex code uses Claude (claude-haiku-4-5) via the Anthropic API."
+        "Common patterns are handled by rules; complex code uses Claude (claude-haiku-4-5) "
+        "via the Anthropic API."
     )
 
     from converter.sas_to_pyspark import convert
@@ -419,9 +450,7 @@ elif page == "SAS → PySpark Converter":
         sas_input = st.text_area(
             "Paste SAS code here",
             height=320,
-            placeholder="""PROC SORT DATA=customers;
-    BY last_name first_name;
-RUN;""",
+            placeholder="PROC SORT DATA=customers;\n    BY last_name first_name;\nRUN;",
         )
         convert_btn = st.button("Convert", type="primary", use_container_width=True)
 
