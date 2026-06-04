@@ -1,7 +1,8 @@
 """
 Streamlit Dashboard — Financial Analytics Pipeline on Databricks
 =====================================================
-Two pages:
+Three pages:
+  0. Home                    — overview of the pipeline and the migration tool
   1. Analytics Dashboard     — equity indices, rates, volatility, regimes (reads live from Databricks)
   2. SAS → PySpark Converter — convert legacy SAS code to PySpark or Databricks SQL
 
@@ -480,7 +481,7 @@ elif page == "SAS → PySpark Converter":
         "portfolio calculations. The infrastructure can move to Databricks, but the code cannot move itself. "
         "Rewriting each script by hand is the bottleneck that stalls most migrations. "
         "This converter automates the translation: paste SAS, get working PySpark or Databricks SQL back. "
-        "Common patterns — PROC SORT, PROC MEANS, DATA steps — are handled by a rule engine with no API key needed. "
+        "Common patterns — PROC SORT, PROC MEANS, PROC SQL, DATA steps — are handled by a rule engine with no API key needed. "
         "Anything outside those patterns is sent to Claude AI."
     )
     st.markdown("---")
