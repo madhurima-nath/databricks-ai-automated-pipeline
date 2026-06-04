@@ -20,14 +20,19 @@
 
 # MAGIC %md
 # MAGIC ## Setup: FRED API key
-# MAGIC Store your key as a cluster environment variable — no DBFS required.
 # MAGIC
-# MAGIC 1. Go to **Compute → your cluster → Edit**
-# MAGIC 2. Expand **Advanced Options → Environment variables**
-# MAGIC 3. Add: `FRED_API_KEY=your_actual_key`
-# MAGIC 4. Click **Confirm** and restart the cluster.
+# MAGIC A widget will appear at the top of this notebook after running the next cell.
+# MAGIC Paste your FRED API key there before running the rest of the notebook.
+# MAGIC The key is never saved to a file or committed to git.
 # MAGIC
 # MAGIC Get a free key at [fred.stlouisfed.org/docs/api/api_key.html](https://fred.stlouisfed.org/docs/api/api_key.html).
+# MAGIC
+# MAGIC **Note:** This project requires a full Databricks workspace (free trial or paid).
+# MAGIC Serverless compute, SQL Warehouses, and Databricks Apps are not available on Community Edition.
+
+# COMMAND ----------
+
+dbutils.widgets.text("FRED_API_KEY", "", "FRED API Key")
 
 # COMMAND ----------
 
@@ -46,7 +51,7 @@ from pyspark.sql.types import DateType, DoubleType
 START_DATE = "2010-01-01"
 END_DATE   = datetime.date.today().isoformat()
 
-fred_api_key = os.environ.get("FRED_API_KEY", "")
+fred_api_key = dbutils.widgets.get("FRED_API_KEY").strip()
 if not fred_api_key:
     try:
         fred_api_key = dbutils.secrets.get(scope="project-secrets", key="fred_api_key")
@@ -54,8 +59,7 @@ if not fred_api_key:
         pass
 if not fred_api_key:
     raise ValueError(
-        "FRED_API_KEY not found.\n"
-        "Set it under Compute → Edit cluster → Advanced Options → Environment Variables."
+        "FRED API key not found. Paste it in the FRED_API_KEY widget at the top of this notebook."
     )
 
 fred = Fred(api_key=fred_api_key)

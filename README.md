@@ -217,10 +217,8 @@ pytest tests/ -v
 **First time:**
 
 1. Go to **Repos → Add Repo** and enter this repository URL.
-2. Store your FRED API key as a cluster environment variable:
-   - **Compute → your cluster → Edit → Advanced Options → Environment Variables**
-   - Add: `FRED_API_KEY=your_actual_key`
-   - Restart the cluster.
+2. Open `notebooks/01_bronze_ingest.py`. A **FRED API Key** widget appears at the top —
+   paste your key there before running. The key is never saved to a file or committed to git.
 3. Register the pipeline job:
    ```bash
    databricks jobs create --json @jobs/pipeline_job.json
