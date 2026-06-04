@@ -202,10 +202,13 @@ if page == "Analytics Dashboard":
             st.rerun()
     st.title("Analytics Dashboard")
     st.markdown(
-        "**Bronze** ingests raw market data into Delta tables. "
-        "**Silver** cleans it and joins daily equity prices with monthly interest rates. "
-        "**Gold** computes the analytics metrics — rolling volatility, correlations, drawdown, and regime classifications. "
-        "The patterns and charts below are the output of that pipeline."
+        "The interest rate data in this pipeline is monthly; equity prices are daily. "
+        "Joining them directly leaves most rows empty — rate dates almost never fall on trading days. "
+        "**Bronze** preserves the five raw source tables exactly as received. "
+        "**Silver** solves the join problem once: it forward-fills each rate across trading days, "
+        "runs quality checks, and produces a single clean table every downstream step reads from. "
+        "**Gold** computes the analytics from that clean base — rolling volatility, correlations, drawdown. "
+        "The charts below are the Gold layer output on 15 years of real data."
     )
     host      = _secret("DATABRICKS_HOST")
     token     = _secret("DATABRICKS_TOKEN")
@@ -472,8 +475,11 @@ elif page == "SAS → PySpark Converter":
             st.rerun()
     st.title("SAS → PySpark Converter")
     st.markdown(
-        "Paste legacy SAS code and get the equivalent PySpark or Databricks SQL back. "
-        "Common patterns — PROC SORT, PROC MEANS, DATA steps — are handled by a built-in rule engine with no API key needed. "
+        "Financial institutions have decades of analytics written in SAS — risk models, regulatory reports, "
+        "portfolio calculations. The infrastructure can move to Databricks, but the code cannot move itself. "
+        "Rewriting each script by hand is the bottleneck that stalls most migrations. "
+        "This converter automates the translation: paste SAS, get working PySpark or Databricks SQL back. "
+        "Common patterns — PROC SORT, PROC MEANS, DATA steps — are handled by a rule engine with no API key needed. "
         "Anything outside those patterns is sent to Claude AI."
     )
     st.markdown("---")
