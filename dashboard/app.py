@@ -202,13 +202,14 @@ if page == "Analytics Dashboard":
             st.rerun()
     st.title("Analytics Dashboard")
     st.markdown(
-        "The interest rate data in this pipeline is monthly; equity prices are daily. "
-        "Joining them directly leaves most rows empty — rate dates almost never fall on trading days. "
-        "**Bronze** preserves the five raw source tables exactly as received. "
-        "**Silver** solves the join problem once: it forward-fills each rate across trading days, "
-        "runs quality checks, and produces a single clean table every downstream step reads from. "
-        "**Gold** computes the analytics from that clean base — rolling volatility, correlations, drawdown. "
-        "The charts below are the Gold layer output on 15 years of real data."
+        "Rolling volatility, cross-market correlations, and drawdown are the analytics that financial risk teams "
+        "run in SAS today — and that need to move to modern platforms. "
+        "This dashboard shows them running on PySpark, on real data, end to end. "
+        "The interest rate data is monthly; equity prices are daily — joining them directly leaves most rows empty. "
+        "**Bronze** preserves the five raw source tables. "
+        "**Silver** forward-fills each rate across trading days, runs quality checks, and produces one clean joined table. "
+        "**Gold** computes the analytics from that base. "
+        "The charts below are the Gold layer output on 15 years of US and European market data."
     )
     host      = _secret("DATABRICKS_HOST")
     token     = _secret("DATABRICKS_TOKEN")
@@ -566,7 +567,8 @@ elif page == "SAS → PySpark Converter":
                 for w in result.warnings:
                     st.markdown(f"- {w}")
 
-        st.caption(f"Method: `{result.method}` · Target: `{result.target}`")
+        method_label = "Rule engine" if result.method == "rule_engine" else "Claude AI"
+        st.caption(f"Converted by: {method_label} · Target: `{result.target}`")
 
     elif convert_btn:
         st.info("Paste some SAS code above to convert.")
