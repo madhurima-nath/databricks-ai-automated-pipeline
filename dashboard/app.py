@@ -221,11 +221,10 @@ if page == "Home":
 if page == "Analytics Dashboard":
     st.title("Analytics Dashboard")
     st.markdown(
-        "These charts show the output of the **Gold Delta table** on Databricks — "
-        "the final step of the medallion pipeline. "
-        "Raw market data was ingested into Bronze, cleaned and joined in Silver, "
-        "then transformed into the analytics metrics you see here. "
-        "Use the date filters to zoom into any period."
+        "**Bronze** ingests raw market data into Delta tables. "
+        "**Silver** cleans it and joins daily equity prices with monthly interest rates. "
+        "**Gold** computes the analytics metrics — rolling volatility, correlations, drawdown, and regime classifications. "
+        "The patterns and charts below are the output of that pipeline."
     )
     st.info(
         "Try **March 2020** (COVID crash), **2022** (fastest rate rises in decades), "
@@ -306,7 +305,7 @@ if page == "Analytics Dashboard":
 
     # --- Key findings first: this is the point of the dashboard ---
     st.markdown("### Key patterns in the data")
-    st.caption("From 15 years of US and European market data, loaded into Delta Lake and transformed through the Databricks medallion pipeline.")
+    st.caption("These patterns are in the data — visible once it is loaded, cleaned, and structured through the Bronze, Silver, and Gold pipeline layers.")
     st.markdown(
         """
         <div class="insight-grid">
