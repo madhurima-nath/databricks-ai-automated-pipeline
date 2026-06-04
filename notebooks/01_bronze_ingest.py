@@ -19,13 +19,15 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## One-time setup: save FRED API key to DBFS
-# MAGIC Uncomment, paste your key, run once, re-comment. Key persists across sessions and is never committed to git.
-
-# COMMAND ----------
-
-# dbutils.fs.put("/config/fred_api_key.txt", "PASTE_YOUR_KEY_HERE", overwrite=True)
-# print("Key saved to DBFS.")
+# MAGIC ## Setup: FRED API key
+# MAGIC Store your key as a cluster environment variable — no DBFS required.
+# MAGIC
+# MAGIC 1. Go to **Compute → your cluster → Edit**
+# MAGIC 2. Expand **Advanced Options → Environment variables**
+# MAGIC 3. Add: `FRED_API_KEY=your_actual_key`
+# MAGIC 4. Click **Confirm** and restart the cluster.
+# MAGIC
+# MAGIC Get a free key at [fred.stlouisfed.org/docs/api/api_key.html](https://fred.stlouisfed.org/docs/api/api_key.html).
 
 # COMMAND ----------
 
@@ -34,6 +36,7 @@
 # COMMAND ----------
 
 import datetime
+import os
 import pandas as pd
 import yfinance as yf
 from fredapi import Fred
@@ -43,7 +46,18 @@ from pyspark.sql.types import DateType, DoubleType
 START_DATE = "2010-01-01"
 END_DATE   = datetime.date.today().isoformat()
 
-fred_api_key = dbutils.fs.head("/config/fred_api_key.txt").strip()
+fred_api_key = os.environ.get("FRED_API_KEY", "")
+if not fred_api_key:
+    try:
+        fred_api_key = dbutils.secrets.get(scope="project-secrets", key="fred_api_key")
+    except Exception:
+        pass
+if not fred_api_key:
+    raise ValueError(
+        "FRED_API_KEY not found.\n"
+        "Set it under Compute → Edit cluster → Advanced Options → Environment Variables."
+    )
+
 fred = Fred(api_key=fred_api_key)
 
 print(f"Date range: {START_DATE} → {END_DATE}")
