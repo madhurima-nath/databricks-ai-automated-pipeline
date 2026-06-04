@@ -159,7 +159,7 @@ databricks-ai-automated-pipeline/
 │       └── sas_to_pyspark.py           SAS→PySpark/SQL converter — rule-based + LLM fallback
 │
 ├── dashboard/
-│   └── app.py                          Streamlit app — Market Analysis, Pipeline Control, SAS Converter
+│   └── app.py                          Streamlit app — Analytics Dashboard, Pipeline Control, SAS Converter
 │
 ├── tests/
 │   ├── test_sas_converter.py           23 pytest cases for the SAS converter (all patterns)

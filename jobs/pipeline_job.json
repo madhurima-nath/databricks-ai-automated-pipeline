@@ -12,7 +12,7 @@
     "For a full Databricks workspace, replace existing_cluster_id with a new_cluster block",
     "using job_clusters (see commented section below) for cost-efficient isolated runs."
   ],
-  "name": "cross-market-macro-analysis",
+  "name": "financial-analytics-pipeline",
   "max_concurrent_runs": 1,
   "timeout_seconds": 7200,
   "email_notifications": {

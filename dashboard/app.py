@@ -100,7 +100,7 @@ def _run_status_emoji(life_cycle: str, result: str = "") -> str:
 
 
 # ---------------------------------------------------------------------------
-# Page 1: Cross-Market Analytics
+# Page 1: Analytics Dashboard
 # ---------------------------------------------------------------------------
 
 if page == "Analytics Dashboard":
