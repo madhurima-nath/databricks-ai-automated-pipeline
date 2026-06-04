@@ -16,9 +16,7 @@ Deploy to Streamlit Community Cloud:
 
 import os
 import sys
-import datetime
 
-import requests
 import streamlit as st
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
@@ -89,50 +87,6 @@ st.sidebar.markdown(
 
 
 # ---------------------------------------------------------------------------
-# Shared Databricks REST API helper (used by Pipeline Control)
-# ---------------------------------------------------------------------------
-
-def _db_api(method: str, path: str, host: str, token: str, **kwargs):
-    """Call the Databricks REST API. Returns (data_dict, error_str)."""
-    url = f"{host.rstrip('/')}/api/{path}"
-    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
-    try:
-        resp = getattr(requests, method)(url, headers=headers, timeout=15, **kwargs)
-        if resp.status_code == 401:
-            return None, "Authentication failed — check your personal access token."
-        if resp.status_code == 404:
-            return None, f"Not found: {url}"
-        resp.raise_for_status()
-        return resp.json(), None
-    except requests.exceptions.ConnectionError:
-        return None, f"Cannot reach {host} — check DATABRICKS_HOST."
-    except Exception as exc:
-        return None, str(exc)
-
-
-TASK_EMOJI = {
-    "SUCCESS":           "✅",
-    "FAILED":            "❌",
-    "TIMEDOUT":          "⏱",
-    "CANCELED":          "🚫",
-    "INTERNAL_ERROR":    "💥",
-    "SKIPPED":           "⏭",
-    "RUNNING":           "⏳",
-    "PENDING":           "🔵",
-    "BLOCKED":           "🔒",
-    "WAITING_FOR_RETRY": "🔁",
-    "TERMINATING":       "🔶",
-    "QUEUED":            "🔵",
-}
-
-
-def _run_status_emoji(life_cycle: str, result: str = "") -> str:
-    if result:
-        return TASK_EMOJI.get(result, "❓")
-    return TASK_EMOJI.get(life_cycle, "⏳")
-
-
-# ---------------------------------------------------------------------------
 # Home
 # ---------------------------------------------------------------------------
 
@@ -150,10 +104,12 @@ if page == "Home":
     CARD = (
         "background:#F8FAFC;border:1px solid #E2E8F0;"
         "border-top:3px solid #3B82F6;border-radius:10px;"
-        "padding:22px 24px;min-height:300px;box-sizing:border-box;"
+        "padding:22px 24px;min-height:400px;box-sizing:border-box;"
     )
-    TD = "border:none;padding:6px 12px 6px 0;vertical-align:top;"
-    BADGE = "color:white;padding:2px 10px;border-radius:4px;font-size:0.85em;white-space:nowrap;"
+    BADGE = (
+        "color:white;padding:2px 10px;border-radius:4px;font-size:0.85em;"
+        "white-space:nowrap;min-width:54px;text-align:center;display:inline-block;"
+    )
 
     with col_a:
         st.markdown(
@@ -163,14 +119,20 @@ if page == "Home":
                 <p style="color:#374151;margin-bottom:14px;">
                     15 years of US and European market data processed on Databricks through three Delta Lake layers:
                 </p>
-                <table style="border-collapse:collapse;width:100%;font-size:0.9em;border:none;">
-                    <tr><td style="{TD}"><span style="background:#7C3D12;{BADGE}">Bronze</span></td>
-                        <td style="{TD}color:#374151;">5 raw Delta tables: S&amp;P 500, Euro Stoxx 50, VIX, US Fed Rate, ECB Rate</td></tr>
-                    <tr><td style="{TD}"><span style="background:#475569;{BADGE}">Silver</span></td>
-                        <td style="{TD}color:#374151;">Cleaned, quality-checked, joined into a single daily time series</td></tr>
-                    <tr><td style="{TD}"><span style="background:#B45309;{BADGE}">Gold</span></td>
-                        <td style="{TD}color:#374151;">Volatility, correlations, drawdown, regime classifications</td></tr>
-                </table>
+                <div style="font-size:0.9em;">
+                    <div style="display:flex;align-items:flex-start;padding:5px 0;gap:10px;">
+                        <span style="background:#7C3D12;{BADGE}">Bronze</span>
+                        <span style="color:#374151;flex:1;">5 raw Delta tables: S&amp;P 500, Euro Stoxx 50, VIX, US Fed Rate, ECB Rate</span>
+                    </div>
+                    <div style="display:flex;align-items:flex-start;padding:5px 0;gap:10px;">
+                        <span style="background:#475569;{BADGE}">Silver</span>
+                        <span style="color:#374151;flex:1;">Cleaned, quality-checked, joined into a single daily time series</span>
+                    </div>
+                    <div style="display:flex;align-items:flex-start;padding:5px 0;gap:10px;">
+                        <span style="background:#B45309;{BADGE}">Gold</span>
+                        <span style="color:#374151;flex:1;">Volatility, correlations, drawdown, regime classifications</span>
+                    </div>
+                </div>
                 <p style="color:#374151;margin-top:14px;margin-bottom:0;">
                     The Analytics Dashboard shows the Gold layer output on real data.
                 </p>
@@ -208,9 +170,24 @@ if page == "Home":
             st.rerun()
 
     st.markdown("---")
-    st.caption(
-        "Databricks · PySpark · Delta Lake · Python · Streamlit · Claude AI  |  "
-        "[View on GitHub ↗](https://github.com/madhurima-nath/databricks-ai-automated-pipeline)"
+    PILL = (
+        "background:#EFF6FF;color:#1E40AF;padding:3px 12px;"
+        "border-radius:12px;font-size:0.82em;font-weight:500;"
+        "border:1px solid #BFDBFE;white-space:nowrap;"
+    )
+    st.markdown(
+        f"<div style='display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:4px 0;'>"
+        f"<span style='color:#4B5563;font-size:0.82em;font-weight:500;margin-right:2px;'>Built with</span>"
+        f"<span style='{PILL}'>Databricks</span>"
+        f"<span style='{PILL}'>PySpark</span>"
+        f"<span style='{PILL}'>Delta Lake</span>"
+        f"<span style='{PILL}'>Python</span>"
+        f"<span style='{PILL}'>Streamlit</span>"
+        f"<span style='{PILL}'>Claude AI</span>"
+        f"&nbsp;&nbsp;<a href='https://github.com/madhurima-nath/databricks-ai-automated-pipeline' "
+        f"target='_blank' rel='noopener' style='color:#3B82F6;font-size:0.85em;text-decoration:none;'>"
+        f"View on GitHub ↗</a></div>",
+        unsafe_allow_html=True,
     )
 
 
@@ -219,6 +196,9 @@ if page == "Home":
 # ---------------------------------------------------------------------------
 
 if page == "Analytics Dashboard":
+    if st.button("← Home", key="home_from_analytics"):
+        st.session_state["_nav_target"] = "Home"
+        st.rerun()
     st.title("Analytics Dashboard")
     st.markdown(
         "**Bronze** ingests raw market data into Delta tables. "
@@ -507,163 +487,18 @@ if page == "Analytics Dashboard":
 
 
 # ---------------------------------------------------------------------------
-# Page 2: Pipeline Control
-# ---------------------------------------------------------------------------
-
-elif page == "Pipeline Control":
-    st.title("Pipeline Control")
-    st.caption(
-        "Trigger and monitor the Bronze → Silver → Gold pipeline on Databricks. "
-        "Requires a Databricks workspace with the pipeline job registered."
-    )
-
-    with st.expander("Databricks connection", expanded=True):
-        host = st.text_input(
-            "Workspace host",
-            value=_secret("DATABRICKS_HOST"),
-            placeholder="https://adb-1234567890.12.azuredatabricks.net",
-            help="Your Databricks workspace URL.",
-        )
-        token = st.text_input(
-            "Personal access token",
-            type="password",
-            value=_secret("DATABRICKS_TOKEN"),
-            help="Generate from User Settings → Access tokens in Databricks.",
-        )
-        job_id_str = st.text_input(
-            "Job ID",
-            value=_secret("DATABRICKS_JOB_ID"),
-            placeholder="12345",
-            help="Register the job once with jobs/pipeline_job.json, then paste the ID here.",
-        )
-
-    connected = bool(host and token and job_id_str and job_id_str.isdigit())
-    job_id    = int(job_id_str) if connected else None
-
-    st.markdown("---")
-    st.subheader("Pipeline stages")
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        st.markdown("**Bronze — Raw ingestion**")
-        st.caption("Fetches S&P 500, Euro Stoxx 50, VIX, US Fed Rate, ECB Rate "
-                   "from yfinance and FRED. Writes 5 raw Delta tables.")
-        st.code("01_bronze_ingest.py", language=None)
-    with c2:
-        st.markdown("**Silver — Clean & align**")
-        st.caption("Quality checks, forward-fills monthly rates to daily spine, "
-                   "joins all sources, computes log returns and rate differential.")
-        st.code("02_silver_transform.py", language=None)
-    with c3:
-        st.markdown("**Gold — Analytics**")
-        st.caption("Rolling volatility, US–EU equity correlations, S&P 500 drawdown, "
-                   "VIX regime, rate regime classification, policy divergence.")
-        st.code("03_gold_analytics.py", language=None)
-
-    st.markdown("---")
-
-    if not connected:
-        st.info("Fill in the connection settings above to enable run controls.")
-    else:
-        run_col, refresh_col, _ = st.columns([2, 1, 3])
-        with run_col:
-            run_btn = st.button("▶ Run full pipeline", type="primary", use_container_width=True)
-        with refresh_col:
-            refresh_btn = st.button("🔄 Refresh", use_container_width=True)
-
-        if run_btn:
-            with st.spinner("Submitting pipeline run..."):
-                data, err = _db_api("post", "2.1/jobs/run-now", host, token,
-                                    json={"job_id": job_id})
-            if err:
-                st.error(f"Failed to start run: {err}")
-            else:
-                run_id = data["run_id"]
-                st.session_state["latest_run_id"] = run_id
-                st.success(f"Run submitted — Run ID: {run_id}")
-                st.rerun()
-
-        if refresh_btn:
-            st.rerun()
-
-        # --- Recent runs ---
-        st.subheader("Recent runs")
-        runs_data, runs_err = _db_api(
-            "get", f"2.1/jobs/runs/list?job_id={job_id}&limit=10&active_only=false",
-            host, token,
-        )
-        if runs_err:
-            st.error(f"Could not fetch runs: {runs_err}")
-        else:
-            runs = runs_data.get("runs", [])
-            if not runs:
-                st.info("No runs yet. Click **Run full pipeline** to start.")
-            else:
-                import pandas as pd
-
-                rows = []
-                for r in runs:
-                    s         = r["state"]
-                    lc        = s["life_cycle_state"]
-                    rs        = s.get("result_state", "")
-                    emoji     = _run_status_emoji(lc, rs)
-                    start_ms  = r.get("start_time", 0)
-                    start_str = (
-                        datetime.datetime.fromtimestamp(start_ms / 1000).strftime("%Y-%m-%d %H:%M")
-                        if start_ms else "—"
-                    )
-                    dur_ms  = r.get("execution_duration", 0)
-                    rows.append({
-                        "Run ID":   r["run_id"],
-                        "Started":  start_str,
-                        "Status":   f"{emoji} {rs or lc}",
-                        "Duration": f"{dur_ms // 1000}s" if dur_ms else "—",
-                    })
-                st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
-
-                # --- Task breakdown for most recent run (always shown) ---
-                latest_run_id = runs[0]["run_id"]
-                run_detail, detail_err = _db_api(
-                    "get", f"2.1/jobs/runs/get?run_id={latest_run_id}", host, token
-                )
-                if detail_err:
-                    st.error(f"Could not fetch run details: {detail_err}")
-                elif run_detail:
-                    tasks = run_detail.get("tasks", [])
-                    if tasks:
-                        st.markdown("**Latest run — task breakdown**")
-                        task_rows = []
-                        for t in tasks:
-                            ts  = t["state"]
-                            tlc = ts["life_cycle_state"]
-                            trs = ts.get("result_state", "")
-                            em  = _run_status_emoji(tlc, trs)
-                            dur = t.get("execution_duration", 0)
-                            task_rows.append({
-                                "Task":     t["task_key"],
-                                "Status":   f"{em} {trs or tlc}",
-                                "Duration": f"{dur // 1000}s" if dur else "—",
-                            })
-                        st.dataframe(pd.DataFrame(task_rows), use_container_width=True, hide_index=True)
-
-                    run_url = f"{host}/#job/{job_id}/run/{latest_run_id}"
-                    st.markdown(f"[Open in Databricks UI ↗]({run_url})")
-
-        st.markdown("---")
-        st.caption(
-            "After a successful run, the **Analytics Dashboard** page reads the updated "
-            "Gold table automatically on next load."
-        )
-
-
-# ---------------------------------------------------------------------------
-# Page 3: SAS → PySpark Converter
+# SAS → PySpark Converter
 # ---------------------------------------------------------------------------
 
 elif page == "SAS → PySpark Converter":
+    if st.button("← Home", key="home_from_converter"):
+        st.session_state["_nav_target"] = "Home"
+        st.rerun()
     st.title("SAS → PySpark Converter")
     st.markdown(
         "Paste legacy SAS code and get the equivalent PySpark, Databricks SQL, or dbt YAML back automatically. "
-        "Common patterns — PROC SORT, PROC MEANS, DATA steps — are handled by a built-in rule engine. "
+        "Common patterns — PROC SORT, PROC MEANS, DATA steps — are handled by a built-in rule engine: "
+        "deterministic, no API key needed, same output every time. "
         "Complex code falls back to an AI model that flags anything needing review."
     )
     st.markdown("---")
