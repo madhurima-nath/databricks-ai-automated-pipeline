@@ -26,3 +26,6 @@ build/
 # IDE
 .vscode/settings.json
 .idea/
+
+# Article drafts — kept locally, published to Medium
+docs/article_*.md
