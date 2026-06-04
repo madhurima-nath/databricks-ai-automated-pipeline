@@ -78,6 +78,10 @@ page = st.sidebar.radio(
 )
 
 st.sidebar.markdown("---")
+if page != "Home":
+    if st.sidebar.button("← Home", use_container_width=True):
+        st.session_state["_nav_target"] = "Home"
+        st.rerun()
 st.sidebar.markdown("**Data** · 2010 – June 2026")
 st.sidebar.caption(
     "S&P 500 · Euro Stoxx 50 · VIX\n"
@@ -304,6 +308,77 @@ if page == "Analytics Dashboard":
     df["date"] = pd.to_datetime(df["date"])
     df = df.sort_values("date")
 
+    # --- Current snapshot (always most recent row in dataset) ---
+    latest = df.iloc[-1]
+    st.caption(f"As of {latest['date'].strftime('%d %b %Y')} — most recent data in the pipeline")
+    m1, m2, m3, m4, m5 = st.columns(5)
+    m1.metric("S&P 500",       f"{latest['sp500_close']:,.0f}")
+    m2.metric("Euro Stoxx 50", f"{latest['eurostoxx_close']:,.0f}")
+    m3.metric("VIX",           f"{latest['vix_close']:.1f}",
+              help="Market stress: <20 calm, 20–30 elevated, >30 stress")
+    m4.metric("US Fed Rate",   f"{latest['fed_rate']:.2f}%")
+    m5.metric("ECB Rate",      f"{latest['ecb_rate']:.2f}%")
+
+    st.markdown("---")
+
+    # --- Current Environment ---
+    st.subheader("Current Environment")
+    st.caption("Where things stand as of the last pipeline run — interest rate regimes and market stress level.")
+    divergence_labels = {
+        "us_significantly_higher": "US rates much higher than EU",
+        "us_higher": "US rates higher than EU",
+        "eu_higher": "EU rates higher than US",
+        "aligned": "US and EU rates roughly equal",
+    }
+    vix_labels = {"calm": "Calm", "elevated": "Elevated", "stress": "Stress"}
+    rc1, rc2, rc3, rc4 = st.columns(4)
+    rc1.metric("US Interest Rate", latest["us_rate_regime"].capitalize())
+    rc2.metric("EU Interest Rate", latest["eu_rate_regime"].capitalize())
+    rc3.metric("US vs EU Rates",   divergence_labels.get(latest["policy_divergence"], latest["policy_divergence"]))
+    rc4.metric("Market Stress",    vix_labels.get(latest["vix_regime"], latest["vix_regime"]))
+
+    st.markdown("---")
+
+    # --- Key findings ---
+    st.markdown("### Key findings from the data")
+    st.markdown(
+        '<p style="color:#555;margin-bottom:12px;">Patterns that emerge consistently from 15 years of daily market data.</p>',
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        """
+        <div class="insight-grid">
+            <div class="insight-card" style="background:#FEF9C3;border-left:4px solid #CA8A04;">
+                <strong style="color:#92400E;">Markets crash together</strong><br>
+                During COVID (March 2020) and the 2022 rate shock, US and EU markets fell at the same time
+                and by similar amounts. Correlation spiked toward 1 on the worst days — holding both gave little protection.
+            </div>
+            <div class="insight-card" style="background:#FEE2E2;border-left:4px solid #DC2626;">
+                <strong style="color:#991B1B;">ECB's 8 years of negative rates</strong><br>
+                2014 to 2022: the ECB held its deposit rate below zero. European banks were charged to hold cash
+                rather than earning interest. The longest negative-rate experiment by a major central bank.
+            </div>
+            <div class="insight-card" style="background:#E0F2FE;border-left:4px solid #0284C7;">
+                <strong style="color:#0C4A6E;">2022 rate shock: fastest in 4 decades</strong><br>
+                Both the Fed and ECB raised rates from near zero to above 4% in roughly 18 months —
+                the fastest pace since the early 1980s. Both stock markets fell over 20%.
+            </div>
+            <div class="insight-card" style="background:#F0FDF4;border-left:4px solid #16A34A;">
+                <strong style="color:#14532D;">COVID recovery was unusually fast</strong><br>
+                Both markets recovered their pre-COVID highs within 12 months of the March 2020 crash —
+                faster than any comparable drop in the dataset.
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+    st.caption("Data covers 2010 – June 2026. Produced by the Bronze → Silver → Gold medallion pipeline on Databricks.")
+
+    st.markdown("---")
+    st.markdown("### Explore the data")
+    st.caption("Use the date filters to zoom into any period. Try March 2020 (COVID crash), 2022 (rate shock), or 2014–2022 (ECB negative rates).")
+
     # --- Date filter ---
     col1, col2 = st.columns(2)
     min_date = df["date"].min().date()
@@ -323,18 +398,7 @@ if page == "Analytics Dashboard":
         st.warning("No data in selected range.")
         st.stop()
 
-    # --- Metrics row ---
-    latest = d.iloc[-1]
-    st.caption(f"As of {latest['date'].strftime('%d %b %Y')} — last day in selected range")
-    m1, m2, m3, m4, m5 = st.columns(5)
-    m1.metric("S&P 500",       f"{latest['sp500_close']:,.0f}")
-    m2.metric("Euro Stoxx 50", f"{latest['eurostoxx_close']:,.0f}")
-    m3.metric("VIX",           f"{latest['vix_close']:.1f}",
-              help="Market stress: <20 calm, 20–30 elevated, >30 stress")
-    m4.metric("US Fed Rate",   f"{latest['fed_rate']:.2f}%")
-    m5.metric("ECB Rate",      f"{latest['ecb_rate']:.2f}%")
-
-    st.markdown("---")
+    st.markdown("")
 
     # --- Chart 1: Equity indices ---
     st.markdown('<h3 style="color:#1f77b4;">Equity Indices</h3>', unsafe_allow_html=True)
@@ -454,65 +518,6 @@ if page == "Analytics Dashboard":
         f"Current position: **{current_dd:.1f}%** from its recent high."
     )
 
-    # --- Regime summary ---
-    st.subheader("Current Environment")
-    st.caption(
-        "A summary as of the last day in the selected date range — "
-        "whether interest rates are historically high or low, how far apart US and EU rates are, "
-        "and whether markets are calm or stressed."
-    )
-    latest_regime = d.iloc[-1]
-    divergence_labels = {
-        "us_significantly_higher": "US rates much higher than EU",
-        "us_higher": "US rates higher than EU",
-        "eu_higher": "EU rates higher than US",
-        "aligned": "US and EU rates roughly equal",
-    }
-    vix_labels = {
-        "calm": "Calm",
-        "elevated": "Elevated",
-        "stress": "Stress",
-    }
-    rc1, rc2, rc3, rc4 = st.columns(4)
-    rc1.metric("US Interest Rate", latest_regime["us_rate_regime"].capitalize())
-    rc2.metric("EU Interest Rate", latest_regime["eu_rate_regime"].capitalize())
-    rc3.metric("US vs EU Rates", divergence_labels.get(latest_regime["policy_divergence"], latest_regime["policy_divergence"]))
-    rc4.metric("Market Stress", vix_labels.get(latest_regime["vix_regime"], latest_regime["vix_regime"]))
-
-    st.markdown("---")
-    st.markdown("### Key findings from the data")
-    st.markdown(
-        '<p style="color:#555;margin-bottom:12px;">Patterns that emerge consistently from 15 years of daily market data.</p>',
-        unsafe_allow_html=True,
-    )
-    st.markdown(
-        """
-        <div class="insight-grid">
-            <div class="insight-card" style="background:#FEF9C3;border-left:4px solid #CA8A04;">
-                <strong style="color:#92400E;">Markets crash together</strong><br>
-                During COVID (March 2020) and the 2022 rate shock, US and EU markets fell at the same time
-                and by similar amounts. Correlation spiked toward 1 on the worst days — holding both gave little protection.
-            </div>
-            <div class="insight-card" style="background:#FEE2E2;border-left:4px solid #DC2626;">
-                <strong style="color:#991B1B;">ECB's 8 years of negative rates</strong><br>
-                2014 to 2022: the ECB held its deposit rate below zero. European banks were charged to hold cash
-                rather than earning interest. The longest negative-rate experiment by a major central bank.
-            </div>
-            <div class="insight-card" style="background:#E0F2FE;border-left:4px solid #0284C7;">
-                <strong style="color:#0C4A6E;">2022 rate shock: fastest in 4 decades</strong><br>
-                Both the Fed and ECB raised rates from near zero to above 4% in roughly 18 months —
-                the fastest pace since the early 1980s. Both stock markets fell over 20%.
-            </div>
-            <div class="insight-card" style="background:#F0FDF4;border-left:4px solid #16A34A;">
-                <strong style="color:#14532D;">COVID recovery was unusually fast</strong><br>
-                Both markets recovered their pre-COVID highs within 12 months of the March 2020 crash —
-                faster than any comparable drop in the dataset.
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
     st.caption("Data covers 2010 – June 2026. Produced by the Bronze → Silver → Gold medallion pipeline on Databricks.")
 
 
