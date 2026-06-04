@@ -209,6 +209,10 @@ if page == "Analytics Dashboard":
         )
         st.stop()
 
+    st.caption(
+        "This dashboard connects live to Databricks. "
+        "The first load may take 20–30 seconds while the cluster wakes up — thank you for your patience."
+    )
     with st.spinner("Loading data from Databricks..."):
         try:
             df = load_gold(host, token, http_path)
