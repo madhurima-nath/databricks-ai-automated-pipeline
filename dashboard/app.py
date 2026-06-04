@@ -52,11 +52,15 @@ st.sidebar.markdown("---")
 st.sidebar.markdown(
     "**About this app**\n\n"
     "This is the output of a data engineering pipeline built on Databricks. "
-    "Market data from Yahoo Finance and FRED (the US Federal Reserve's public data service) is processed through three layers — "
-    "Bronze (raw), Silver (cleaned and joined), Gold (analytics-ready) — "
-    "and served here for exploration.\n\n"
-    "**Data:** S&P 500 (US stocks) · Euro Stoxx 50 (European stocks) · VIX (market uncertainty index) · US Fed Funds Rate · ECB Deposit Facility Rate\n\n"
-    "**Period:** 2010 to present\n\n"
+    "Market data is processed through three layers — Bronze (raw), Silver (cleaned), Gold (analytics-ready) — "
+    "and served here.\n\n"
+    "**Data covers 2010 – June 2026**\n\n"
+    "**Sources:**\n"
+    "- S&P 500 (US stock index)\n"
+    "- Euro Stoxx 50 (European stock index)\n"
+    "- VIX (market uncertainty index)\n"
+    "- US Federal Funds Rate\n"
+    "- ECB Deposit Facility Rate\n\n"
     "[View project on GitHub ↗](https://github.com/madhurima-nath/databricks-ai-automated-pipeline)"
 )
 
@@ -294,17 +298,29 @@ if page == "Analytics Dashboard":
     st.plotly_chart(fig5, use_container_width=True)
 
     # --- Regime summary ---
-    st.subheader("Current Regimes")
+    st.subheader("Current Environment")
     st.caption(
-        "A summary of the current environment based on the last day in the selected date range — "
-        "whether interest rates are historically high or low, how far US and EU rates have diverged, "
+        "A summary as of the last day in the selected date range — "
+        "whether interest rates are historically high or low, how far apart US and EU rates are, "
         "and whether markets are calm or stressed."
     )
-    regime_cols = ["us_rate_regime", "eu_rate_regime", "policy_divergence", "vix_regime"]
-    st.dataframe(
-        d[regime_cols + ["date"]].tail(1).set_index("date").T.rename(columns=lambda c: str(c.date())),
-        use_container_width=True,
-    )
+    latest_regime = d.iloc[-1]
+    divergence_labels = {
+        "us_significantly_higher": "US rates much higher than EU",
+        "us_higher": "US rates higher than EU",
+        "eu_higher": "EU rates higher than US",
+        "aligned": "US and EU rates roughly equal",
+    }
+    vix_labels = {
+        "calm": "Calm",
+        "elevated": "Elevated",
+        "stress": "Stress",
+    }
+    rc1, rc2, rc3, rc4 = st.columns(4)
+    rc1.metric("US Interest Rate", latest_regime["us_rate_regime"].capitalize())
+    rc2.metric("EU Interest Rate", latest_regime["eu_rate_regime"].capitalize())
+    rc3.metric("US vs EU Rates", divergence_labels.get(latest_regime["policy_divergence"], latest_regime["policy_divergence"]))
+    rc4.metric("Market Stress", vix_labels.get(latest_regime["vix_regime"], latest_regime["vix_regime"]))
 
 
 # ---------------------------------------------------------------------------
