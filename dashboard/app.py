@@ -281,7 +281,7 @@ if page == "Analytics Dashboard":
 
     # --- Key findings first: this is the point of the dashboard ---
     st.markdown("### Key patterns in the data")
-    st.caption("These patterns are in the data — visible once it is loaded, cleaned, and structured through the Bronze, Silver, and Gold pipeline layers.")
+    st.markdown("These patterns are in the data — visible once it is loaded, cleaned, and structured through the Bronze, Silver, and Gold pipeline layers.")
     st.markdown(
         """
         <div class="insight-grid">
@@ -313,18 +313,9 @@ if page == "Analytics Dashboard":
 
     st.markdown("---")
 
-    # --- Current state ---
-    st.subheader("Current State")
-    st.caption(f"As of {latest['date'].strftime('%d %b %Y')} · most recent pipeline run")
-    m1, m2, m3, m4, m5 = st.columns(5)
-    m1.metric("S&P 500",       f"{latest['sp500_close']:,.0f}")
-    m2.metric("Euro Stoxx 50", f"{latest['eurostoxx_close']:,.0f}")
-    m3.metric("VIX",           f"{latest['vix_close']:.1f}",
-              help="Market stress: <20 calm, 20–30 elevated, >30 stress")
-    m4.metric("US Fed Rate",   f"{latest['fed_rate']:.2f}%")
-    m5.metric("ECB Rate",      f"{latest['ecb_rate']:.2f}%")
-
-    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+    # --- Pipeline output: current classifications ---
+    st.subheader("What the pipeline classifies today")
+    st.caption(f"Gold layer output · {latest['date'].strftime('%d %b %Y')}")
     divergence_labels = {
         "us_significantly_higher": "US >> EU",
         "us_higher": "US > EU",
