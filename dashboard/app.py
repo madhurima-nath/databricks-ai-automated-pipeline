@@ -158,7 +158,7 @@ if page == "Home":
                     <li>Paste SAS code, choose a target format, get working code back</li>
                     <li>Common patterns handled by a rule engine — no API key needed</li>
                     <li>Unrecognised patterns are sent to Claude AI, which converts and flags anything needing a human check</li>
-                    <li>Tested with <strong>23 automated test cases</strong></li>
+                    <li>Tested with <strong>23 test cases</strong> covering all supported SAS patterns</li>
                 </ul>
             </div>
             """,
