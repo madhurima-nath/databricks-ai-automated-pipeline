@@ -33,7 +33,7 @@ External APIs
               │  bronze_sp500  │  bronze_eurostoxx  bronze_vix
               │  bronze_fed_rate  bronze_ecb_rate   │
               └───────┬────────┘
-                      │  Quality checks · Schema validation · Range checks
+                      │  Quality checks · Null checks · Range checks · Duplicate detection
               ┌───────▼────────┐
               │  Silver Layer  │  Cleaned · Joined · Forward-filled
               │  silver_market │  Daily spine · Log returns · Rate differential
