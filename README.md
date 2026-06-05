@@ -2,18 +2,22 @@
 
 [![Tests](https://github.com/madhurima-nath/databricks-ai-automated-pipeline/actions/workflows/test.yml/badge.svg)](https://github.com/madhurima-nath/databricks-ai-automated-pipeline/actions/workflows/test.yml)
 
-An end-to-end data engineering project on Databricks demonstrating a production-grade
-Medallion Architecture pipeline alongside an AI-powered legacy code migration tool.
+An end-to-end data engineering project on Databricks: a medallion architecture pipeline on 15 years
+of US and European market data, and a SAS → PySpark converter that automates legacy code migration.
 
-**Pipeline:** Ingests US and European market data — S&P 500, Euro Stoxx 50, VIX, US Federal
-Funds Rate, and ECB Deposit Facility Rate — through Bronze, Silver, and Gold Delta Lake layers.
-The Gold layer surfaces volatility regimes, US–EU equity correlations, central bank policy
-divergence, and drawdown analysis via a Streamlit dashboard.
+**Pipeline:** Ingests S&P 500, Euro Stoxx 50, VIX, US Federal Funds Rate, and ECB Deposit Facility
+Rate through Bronze, Silver, and Gold Delta Lake layers. The Gold layer computes rolling volatility,
+US–EU equity correlations, central bank policy divergence, and drawdown — the analytics that SAS
+risk teams run today, now running in PySpark on real data.
 
 **Migration tool:** A SAS → PySpark converter that translates legacy SAS code (PROC SORT,
 PROC MEANS, PROC SQL, DATA steps) to PySpark DataFrame API or Databricks SQL. Common patterns
-are handled by a deterministic rule engine; complex or ambiguous code falls back to Claude
+are handled by a deterministic rule engine; anything outside those patterns falls back to Claude
 (claude-haiku-4-5) via the Anthropic API.
+
+**Built with Claude Code** as a development collaborator — for architecture decisions, the quality
+checks module, and the converter's rule engine. The converter deploys the same AI capability as a
+production feature: rule engine for recognised patterns, Claude AI fallback for the rest.
 
 ---
 

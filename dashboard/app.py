@@ -189,6 +189,11 @@ if page == "Home":
         f"View on GitHub ↗</a></div>",
         unsafe_allow_html=True,
     )
+    st.caption(
+        "Claude AI powers the SAS → PySpark converter fallback and was used as a development "
+        "collaborator (Claude Code) throughout — for architecture decisions, the quality checks "
+        "module, and the converter's rule engine."
+    )
 
 
 # ---------------------------------------------------------------------------
