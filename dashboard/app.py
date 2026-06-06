@@ -155,10 +155,10 @@ if page == "Home":
                     This converter translates legacy SAS into PySpark or Databricks SQL automatically.
                 </p>
                 <ul style="color:#374151;margin:0;padding-left:18px;line-height:1.9;">
-                    <li><strong>Community:</strong> paste a SAS block, get PySpark or Databricks SQL back — no API key needed for common patterns</li>
-                    <li><strong>Enterprise:</strong> upload a migration config (YAML) mapping SAS libraries and macro variables to Unity Catalog paths; convert a full multi-block script; download converted code and a migration manifest with per-block confidence scores</li>
-                    <li>Unrecognised patterns are sent to Claude AI, which converts and flags anything needing a human check</li>
-                    <li>Tested with <strong>39 pytest cases</strong> — covering all supported SAS patterns, config-driven mapping, confidence scoring, manifest generation, and the pipeline submission scripts — run automatically via GitHub Actions</li>
+                    <li><strong>Community:</strong> paste a SAS block, get PySpark or Databricks SQL back</li>
+                    <li><strong>Enterprise:</strong> YAML config for library and macro mapping, multi-block conversion, per-block confidence scores, downloadable manifest</li>
+                    <li>Unrecognised patterns fall back to Claude AI</li>
+                    <li>Tested with <strong>39 pytest cases</strong>, run automatically via GitHub Actions</li>
                 </ul>
             </div>
             """,
