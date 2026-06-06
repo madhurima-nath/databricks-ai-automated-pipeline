@@ -53,7 +53,7 @@ External APIs
 
 ## Key technical details
 
-### Mixed-frequency time-series join
+### The Silver layer join
 
 The Fed Funds Rate and ECB rate are monthly; equity data is daily. A standard join leaves most
 rows null. Silver resolves this with a forward-fill window function:
@@ -122,7 +122,7 @@ print(result.notes)
 # ['PROC SORT → .orderBy()']
 ```
 
-Tested with 33 pytest cases (23 SAS converter + 10 scripts).
+Tested with 30 pytest cases: 23 covering every supported SAS construct (sort, aggregation, SQL, DATA step variants, date functions, and warning cases for constructs like RETAIN and INTCK), and 7 covering the pipeline submission script (credential loading, exit codes, job status handling). The full suite runs automatically on every push to main via GitHub Actions. Pipeline notebook execution is validated on Databricks through quality checks at every layer transition.
 
 ---
 
@@ -166,7 +166,7 @@ databricks-ai-automated-pipeline/
 │
 ├── tests/
 │   ├── test_sas_converter.py           23 pytest cases for the SAS converter (all patterns)
-│   └── test_scripts.py                 10 pytest cases for run_pipeline.py + download_gold.py
+│   └── test_scripts.py                 7 pytest cases for run_pipeline.py + download_gold.py
 │
 ├── scripts/
 │   └── run_pipeline.py                 Submit the Databricks job and poll for completion
@@ -234,6 +234,8 @@ pytest tests/ -v
 python scripts/run_pipeline.py --job-id 12345
 ```
 
+The pipeline fetches from Yahoo Finance and FRED on every run — all five series are updated through the current date automatically. Re-run at any time to pull the latest data.
+
 The Streamlit dashboard is at [financial-analytics-databricks.streamlit.app](https://financial-analytics-databricks.streamlit.app).
 
 ---
@@ -282,5 +284,6 @@ Task results:
 
 - Portfolio: [Financial Analytics Pipeline on Databricks](https://madhurima-nath.github.io/project_related_files/data_migration.html)
 - Dashboard: [financial-analytics-databricks.streamlit.app](https://financial-analytics-databricks.streamlit.app)
-- Medium: *Aligning Mixed-Frequency Central Bank Rates with Daily Equity Data on Databricks* (forthcoming)
-- Medium: *From SAS to PySpark: Migrating Legacy Financial Analytics Code to a Modern Lakehouse* (forthcoming)
+- Medium: *Migrating Financial Analytics to a Lakehouse on Databricks: A Working Demo* (forthcoming)
+- Medium: *One Problem in the Silver Layer: Joining Monthly Rates onto a Daily Price Spine* (forthcoming)
+- Medium: *Automating SAS-to-PySpark Code Migration with a Rule Engine and AI Fallback* (forthcoming)

@@ -158,7 +158,7 @@ if page == "Home":
                     <li>Paste SAS code, choose a target format, get working code back</li>
                     <li>Common patterns handled by a rule engine — no API key needed</li>
                     <li>Unrecognised patterns are sent to Claude AI, which converts and flags anything needing a human check</li>
-                    <li>Tested with <strong>23 test cases</strong> covering all supported SAS patterns</li>
+                    <li>Tested with <strong>30 pytest cases</strong> — 23 covering all supported SAS patterns, 7 covering the pipeline submission script — run automatically via GitHub Actions</li>
                 </ul>
             </div>
             """,
@@ -484,7 +484,7 @@ elif page == "SAS → PySpark Converter":
     st.markdown(
         "Financial institutions have decades of analytics written in SAS — risk models, regulatory reports, "
         "portfolio calculations. The infrastructure can move to Databricks, but the code cannot move itself. "
-        "Rewriting each script by hand is the bottleneck that stalls most migrations. "
+        "Rewriting each script by hand is the bottleneck that impedes most migrations. "
         "This converter automates the translation: paste SAS, get working PySpark or Databricks SQL back. "
         "Common patterns — PROC SORT, PROC MEANS, PROC SQL, DATA steps — are handled by a rule engine with no API key needed. "
         "Anything outside those patterns is sent to Claude AI."
