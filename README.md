@@ -295,5 +295,5 @@ Task results:
 - Portfolio: [Financial Analytics Pipeline on Databricks](https://madhurima-nath.github.io/project_related_files/data_migration.html)
 - Dashboard: [financial-analytics-databricks.streamlit.app](https://financial-analytics-databricks.streamlit.app)
 - Medium: *Migrating Financial Analytics to a Lakehouse on Databricks: A Working Demo* (forthcoming)
-- Medium: *The Join SAS Buries: Aligning Financial Data in a Databricks Pipeline* (forthcoming)
+- Medium: *The Join SAS Buries: Aligning Data in a Databricks Pipeline* (forthcoming)
 - Medium: *Automating SAS-to-PySpark Code Migration with a Rule Engine and AI Fallback* (forthcoming)
