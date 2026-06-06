@@ -67,6 +67,14 @@ Silver owns data preparation — including the forward-fill join that aligns mon
 onto the daily trading sequence. Gold applies business rules on top of the prepared data. Each
 layer is independently testable; a change to Gold does not touch Silver.
 
+### Bronze layer
+
+Five Delta tables written without any transforms — source data preserved exactly as received:
+`bronze_sp500`, `bronze_eurostoxx`, `bronze_vix` from Yahoo Finance (daily OHLCV), and
+`bronze_fed_rate`, `bronze_ecb_rate` from FRED (monthly rates). Because Bronze never transforms,
+the full history can be re-derived by rerunning Silver against Bronze if any cleaning rule changes —
+without calling the original APIs again.
+
 ### Data quality layer
 
 Quality checks run at Bronze → Silver and Silver → Gold transitions. The `00_quality_checks`
@@ -88,8 +96,8 @@ Each check logs PASS or FAIL with detail. A FAIL raises immediately to halt the 
 
 In the Databricks medallion architecture, the Gold layer is the consumption-ready layer where
 final business rules and aggregations are applied for specific use cases. A financial analyst
-opening the dashboard gets rolling volatility, correlations, drawdown, and regime classifications
-as direct answers, with no further calculation needed.
+opening the dashboard gets rolling volatility, correlations, rate regimes, and price decline from
+peak as direct answers, with no further calculation needed.
 
 | Metric | Description |
 |--------|-------------|
@@ -157,7 +165,7 @@ databricks-ai-automated-pipeline/
 │   ├── 00_quality_checks.py            Reusable quality check module — imported by 02 and 03
 │   ├── 01_bronze_ingest.py             Raw ingestion from yfinance + FRED; writes 5 Delta tables
 │   ├── 02_silver_transform.py          Clean, join, forward-fill rates; derives log returns
-│   └── 03_gold_analytics.py            Rolling vol, correlations, regimes, drawdown
+│   └── 03_gold_analytics.py            Rolling vol, correlations, rate regimes, % decline from 52-week high
 │
 ├── src/
 │   └── converter/
