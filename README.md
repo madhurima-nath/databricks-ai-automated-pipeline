@@ -73,7 +73,7 @@ without calling the original APIs again.
 ### Data quality layer
 
 Quality checks run at Bronze → Silver and Silver → Gold transitions. The `00_quality_checks`
-module is domain-agnostic and reusable across projects:
+module works across any project, not just this one:
 
 ```python
 run_quality_checks(
@@ -266,7 +266,7 @@ python scripts/run_pipeline.py --job-id 12345
 
 The pipeline fetches from Yahoo Finance and FRED on every run — all five series are updated through the current date automatically. Re-run at any time to pull the latest data.
 
-[Live Streamlit dashboard](https://financial-analytics-databricks.streamlit.app)
+Live dashboard: [financial-analytics-databricks.streamlit.app](https://financial-analytics-databricks.streamlit.app)
 
 ---
 
