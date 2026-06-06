@@ -208,9 +208,10 @@ if page == "Analytics Dashboard":
             st.rerun()
     st.title("Analytics Dashboard")
     st.markdown(
-        "Rolling volatility, cross-market correlations, and drawdown are standard financial risk analytics. "
-        "This dashboard shows what they look like on a modern data platform — scalable, versioned, "
-        "and cleanly separated from the data preparation that feeds them. "
+        "In the Databricks medallion architecture, the Gold layer is where final business rules and "
+        "aggregations are applied for specific use cases. This dashboard shows the Gold layer output: "
+        "rolling volatility, cross-market correlations, drawdown, and rate regime classifications "
+        "on 15 years of real US and European market data. "
         "This dashboard shows them running on PySpark, on real data, end to end. "
         "The interest rate data is monthly; equity prices are daily — joining them directly leaves most rows empty. "
         "**Bronze** preserves the five raw source tables. "

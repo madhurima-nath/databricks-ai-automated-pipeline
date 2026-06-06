@@ -92,9 +92,10 @@ Each check logs PASS or FAIL with detail. A FAIL raises immediately to halt the 
 
 ### Gold layer metrics
 
-Rolling volatility, correlations, drawdown, and regime classifications are standard financial risk
-calculations. The Gold layer shows what they look like on a modern data platform — scalable,
-versioned, and cleanly separated from the data preparation that feeds them.
+In the Databricks medallion architecture, the Gold layer is the consumption-ready layer where
+final business rules and aggregations are applied for specific use cases. A financial analyst
+opening the dashboard gets rolling volatility, correlations, drawdown, and regime classifications
+as direct answers, with no further calculation needed.
 
 | Metric | Description |
 |--------|-------------|
