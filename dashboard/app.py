@@ -122,7 +122,7 @@ if page == "Home":
                     </div>
                     <div style="display:flex;align-items:flex-start;padding:5px 0;gap:10px;">
                         <span style="background:#B45309;{BADGE}">Gold</span>
-                        <span style="color:#374151;flex:1;">Market analytics, ready for the dashboard</span>
+                        <span style="color:#374151;flex:1;">Volatility, correlations, and rate regime classifications</span>
                     </div>
                 </div>
             </div>
