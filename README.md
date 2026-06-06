@@ -133,6 +133,28 @@ print(result.notes)
 # ['PROC SORT → .orderBy()']
 ```
 
+**Enterprise mode** converts a full SAS script using a config file that maps SAS library names
+and variables to Databricks table paths:
+
+```python
+from src.converter import convert_script, load_config_from_dict, generate_manifest
+
+config = load_config_from_dict({
+    "source": {
+        "library_mappings": {"risklib": "trading.bronze"},
+        "macro_vars": {"start_date": "2010-01-01"},
+    },
+    "target": {"platform": "enterprise", "unity_catalog": False},
+})
+
+results = convert_script(sas_script, config=config)
+manifest_yaml = generate_manifest(results, source_label="risk_models.sas")
+```
+
+Each converted block gets a confidence score and a review flag. `generate_manifest()` produces
+a downloadable audit trail listing every block, how it was converted, its score, and anything
+flagged for manual review.
+
 Tested with 46 pytest cases: 39 covering the SAS converter (all supported patterns, confidence scoring, config-driven mapping, multi-block conversion, and manifest generation) and 7 covering the pipeline script (credential loading, exit codes, job status handling). Pipeline notebook execution is validated on Databricks through quality checks at every layer transition.
 
 ---
