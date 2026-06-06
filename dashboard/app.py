@@ -146,7 +146,7 @@ if page == "Home":
                     </div>
                     <div style="display:flex;align-items:flex-start;padding:5px 0;gap:10px;">
                         <span style="background:#6B21A8;{BADGE}">Enterprise</span>
-                        <span style="color:#374151;flex:1;">Upload a config file, convert full scripts, download code and an audit trail</span>
+                        <span style="color:#374151;flex:1;">Full script conversion using a config file</span>
                     </div>
                     <div style="display:flex;align-items:flex-start;padding:5px 0;gap:10px;">
                         <span style="background:#065F46;{BADGE}">Tested</span>
