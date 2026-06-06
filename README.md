@@ -93,8 +93,8 @@ Each check logs PASS or FAIL with detail. A FAIL raises immediately to halt the 
 ### Gold layer metrics
 
 Rolling volatility, correlations, drawdown, and regime classifications are standard financial risk
-calculations — the kind that have historically run in SAS on single-node infrastructure, now
-running in PySpark on a clean tested Silver table.
+calculations. The Gold layer shows what they look like on a modern data platform — scalable,
+versioned, and cleanly separated from the data preparation that feeds them.
 
 | Metric | Description |
 |--------|-------------|
