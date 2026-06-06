@@ -211,13 +211,7 @@ if page == "Analytics Dashboard":
         "In the Databricks medallion architecture, the Gold layer is where final business rules and "
         "aggregations are applied for specific use cases. This dashboard shows the Gold layer output: "
         "rolling volatility, cross-market correlations, drawdown, and rate regime classifications "
-        "on 15 years of real US and European market data. "
-        "This dashboard shows them running on PySpark, on real data, end to end. "
-        "The interest rate data is monthly; equity prices are daily — joining them directly leaves most rows empty. "
-        "**Bronze** preserves the five raw source tables. "
-        "**Silver** forward-fills each rate across trading days, runs quality checks, and produces one clean joined table. "
-        "**Gold** computes the analytics from that base. "
-        "The charts below are the Gold layer output on 15 years of US and European market data."
+        "on 15 years of real US and European market data."
     )
     host      = _secret("DATABRICKS_HOST")
     token     = _secret("DATABRICKS_TOKEN")
