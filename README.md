@@ -55,6 +55,10 @@ External APIs
 
 ### The Silver layer join
 
+In a SAS script, this join sits alongside ingestion, cleaning, and analytics in the same file.
+Silver isolates it: solved once, in one place, with every downstream calculation reading from
+the same aligned source.
+
 The Fed Funds Rate and ECB rate are monthly; equity data is daily. A standard join leaves most
 rows null. Silver resolves this with a forward-fill window function:
 
@@ -87,6 +91,9 @@ run_quality_checks(
 Each check logs PASS or FAIL with detail. A FAIL raises immediately to halt the pipeline.
 
 ### Gold layer metrics
+
+These are the calculations SAS risk teams run today — rolling volatility, correlations, drawdown,
+regime classifications — now running in PySpark, reading from a clean tested Silver table.
 
 | Metric | Description |
 |--------|-------------|
