@@ -1,20 +1,19 @@
 # Financial Analytics Pipeline on Databricks
 
+A hands-on migration project: a Databricks medallion pipeline on 15 years of US and European
+market data, and a SAS → PySpark converter that translates legacy analytics code automatically.
 
-An end-to-end data engineering project on Databricks: a medallion architecture pipeline on 15 years
-of US and European market data, and a SAS → PySpark converter that automates legacy code migration.
+**Pipeline:** Bronze → Silver → Gold across five series — S&P 500, Euro Stoxx 50, VIX, US
+Federal Funds Rate, and ECB Deposit Facility Rate. Gold computes rolling volatility, US–EU
+equity correlations, US–EU interest rate divergence, and rate regime classifications. The ECB
+rate went negative in 2014 and stayed there until 2022 — a regime the US Fed never entered —
+which appears clearly in the regime classifications and the US–EU rate differential.
 
-**Pipeline:** Ingests S&P 500, Euro Stoxx 50, VIX, US Federal Funds Rate, and ECB Deposit Facility
-Rate through Bronze, Silver, and Gold Delta Lake layers. The Gold layer is the consumption-ready
-layer where final business rules and aggregations are applied: rolling volatility, US-EU equity
-correlations, central bank policy divergence, % decline from peak, and regime classifications on 15 years of
-real market data.
-
-**Migration tool:** A SAS → PySpark converter that translates legacy SAS code (PROC SORT,
-PROC MEANS, PROC SQL, DATA steps) to PySpark DataFrame API or Databricks SQL. Two modes:
-Community (convert a single SAS block) and Enterprise (convert a full script using a config
-file that maps SAS library names and variables to Databricks paths). Common patterns are
-handled by a deterministic rule engine; anything else falls back to Claude AI.
+**Migration tool:** Translates legacy SAS code (PROC SORT, PROC MEANS, PROC SQL, DATA steps)
+to PySpark or Databricks SQL. Community mode converts a single block; Enterprise mode converts
+a full script using a config file that maps SAS library names and variables to Databricks paths.
+Common patterns use a deterministic rule engine; anything outside those patterns falls back to
+Claude AI.
 
 **Built with Claude Code** as a development collaborator — for architecture decisions, the quality
 checks module, and the converter's rule engine.
@@ -36,7 +35,7 @@ External APIs
                       │  Quality checks · Null checks · Range checks · Duplicate detection
               ┌───────▼────────┐
               │  Silver Layer  │  Cleaned · Joined · Forward-filled
-              │  silver_market │  Daily spine · Log returns · Rate differential
+              │  silver_market │  Aligned to daily · Log returns · US–EU rate differential
               └───────┬────────┘
                       │  Quality checks · Duplicate detection · Return bounds
               ┌───────▼────────┐
