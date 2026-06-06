@@ -556,7 +556,7 @@ elif page == "SAS → PySpark Converter":
         "  platform: enterprise\n"
         "  catalog: trading\n"
         "  default_schema: silver\n"
-        "  unity_catalog: true\n"
+        "  unity_catalog: false  # set true for Unity Catalog (full Databricks workspace only)\n"
     )
 
     with st.expander("Advanced: Anthropic API key (for patterns outside the rule engine)"):
@@ -632,9 +632,17 @@ elif page == "SAS → PySpark Converter":
     else:
         st.markdown(
             "Enterprise mode adds: a migration config (YAML) that resolves SAS library "
-            "references to Unity Catalog paths and substitutes macro variables; multi-block "
+            "references to Databricks table paths and substitutes macro variables; multi-block "
             "script conversion; confidence scoring per block; and downloadable outputs — "
             "converted code and a migration manifest."
+        )
+        st.info(
+            "The conversion runs entirely in Python — no Databricks connection needed. "
+            "When `unity_catalog: true` is set in the config, the generated code uses "
+            "fully qualified `catalog.schema.table` paths, which require a full Databricks "
+            "workspace with Unity Catalog enabled to run. Set `unity_catalog: false` to "
+            "generate simpler table references compatible with Community Edition or the "
+            "Hive Metastore."
         )
 
         col_cfg, col_sas = st.columns(2)
