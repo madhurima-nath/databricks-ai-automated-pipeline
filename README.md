@@ -12,8 +12,7 @@ which appears clearly in the regime classifications and the US–EU rate differe
 **Migration tool:** Translates legacy SAS code (PROC SORT, PROC MEANS, PROC SQL, DATA steps)
 to PySpark or Databricks SQL. Community mode converts a single block; Enterprise mode converts
 a full script using a config file that maps SAS library names and variables to Databricks paths.
-Common patterns use a deterministic rule engine; anything outside those patterns falls back to
-Claude AI.
+Common patterns are handled automatically; anything outside those patterns falls back to Claude AI.
 
 **Built with Claude Code** as a development collaborator — for architecture decisions, the quality
 checks module, and the converter's rule engine.
@@ -37,7 +36,7 @@ External APIs
               │  Silver Layer  │  Cleaned · Joined · Forward-filled
               │  silver_market │  Aligned to daily · Log returns · US–EU rate differential
               └───────┬────────┘
-                      │  Quality checks · Duplicate detection · Return bounds
+                      │  Quality checks · Duplicate detection · Log return range checks
               ┌───────▼────────┐
               │   Gold Layer   │  Analytics-ready aggregates
               │ gold_analytics │  Rolling vol · Correlations · Regimes · % decline from peak
@@ -140,7 +139,7 @@ config = load_config_from_dict({
         "library_mappings": {"risklib": "trading.bronze"},
         "macro_vars": {"start_date": "2010-01-01"},
     },
-    "target": {"platform": "enterprise", "unity_catalog": False},
+    "target": {"platform": "enterprise", "unity_catalog": False},  # set True for a full workspace
 })
 
 results = convert_script(sas_script, config=config)
@@ -209,7 +208,7 @@ databricks-ai-automated-pipeline/
 │       └── test.yml                    GitHub Actions CI — runs pytest on push
 │
 ├── config/
-│   └── migration_config_example.yaml   Example migration config — library mappings, macro vars, platform settings
+│   └── migration_config_example.yaml   Example config — library name mappings, variable substitutions, platform settings
 │
 ├── .env.example                        Template for API keys (copy to .env — never commit .env)
 ├── requirements.txt
@@ -267,7 +266,7 @@ python scripts/run_pipeline.py --job-id 12345
 
 The pipeline fetches from Yahoo Finance and FRED on every run — all five series are updated through the current date automatically. Re-run at any time to pull the latest data.
 
-The Streamlit dashboard is at [Live Streamlit dashboard](https://financial-analytics-databricks.streamlit.app).
+[Live Streamlit dashboard](https://financial-analytics-databricks.streamlit.app)
 
 ---
 
