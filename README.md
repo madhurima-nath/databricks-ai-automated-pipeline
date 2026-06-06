@@ -89,10 +89,9 @@ Each check logs PASS or FAIL with detail. A FAIL raises immediately to halt the 
 
 ### Gold layer metrics
 
-In the Databricks medallion architecture, the Gold layer is the consumption-ready layer where
-final business rules and aggregations are applied for specific use cases. A financial analyst
-opening the dashboard gets rolling volatility, correlations, rate regimes, and price decline from
-peak as direct answers, with no further calculation needed.
+Gold is where business logic runs on top of the prepared Silver data. Rolling volatility,
+correlations, rate regimes, and price decline from peak are computed here and read directly
+by the dashboard — no further calculation needed.
 
 | Metric | Description |
 |--------|-------------|
@@ -305,7 +304,7 @@ Task results:
 | S&P 500 | `^GSPC` | Yahoo Finance | Daily OHLCV, 2010–present |
 | Euro Stoxx 50 | `^STOXX50E` | Yahoo Finance | Daily close, 2010–present |
 | VIX | `^VIX` | Yahoo Finance | Daily close |
-| US Fed Funds Rate | `FEDFUNDS` | FRED (St. Louis Fed) | Monthly — free API key |
+| US Fed Funds Rate | `FEDFUNDS` | FRED (Federal Reserve Economic Data) | Monthly — free API key |
 | ECB Deposit Facility Rate | `ECBDFR` | FRED | Monthly |
 
 ---
@@ -315,5 +314,5 @@ Task results:
 - Portfolio: [Financial Analytics Pipeline on Databricks](https://madhurima-nath.github.io/project_related_files/data_migration.html)
 - Dashboard: [Live Streamlit dashboard](https://financial-analytics-databricks.streamlit.app)
 - Medium: [Migrating Financial Analytics to a Lakehouse on Databricks: A Working Demo](https://medium.com/@m.nath/migrating-financial-analytics-to-a-lakehouse-on-databricks-a-working-demo-38a3eb9f16d5)
-- Medium: *A SAS Migration on Databricks: A Hands-On Project* (forthcoming)
+- Medium: [A SAS Migration on Databricks: A Hands-On Project](https://medium.com/@m.nath/a-sas-migration-on-databricks-a-hands-on-project-13582e8f7004)
 - Medium: *Automating SAS-to-PySpark Code Migration with a Rule Engine and AI Fallback* (forthcoming)
