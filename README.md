@@ -250,7 +250,7 @@ python scripts/run_pipeline.py --job-id 12345
 
 The pipeline fetches from Yahoo Finance and FRED on every run — all five series are updated through the current date automatically. Re-run at any time to pull the latest data.
 
-The Streamlit dashboard is at [financial-analytics-databricks.streamlit.app](https://financial-analytics-databricks.streamlit.app).
+The Streamlit dashboard is at [Live Streamlit dashboard](https://financial-analytics-databricks.streamlit.app).
 
 ---
 
@@ -297,7 +297,7 @@ Task results:
 ## Related
 
 - Portfolio: [Financial Analytics Pipeline on Databricks](https://madhurima-nath.github.io/project_related_files/data_migration.html)
-- Dashboard: [financial-analytics-databricks.streamlit.app](https://financial-analytics-databricks.streamlit.app)
+- Dashboard: [Live Streamlit dashboard](https://financial-analytics-databricks.streamlit.app)
 - Medium: [Migrating Financial Analytics to a Lakehouse on Databricks: A Working Demo](https://medium.com/@m.nath/migrating-financial-analytics-to-a-lakehouse-on-databricks-a-working-demo-38a3eb9f16d5)
 - Medium: *A SAS Migration on Databricks: A Hands-On Project* (forthcoming)
 - Medium: *Automating SAS-to-PySpark Code Migration with a Rule Engine and AI Fallback* (forthcoming)
