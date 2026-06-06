@@ -132,7 +132,7 @@ print(result.notes)
 # ['PROC SORT → .orderBy()']
 ```
 
-Tested with 30 pytest cases: 23 covering every supported SAS construct (sort, aggregation, SQL, DATA step variants, date functions, and warning cases for constructs like RETAIN and INTCK), and 7 covering the pipeline submission script (credential loading, exit codes, job status handling). The full suite runs automatically on every push to main via GitHub Actions. Pipeline notebook execution is validated on Databricks through quality checks at every layer transition.
+Tested with 46 pytest cases: 39 covering the SAS converter (all supported patterns, confidence scoring, config-driven mapping, multi-block conversion, and manifest generation) and 7 covering the pipeline submission script (credential loading, exit codes, job status handling). The full suite runs automatically on every push to main via GitHub Actions. Pipeline notebook execution is validated on Databricks through quality checks at every layer transition.
 
 ---
 
@@ -175,7 +175,7 @@ databricks-ai-automated-pipeline/
 │   └── app.py                          Streamlit app — Home · Analytics Dashboard · SAS → PySpark Converter
 │
 ├── tests/
-│   ├── test_sas_converter.py           23 pytest cases for the SAS converter (all patterns)
+│   ├── test_sas_converter.py           39 pytest cases for the SAS converter (all patterns, config mapping, confidence, manifest)
 │   └── test_scripts.py                 7 pytest cases for run_pipeline.py + download_gold.py
 │
 ├── scripts/
