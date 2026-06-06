@@ -12,9 +12,11 @@ correlations, central bank policy divergence, drawdown, and regime classificatio
 real market data.
 
 **Migration tool:** A SAS → PySpark converter that translates legacy SAS code (PROC SORT,
-PROC MEANS, PROC SQL, DATA steps) to PySpark DataFrame API or Databricks SQL. Common patterns
-are handled by a deterministic rule engine; anything outside those patterns falls back to Claude
-(claude-haiku-4-5) via the Anthropic API.
+PROC MEANS, PROC SQL, DATA steps) to PySpark DataFrame API or Databricks SQL. Two modes:
+Community (single block, rule engine + Claude AI fallback) and Enterprise (migration config
+YAML for library/macro var resolution, multi-block script conversion, per-block confidence
+scoring, and downloadable migration manifest). Common patterns handled by a deterministic
+rule engine; anything outside those patterns falls back to Claude (claude-haiku-4-5).
 
 **Built with Claude Code** as a development collaborator — for architecture decisions, the quality
 checks module, and the converter's rule engine. The converter deploys the same AI capability as a
