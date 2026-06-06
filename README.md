@@ -13,7 +13,7 @@ real market data.
 **Migration tool:** A SAS → PySpark converter that translates legacy SAS code (PROC SORT,
 PROC MEANS, PROC SQL, DATA steps) to PySpark DataFrame API or Databricks SQL. Two modes:
 Community (convert a single SAS block) and Enterprise (convert a full script using a config
-file, with a confidence score per block and a downloadable audit trail). Common patterns are
+file that maps SAS library names and variables to Databricks paths). Common patterns are
 handled by a deterministic rule engine; anything else falls back to Claude AI.
 
 **Built with Claude Code** as a development collaborator — for architecture decisions, the quality
