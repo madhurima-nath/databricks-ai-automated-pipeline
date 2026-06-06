@@ -9,7 +9,9 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 import pytest
-from converter.sas_to_pyspark import convert, ConversionResult
+from converter.sas_to_pyspark import convert, convert_script, ConversionResult
+from converter.migration_config import MigrationConfig
+from converter.manifest import generate_manifest
 
 
 # ---------------------------------------------------------------------------
@@ -264,3 +266,152 @@ class TestConversionResult:
         sas = "PROC SORT DATA=x; BY id; RUN;"
         result = convert(sas)
         assert result.target == "pyspark"
+
+    def test_confidence_present_and_in_range(self):
+        sas = "PROC SORT DATA=x; BY id; RUN;"
+        result = convert(sas)
+        assert 0.0 <= result.confidence <= 1.0
+
+    def test_rule_based_confidence_high(self):
+        sas = "PROC SORT DATA=x; BY id; RUN;"
+        result = convert(sas)
+        assert result.method == "rule_based"
+        assert result.confidence >= 0.90
+
+    def test_review_required_when_warnings(self):
+        sas = """
+        DATA running_total;
+            SET daily_sales;
+            RETAIN cumulative 0;
+            cumulative = cumulative + revenue;
+        RUN;
+        """
+        result = convert(sas)
+        assert result.warnings
+        assert result.review_required is True
+
+    def test_no_review_required_clean_sort(self):
+        sas = "PROC SORT DATA=customers; BY last_name; RUN;"
+        result = convert(sas)
+        assert result.review_required is False
+
+
+# ---------------------------------------------------------------------------
+# MigrationConfig — library and macro var resolution
+# ---------------------------------------------------------------------------
+
+class TestMigrationConfig:
+    def test_library_mapping_resolves_table(self):
+        config = MigrationConfig(
+            library_mappings={"risklib": "trading.bronze"},
+            unity_catalog=True,
+        )
+        assert config.resolve_table("risklib.sp500_prices") == "trading.bronze.sp500_prices"
+
+    def test_dataset_mapping_takes_precedence(self):
+        config = MigrationConfig(
+            library_mappings={"risklib": "trading.bronze"},
+            dataset_mappings={"risklib.sp500_prices": "trading.bronze.bronze_sp500"},
+            unity_catalog=True,
+        )
+        assert config.resolve_table("risklib.sp500_prices") == "trading.bronze.bronze_sp500"
+
+    def test_unknown_ref_returns_original(self):
+        config = MigrationConfig(library_mappings={"risklib": "trading.bronze"})
+        assert config.resolve_table("otherlib.dataset") == "otherlib.dataset"
+
+    def test_macro_vars_resolved_in_output(self):
+        config = MigrationConfig(macro_vars={"start_date": "2010-01-01"})
+        sas = """
+        DATA filtered;
+            SET source;
+            WHERE date >= &start_date;
+        RUN;
+        """
+        result = convert(sas, config=config)
+        assert "'2010-01-01'" in result.output
+        assert any("start_date" in n for n in result.notes)
+
+    def test_unity_catalog_path_in_output(self):
+        config = MigrationConfig(
+            library_mappings={"risklib": "trading.bronze"},
+            unity_catalog=True,
+        )
+        sas = "PROC SORT DATA=risklib.fed_rate; BY date; RUN;"
+        result = convert(sas, config=config)
+        assert "trading.bronze.fed_rate" in result.output
+        assert 'spark.table("trading.bronze.fed_rate")' in result.output
+
+    def test_libname_dataset_df_name_format(self):
+        config = MigrationConfig(
+            library_mappings={"risklib": "trading.bronze"},
+            unity_catalog=False,
+        )
+        sas = "PROC SORT DATA=risklib.sp500_prices; BY date; RUN;"
+        result = convert(sas, config=config)
+        assert "risklib_sp500_prices_df" in result.output
+
+
+# ---------------------------------------------------------------------------
+# convert_script — multi-block splitting
+# ---------------------------------------------------------------------------
+
+class TestConvertScript:
+    def test_single_block_returns_one_result(self):
+        sas = "PROC SORT DATA=customers; BY last_name; RUN;"
+        results = convert_script(sas)
+        assert len(results) == 1
+
+    def test_two_blocks_returns_two_results(self):
+        sas = (
+            "PROC SORT DATA=customers; BY last_name; RUN;\n"
+            "PROC MEANS DATA=sales; CLASS region; VAR revenue; RUN;"
+        )
+        results = convert_script(sas)
+        assert len(results) == 2
+
+    def test_each_result_is_conversion_result(self):
+        sas = (
+            "PROC SORT DATA=x; BY id; RUN;\n"
+            "PROC MEANS DATA=y; VAR amount; RUN;"
+        )
+        results = convert_script(sas)
+        for r in results:
+            assert isinstance(r, ConversionResult)
+            assert isinstance(r.confidence, float)
+
+
+# ---------------------------------------------------------------------------
+# Manifest generation
+# ---------------------------------------------------------------------------
+
+class TestManifest:
+    def test_manifest_is_valid_yaml(self):
+        import yaml
+        sas = "PROC SORT DATA=x; BY id; RUN;"
+        result = convert(sas)
+        manifest_str = generate_manifest([result], source_label="test.sas")
+        doc = yaml.safe_load(manifest_str)
+        assert "migration_manifest" in doc
+
+    def test_manifest_summary_counts(self):
+        import yaml
+        sas = (
+            "PROC SORT DATA=customers; BY last_name; RUN;\n"
+            "PROC MEANS DATA=sales; CLASS region; VAR revenue; RUN;"
+        )
+        results = convert_script(sas)
+        manifest_str = generate_manifest(results, source_label="test.sas")
+        doc = yaml.safe_load(manifest_str)
+        summary = doc["migration_manifest"]["summary"]
+        assert summary["total_blocks"] == 2
+        assert summary["rule_engine_hits"] == 2
+
+    def test_manifest_confidence_in_range(self):
+        import yaml
+        sas = "PROC SORT DATA=x; BY id; RUN;"
+        result = convert(sas)
+        manifest_str = generate_manifest([result])
+        doc = yaml.safe_load(manifest_str)
+        conf = doc["migration_manifest"]["summary"]["overall_confidence"]
+        assert 0.0 <= conf <= 1.0

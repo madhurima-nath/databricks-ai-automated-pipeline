@@ -155,10 +155,10 @@ if page == "Home":
                     This converter translates legacy SAS into PySpark or Databricks SQL automatically.
                 </p>
                 <ul style="color:#374151;margin:0;padding-left:18px;line-height:1.9;">
-                    <li>Paste SAS code, choose a target format, get working code back</li>
-                    <li>Common patterns handled by a rule engine — no API key needed</li>
+                    <li><strong>Community:</strong> paste a SAS block, get PySpark or Databricks SQL back — no API key needed for common patterns</li>
+                    <li><strong>Enterprise:</strong> upload a migration config (YAML) mapping SAS libraries and macro variables to Unity Catalog paths; convert a full multi-block script; download converted code and a migration manifest with per-block confidence scores</li>
                     <li>Unrecognised patterns are sent to Claude AI, which converts and flags anything needing a human check</li>
-                    <li>Tested with <strong>30 pytest cases</strong> — 23 covering all supported SAS patterns, 7 covering the pipeline submission script — run automatically via GitHub Actions</li>
+                    <li>Tested with <strong>39 pytest cases</strong> — covering all supported SAS patterns, config-driven mapping, confidence scoring, manifest generation, and the pipeline submission scripts — run automatically via GitHub Actions</li>
                 </ul>
             </div>
             """,
@@ -478,18 +478,29 @@ elif page == "SAS → PySpark Converter":
             st.rerun()
     st.title("SAS → PySpark Converter")
     st.markdown(
-        "Financial institutions have decades of analytics written in SAS — risk models, regulatory reports, "
-        "portfolio calculations. The infrastructure can move to Databricks, but the code cannot move itself. "
-        "Rewriting each script by hand is the bottleneck that impedes most migrations. "
-        "This converter automates the translation: paste SAS, get working PySpark or Databricks SQL back. "
-        "Common patterns — PROC SORT, PROC MEANS, PROC SQL, DATA steps — are handled by a rule engine with no API key needed. "
-        "Anything outside those patterns is sent to Claude AI."
+        "SAS analytics code — risk models, regulatory reports, portfolio calculations — "
+        "cannot move to Databricks on its own. Rewriting each script by hand is the bottleneck "
+        "that slows most migrations. This converter automates the translation: paste SAS, "
+        "get working PySpark or Databricks SQL back. Common patterns are handled by a rule engine "
+        "with no API key needed. Anything outside those patterns is sent to Claude AI."
     )
     st.markdown("---")
 
-    from converter.sas_to_pyspark import convert
+    # Mode toggle
+    mode = st.radio(
+        "Mode",
+        ["Community", "Enterprise"],
+        horizontal=True,
+        help=(
+            "Community: paste a single SAS block and convert. "
+            "Enterprise: upload a migration config, convert a full script with multiple blocks, "
+            "and download the converted code and a migration manifest."
+        ),
+    )
 
-    EXAMPLES = {
+    st.markdown("---")
+
+    EXAMPLES_COMMUNITY = {
         "Paste your own SAS code": "",
         "PROC SORT: sort customers by name": (
             "PROC SORT DATA=customers OUT=customers_sorted;\n"
@@ -514,32 +525,39 @@ elif page == "SAS → PySpark Converter":
         ),
     }
 
-    st.info(
-        "The three examples work without an API key. "
-        "To convert your own SAS code that falls outside the supported patterns, "
-        "add your Anthropic API key in the Advanced section below."
+    EXAMPLE_ENTERPRISE = (
+        "/* Financial analytics migration — risklib → trading.bronze */\n\n"
+        "PROC SORT DATA=risklib.sp500_prices OUT=sp500_sorted;\n"
+        "    BY date;\n"
+        "RUN;\n\n"
+        "PROC MEANS DATA=risklib.fed_rate;\n"
+        "    CLASS year_month;\n"
+        "    VAR rate_value;\n"
+        "RUN;\n\n"
+        "DATA outlib.daily_analytics;\n"
+        "    SET sp500_sorted;\n"
+        "    WHERE date >= &start_date;\n"
+        "    KEEP date close log_return;\n"
+        "RUN;"
     )
 
-    example_choice = st.selectbox(
-        "Choose an example or paste your own",
-        list(EXAMPLES.keys()),
+    EXAMPLE_CONFIG = (
+        "source:\n"
+        "  library_mappings:\n"
+        "    risklib: trading.bronze\n"
+        "    outlib: trading.silver\n"
+        "  dataset_mappings:\n"
+        "    risklib.sp500_prices: trading.bronze.bronze_sp500\n"
+        "    risklib.fed_rate: trading.bronze.bronze_fed_rate\n"
+        "    outlib.daily_analytics: trading.silver.silver_market\n"
+        "  macro_vars:\n"
+        "    start_date: '2010-01-01'\n"
+        "target:\n"
+        "  platform: enterprise\n"
+        "  catalog: trading\n"
+        "  default_schema: silver\n"
+        "  unity_catalog: true\n"
     )
-    sas_input = st.text_area(
-        "SAS code",
-        value=EXAMPLES[example_choice],
-        height=200,
-        placeholder="PROC SORT DATA=customers;\n    BY last_name first_name;\nRUN;",
-    )
-
-    c1, c2 = st.columns([2, 1])
-    with c1:
-        target = st.selectbox(
-            "Convert to",
-            ["pyspark", "databricks_sql"],
-            help="PySpark: DataFrame API code · Databricks SQL: SQL statements",
-        )
-    with c2:
-        convert_btn = st.button("Convert →", type="primary", use_container_width=True)
 
     with st.expander("Advanced: Anthropic API key (for patterns outside the rule engine)"):
         api_key = st.text_input(
@@ -549,33 +567,217 @@ elif page == "SAS → PySpark Converter":
             help="Only needed for SAS code the built-in rules cannot handle.",
         )
 
-    st.markdown("---")
+    # ---------------------------------------------------------------------------
+    # Community mode
+    # ---------------------------------------------------------------------------
 
-    if convert_btn and sas_input.strip():
-        with st.spinner("Converting..."):
-            result = convert(sas_input, target=target, api_key=api_key or None)
+    if mode == "Community":
+        st.info(
+            "The three examples work without an API key. "
+            "To convert your own SAS code that falls outside the supported patterns, "
+            "add your Anthropic API key in the Advanced section above."
+        )
 
-        st.text_area("Output", value=result.output, height=250)
+        example_choice = st.selectbox(
+            "Choose an example or paste your own",
+            list(EXAMPLES_COMMUNITY.keys()),
+        )
+        sas_input = st.text_area(
+            "SAS code",
+            value=EXAMPLES_COMMUNITY[example_choice],
+            height=200,
+            placeholder="PROC SORT DATA=customers;\n    BY last_name first_name;\nRUN;",
+        )
 
-        col_n, col_m = st.columns(2)
-        with col_n:
-            if result.notes:
-                st.markdown("**Notes:**")
-                for n in result.notes:
-                    st.markdown(f"- {n}")
-        with col_m:
-            if result.warnings:
-                st.warning("**Needs review:**")
-                for w in result.warnings:
-                    st.markdown(f"- {w}")
+        c1, c2 = st.columns([2, 1])
+        with c1:
+            target = st.selectbox(
+                "Convert to",
+                ["pyspark", "databricks_sql"],
+                help="PySpark: DataFrame API code · Databricks SQL: SQL statements",
+            )
+        with c2:
+            convert_btn = st.button("Convert →", type="primary", use_container_width=True)
 
-        method_label = "Rule engine" if result.method == "rule_engine" else "Claude AI"
-        st.caption(f"Converted by: {method_label} · Target: `{result.target}`")
+        if convert_btn and sas_input.strip():
+            with st.spinner("Converting..."):
+                result = convert(sas_input, target=target, api_key=api_key or None)
 
-    elif convert_btn:
-        st.info("Paste some SAS code above to convert.")
+            st.text_area("Output", value=result.output, height=250)
+
+            col_n, col_m = st.columns(2)
+            with col_n:
+                if result.notes:
+                    st.markdown("**Notes:**")
+                    for n in result.notes:
+                        st.markdown(f"- {n}")
+            with col_m:
+                if result.warnings:
+                    st.warning("**Needs review:**")
+                    for w in result.warnings:
+                        st.markdown(f"- {w}")
+
+            method_label = "Rule engine" if result.method == "rule_based" else "Claude AI"
+            st.caption(f"Converted by: {method_label} · Target: `{result.target}`")
+
+        elif convert_btn:
+            st.info("Paste some SAS code above to convert.")
+        else:
+            st.info("Select an example above and click **Convert →** to see the output here.")
+
+    # ---------------------------------------------------------------------------
+    # Enterprise mode
+    # ---------------------------------------------------------------------------
+
     else:
-        st.info("Select an example above and click **Convert →** to see the output here.")
+        st.markdown(
+            "Enterprise mode adds: a migration config (YAML) that resolves SAS library "
+            "references to Unity Catalog paths and substitutes macro variables; multi-block "
+            "script conversion; confidence scoring per block; and downloadable outputs — "
+            "converted code and a migration manifest."
+        )
+
+        col_cfg, col_sas = st.columns(2)
+
+        with col_cfg:
+            st.markdown("**Migration config (YAML)**")
+            st.caption("Maps SAS libraries and macro variables to Databricks targets.")
+            use_example_cfg = st.checkbox("Use example config (financial analytics pipeline)", value=True)
+            if use_example_cfg:
+                config_text = st.text_area(
+                    "Config YAML",
+                    value=EXAMPLE_CONFIG,
+                    height=260,
+                    key="config_text_example",
+                )
+            else:
+                uploaded = st.file_uploader("Upload migration config YAML", type=["yaml", "yml"])
+                if uploaded:
+                    config_text = uploaded.read().decode("utf-8")
+                    st.text_area("Config YAML (loaded)", value=config_text, height=200, disabled=True)
+                else:
+                    config_text = ""
+
+        with col_sas:
+            st.markdown("**SAS script**")
+            st.caption("Can contain multiple PROC/DATA blocks — each is converted independently.")
+            use_example_sas = st.checkbox("Use example SAS script (financial analytics)", value=True)
+            sas_input = st.text_area(
+                "SAS code",
+                value=EXAMPLE_ENTERPRISE if use_example_sas else "",
+                height=260,
+                placeholder="Paste a full SAS script here...",
+                key="sas_input_enterprise",
+            )
+
+        c1, c2 = st.columns([2, 1])
+        with c1:
+            target = st.selectbox(
+                "Convert to",
+                ["pyspark", "databricks_sql"],
+                key="target_enterprise",
+            )
+        with c2:
+            convert_btn = st.button("Convert →", type="primary", use_container_width=True, key="convert_enterprise")
+
+        if convert_btn and sas_input.strip():
+            import yaml as _yaml
+
+            config = None
+            if config_text.strip():
+                try:
+                    raw_cfg = _yaml.safe_load(config_text)
+                    config = load_config_from_dict(raw_cfg)
+                except Exception as e:
+                    st.error(f"Could not parse config YAML: {e}")
+                    st.stop()
+
+            with st.spinner("Converting..."):
+                results = convert_script(sas_input, target=target, api_key=api_key or None, config=config)
+
+            # Combined output for download
+            all_output = "\n\n".join(
+                f"# --- Block {i+1} ---\n{r.output}"
+                for i, r in enumerate(results)
+            )
+
+            manifest_str = generate_manifest(
+                results,
+                source_label="enterprise_input.sas",
+                platform="enterprise",
+                config_applied=config is not None,
+            )
+
+            # Download row
+            dl1, dl2, _ = st.columns([2, 2, 3])
+            with dl1:
+                st.download_button(
+                    "Download converted code (.py)",
+                    data=all_output,
+                    file_name="converted.py",
+                    mime="text/plain",
+                )
+            with dl2:
+                st.download_button(
+                    "Download migration manifest (.yaml)",
+                    data=manifest_str,
+                    file_name="migration_manifest.yaml",
+                    mime="text/yaml",
+                )
+
+            st.markdown("---")
+
+            # Per-block results
+            for i, result in enumerate(results):
+                conf = result.confidence
+                if conf >= 0.85:
+                    conf_color = "#22c55e"
+                    conf_label = "High"
+                elif conf >= 0.70:
+                    conf_color = "#f59e0b"
+                    conf_label = "Medium"
+                else:
+                    conf_color = "#ef4444"
+                    conf_label = "Low"
+
+                method_label = "Rule engine" if result.method == "rule_based" else "Claude AI"
+                review_badge = (
+                    " &nbsp;<span style='background:#fef2f2;color:#b91c1c;padding:1px 8px;"
+                    "border-radius:4px;font-size:0.82em;border:1px solid #fca5a5;'>"
+                    "Needs review</span>"
+                    if result.review_required else ""
+                )
+
+                st.markdown(
+                    f"**Block {i+1}** &nbsp;·&nbsp; {method_label} &nbsp;·&nbsp; "
+                    f"Confidence: <span style='color:{conf_color};font-weight:600'>"
+                    f"{conf:.0%} ({conf_label})</span>{review_badge}",
+                    unsafe_allow_html=True,
+                )
+                st.text_area(f"Output — block {i+1}", value=result.output, height=180, key=f"out_{i}")
+
+                if result.notes or result.warnings:
+                    col_n, col_w = st.columns(2)
+                    with col_n:
+                        if result.notes:
+                            for n in result.notes:
+                                st.markdown(f"- {n}")
+                    with col_w:
+                        if result.warnings:
+                            st.warning("Needs review:")
+                            for w in result.warnings:
+                                st.markdown(f"- {w}")
+
+                st.markdown("")
+
+        elif convert_btn:
+            st.info("Paste some SAS code to convert.")
+        else:
+            st.info(
+                "Select or paste a SAS script and click **Convert →**. "
+                "The example shows a three-block financial analytics script mapped "
+                "to the Bronze layer of the Databricks pipeline used in this project."
+            )
 
     with st.expander("What SAS patterns are supported?"):
         st.markdown("""
@@ -588,6 +790,8 @@ elif page == "SAS → PySpark Converter":
 | `IF x > 0 THEN y = 1; ELSE y = 0;` | `.withColumn("y", F.when(x > 0, 1).otherwise(0))` |
 | `WHERE date = TODAY();` | `.filter(F.col("date") == F.current_date())` |
 | `RENAME old=new;` | `.withColumnRenamed("old", "new")` |
+| `libname.dataset` (Enterprise) | Resolved to Unity Catalog path via migration config |
+| `&macro_var` (Enterprise) | Substituted from migration config `macro_vars` |
 
 Patterns not in this list are handled by the AI fallback, which will flag anything requiring manual review.
         """)

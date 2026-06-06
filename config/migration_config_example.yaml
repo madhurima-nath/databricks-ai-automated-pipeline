@@ -1,0 +1,37 @@
+# Migration config example — SAS financial analytics to Databricks
+#
+# This example maps a legacy SAS environment (risklib) to the Bronze layer
+# of the Databricks medallion pipeline used in this project.
+#
+# Source SAS libraries contained:
+#   risklib — read-only market data (prices, rates)
+#   outlib  — write target for processed datasets
+#
+# Target: Databricks with Unity Catalog enabled (trading catalog)
+
+source:
+  library_mappings:
+    risklib: trading.bronze
+    outlib: trading.silver
+
+  dataset_mappings:
+    risklib.sp500_prices:  trading.bronze.bronze_sp500
+    risklib.eurostoxx:     trading.bronze.bronze_eurostoxx
+    risklib.vix:           trading.bronze.bronze_vix
+    risklib.fed_rate:      trading.bronze.bronze_fed_rate
+    risklib.ecb_rate:      trading.bronze.bronze_ecb_rate
+    outlib.daily_market:   trading.silver.silver_market
+    outlib.analytics:      trading.gold.gold_analytics
+
+  macro_vars:
+    start_date: "2010-01-01"
+    end_date: "2025-12-31"
+    report_year: "2024"
+    vol_window_short: "20"
+    vol_window_long: "60"
+
+target:
+  platform: enterprise
+  catalog: trading
+  default_schema: silver
+  unity_catalog: true
