@@ -142,11 +142,11 @@ if page == "Home":
                 <div style="font-size:0.9em;">
                     <div style="display:flex;align-items:flex-start;padding:5px 0;gap:10px;">
                         <span style="background:#1E40AF;{BADGE}">Community</span>
-                        <span style="color:#374151;flex:1;">Paste a SAS block, get PySpark or Databricks SQL back</span>
+                        <span style="color:#374151;flex:1;">Convert a single SAS block to PySpark or Databricks SQL</span>
                     </div>
                     <div style="display:flex;align-items:flex-start;padding:5px 0;gap:10px;">
                         <span style="background:#6B21A8;{BADGE}">Enterprise</span>
-                        <span style="color:#374151;flex:1;">YAML config · multi-block conversion · confidence scores · manifest</span>
+                        <span style="color:#374151;flex:1;">Upload a config file, convert full scripts, download code and an audit trail</span>
                     </div>
                     <div style="display:flex;align-items:flex-start;padding:5px 0;gap:10px;">
                         <span style="background:#065F46;{BADGE}">Tested</span>
