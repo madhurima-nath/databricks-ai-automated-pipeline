@@ -92,8 +92,9 @@ Each check logs PASS or FAIL with detail. A FAIL raises immediately to halt the 
 
 ### Gold layer metrics
 
-These are the calculations SAS risk teams run today — rolling volatility, correlations, drawdown,
-regime classifications — now running in PySpark, reading from a clean tested Silver table.
+Rolling volatility, correlations, drawdown, and regime classifications are standard financial risk
+calculations — the kind that have historically run in SAS on single-node infrastructure, now
+running in PySpark on a clean tested Silver table.
 
 | Metric | Description |
 |--------|-------------|

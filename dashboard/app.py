@@ -208,8 +208,8 @@ if page == "Analytics Dashboard":
             st.rerun()
     st.title("Analytics Dashboard")
     st.markdown(
-        "Rolling volatility, cross-market correlations, and drawdown are the analytics that financial risk teams "
-        "run in SAS today — and that need to move to modern platforms. "
+        "Rolling volatility, cross-market correlations, and drawdown are standard financial risk analytics — "
+        "the kind that have historically run in SAS and that need to move to modern platforms. "
         "This dashboard shows them running on PySpark, on real data, end to end. "
         "The interest rate data is monthly; equity prices are daily — joining them directly leaves most rows empty. "
         "**Bronze** preserves the five raw source tables. "
