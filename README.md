@@ -1,6 +1,5 @@
 # Financial Analytics Pipeline on Databricks
 
-[![Tests](https://github.com/madhurima-nath/databricks-ai-automated-pipeline/actions/workflows/test.yml/badge.svg)](https://github.com/madhurima-nath/databricks-ai-automated-pipeline/actions/workflows/test.yml)
 
 An end-to-end data engineering project on Databricks: a medallion architecture pipeline on 15 years
 of US and European market data, and a SAS → PySpark converter that automates legacy code migration.
