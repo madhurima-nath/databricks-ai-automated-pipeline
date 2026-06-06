@@ -6,9 +6,10 @@ An end-to-end data engineering project on Databricks: a medallion architecture p
 of US and European market data, and a SAS → PySpark converter that automates legacy code migration.
 
 **Pipeline:** Ingests S&P 500, Euro Stoxx 50, VIX, US Federal Funds Rate, and ECB Deposit Facility
-Rate through Bronze, Silver, and Gold Delta Lake layers. The Gold layer computes rolling volatility,
-US–EU equity correlations, central bank policy divergence, and drawdown — the analytics that SAS
-risk teams run today, now running in PySpark on real data.
+Rate through Bronze, Silver, and Gold Delta Lake layers. The Gold layer is the consumption-ready
+layer where final business rules and aggregations are applied: rolling volatility, US-EU equity
+correlations, central bank policy divergence, drawdown, and regime classifications on 15 years of
+real market data.
 
 **Migration tool:** A SAS → PySpark converter that translates legacy SAS code (PROC SORT,
 PROC MEANS, PROC SQL, DATA steps) to PySpark DataFrame API or Databricks SQL. Common patterns
@@ -294,5 +295,5 @@ Task results:
 - Portfolio: [Financial Analytics Pipeline on Databricks](https://madhurima-nath.github.io/project_related_files/data_migration.html)
 - Dashboard: [financial-analytics-databricks.streamlit.app](https://financial-analytics-databricks.streamlit.app)
 - Medium: *Migrating Financial Analytics to a Lakehouse on Databricks: A Working Demo* (forthcoming)
-- Medium: *One Problem in the Silver Layer: Joining Monthly Rates onto a Daily Price Spine* (forthcoming)
+- Medium: *The Join SAS Buries: Aligning Financial Data in a Databricks Pipeline* (forthcoming)
 - Medium: *Automating SAS-to-PySpark Code Migration with a Rule Engine and AI Fallback* (forthcoming)
