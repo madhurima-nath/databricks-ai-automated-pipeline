@@ -137,7 +137,7 @@ from src.converter import convert_script, load_config_from_dict, generate_manife
 config = load_config_from_dict({
     "source": {
         "library_mappings": {"risklib": "trading.bronze"},
-        "macro_vars": {"start_date": "2010-01-01"},
+        "macro_vars": {"start_date": "2010-01-01"},  # SAS &start_date → "2010-01-01"
     },
     "target": {"platform": "enterprise", "unity_catalog": False},  # set True for a full workspace
 })
