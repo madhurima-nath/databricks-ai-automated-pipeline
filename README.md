@@ -17,8 +17,7 @@ file that maps SAS library names and variables to Databricks paths). Common patt
 handled by a deterministic rule engine; anything else falls back to Claude AI.
 
 **Built with Claude Code** as a development collaborator — for architecture decisions, the quality
-checks module, and the converter's rule engine. The converter deploys the same AI capability as a
-production feature: rule engine for recognised patterns, Claude AI fallback for the rest.
+checks module, and the converter's rule engine.
 
 ---
 
@@ -149,11 +148,10 @@ results = convert_script(sas_script, config=config)
 manifest_yaml = generate_manifest(results, source_label="risk_models.sas")
 ```
 
-Each converted block gets a confidence score and a review flag. `generate_manifest()` produces
-a downloadable audit trail listing every block, how it was converted, its score, and anything
-flagged for manual review.
+`generate_manifest()` produces a YAML summary of each block — how it was converted, its
+confidence score, and anything that needs a manual check.
 
-Tested with 46 pytest cases: 39 covering the SAS converter (all supported patterns, Community and Enterprise modes, confidence scoring, and audit trail generation) and 7 covering the pipeline script (credential loading, exit codes, job status handling). Pipeline notebook execution is validated on Databricks through quality checks at every layer transition.
+Tested with 46 pytest cases: 39 covering the SAS converter (all supported patterns, Community and Enterprise modes) and 7 covering the pipeline script (credential loading, exit codes, job status handling). Pipeline notebook execution is validated on Databricks through quality checks at every layer transition.
 
 ---
 
@@ -190,15 +188,15 @@ databricks-ai-automated-pipeline/
 ├── src/
 │   └── converter/
 │       ├── __init__.py
-│       ├── sas_to_pyspark.py           SAS→PySpark/SQL converter — rule-based + LLM fallback
-│       ├── migration_config.py         YAML config loader — library and macro var mappings
-│       └── manifest.py                 Migration manifest — YAML audit trail per converted block
+│       ├── sas_to_pyspark.py           SAS→PySpark/SQL converter — rule engine + Claude AI fallback
+│       ├── migration_config.py         Config loader — maps SAS library names and variables to Databricks paths
+│       └── manifest.py                 Generates a conversion summary per block
 │
 ├── dashboard/
 │   └── app.py                          Streamlit app — Home · Analytics Dashboard · SAS → PySpark Converter
 │
 ├── tests/
-│   ├── test_sas_converter.py           39 pytest cases for the SAS converter (all patterns, config mapping, confidence, manifest)
+│   ├── test_sas_converter.py           39 pytest cases — all supported SAS patterns, Community and Enterprise modes
 │   └── test_scripts.py                 7 pytest cases for run_pipeline.py + download_gold.py
 │
 ├── scripts/
