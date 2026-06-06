@@ -8,7 +8,7 @@ of US and European market data, and a SAS → PySpark converter that automates l
 **Pipeline:** Ingests S&P 500, Euro Stoxx 50, VIX, US Federal Funds Rate, and ECB Deposit Facility
 Rate through Bronze, Silver, and Gold Delta Lake layers. The Gold layer is the consumption-ready
 layer where final business rules and aggregations are applied: rolling volatility, US-EU equity
-correlations, central bank policy divergence, drawdown, and regime classifications on 15 years of
+correlations, central bank policy divergence, % decline from peak, and regime classifications on 15 years of
 real market data.
 
 **Migration tool:** A SAS → PySpark converter that translates legacy SAS code (PROC SORT,
@@ -44,7 +44,7 @@ External APIs
                       │  Quality checks · Duplicate detection · Return bounds
               ┌───────▼────────┐
               │   Gold Layer   │  Analytics-ready aggregates
-              │ gold_analytics │  Rolling vol · Correlations · Regimes · Drawdown
+              │ gold_analytics │  Rolling vol · Correlations · Regimes · % decline from peak
               └───────┬────────┘
                       │
               ┌───────▼────────┐
@@ -133,7 +133,7 @@ print(result.notes)
 # ['PROC SORT → .orderBy()']
 ```
 
-Tested with 46 pytest cases: 39 covering the SAS converter (all supported patterns, confidence scoring, config-driven mapping, multi-block conversion, and manifest generation) and 7 covering the pipeline submission script (credential loading, exit codes, job status handling). The full suite runs automatically on every push to main via GitHub Actions. Pipeline notebook execution is validated on Databricks through quality checks at every layer transition.
+Tested with 46 pytest cases: 39 covering the SAS converter (all supported patterns, confidence scoring, config-driven mapping, multi-block conversion, and manifest generation) and 7 covering the pipeline script (credential loading, exit codes, job status handling). Pipeline notebook execution is validated on Databricks through quality checks at every layer transition.
 
 ---
 
