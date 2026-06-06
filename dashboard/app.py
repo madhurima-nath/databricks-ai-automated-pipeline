@@ -150,7 +150,7 @@ if page == "Home":
                     </div>
                     <div style="display:flex;align-items:flex-start;padding:5px 0;gap:10px;">
                         <span style="background:#065F46;{BADGE}">Tested</span>
-                        <span style="color:#374151;flex:1;">39 pytest cases</span>
+                        <span style="color:#374151;flex:1;">46 pytest cases</span>
                     </div>
                 </div>
             </div>
