@@ -13,10 +13,9 @@ real market data.
 
 **Migration tool:** A SAS → PySpark converter that translates legacy SAS code (PROC SORT,
 PROC MEANS, PROC SQL, DATA steps) to PySpark DataFrame API or Databricks SQL. Two modes:
-Community (single block, rule engine + Claude AI fallback) and Enterprise (migration config
-YAML for library/macro var resolution, multi-block script conversion, per-block confidence
-scoring, and downloadable migration manifest). Common patterns handled by a deterministic
-rule engine; anything outside those patterns falls back to Claude (claude-haiku-4-5).
+Community (convert a single SAS block) and Enterprise (convert a full script using a config
+file, with a confidence score per block and a downloadable audit trail). Common patterns are
+handled by a deterministic rule engine; anything else falls back to Claude AI.
 
 **Built with Claude Code** as a development collaborator — for architecture decisions, the quality
 checks module, and the converter's rule engine. The converter deploys the same AI capability as a
@@ -155,7 +154,7 @@ Each converted block gets a confidence score and a review flag. `generate_manife
 a downloadable audit trail listing every block, how it was converted, its score, and anything
 flagged for manual review.
 
-Tested with 46 pytest cases: 39 covering the SAS converter (all supported patterns, confidence scoring, config-driven mapping, multi-block conversion, and manifest generation) and 7 covering the pipeline script (credential loading, exit codes, job status handling). Pipeline notebook execution is validated on Databricks through quality checks at every layer transition.
+Tested with 46 pytest cases: 39 covering the SAS converter (all supported patterns, Community and Enterprise modes, confidence scoring, and audit trail generation) and 7 covering the pipeline script (credential loading, exit codes, job status handling). Pipeline notebook execution is validated on Databricks through quality checks at every layer transition.
 
 ---
 
