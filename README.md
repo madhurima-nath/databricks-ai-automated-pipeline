@@ -56,25 +56,16 @@ External APIs
 
 ## Key technical details
 
-### The Silver layer join
+### What the medallion architecture makes explicit
 
-In a SAS script, this join sits alongside ingestion, cleaning, and analytics in the same file.
-Silver isolates it: solved once, in one place, with every downstream calculation reading from
-the same aligned source.
+In a SAS script, ingestion, cleaning, joining, and business logic typically share one file. A
+change to any part reruns everything; there is no clean boundary between what was ingested and
+what was computed.
 
-The Fed Funds Rate and ECB rate are monthly; equity data is daily. A standard join leaves most
-rows null. Silver resolves this with a forward-fill window function:
-
-```python
-fill_window = Window.orderBy("date").rowsBetween(Window.unboundedPreceding, Window.currentRow)
-df = df.withColumn(
-    "fed_rate",
-    F.last(F.col("fed_rate"), ignorenulls=True).over(fill_window)
-)
-```
-
-Each trading day carries the most recently observed rate — a point-in-time join that avoids
-lookahead bias.
+The medallion architecture separates each step. Bronze preserves source data exactly as received.
+Silver owns data preparation — including the forward-fill join that aligns monthly interest rates
+onto the daily trading sequence. Gold applies business rules on top of the prepared data. Each
+layer is independently testable; a change to Gold does not touch Silver.
 
 ### Data quality layer
 
@@ -171,7 +162,9 @@ databricks-ai-automated-pipeline/
 ├── src/
 │   └── converter/
 │       ├── __init__.py
-│       └── sas_to_pyspark.py           SAS→PySpark/SQL converter — rule-based + LLM fallback
+│       ├── sas_to_pyspark.py           SAS→PySpark/SQL converter — rule-based + LLM fallback
+│       ├── migration_config.py         YAML config loader — library and macro var mappings
+│       └── manifest.py                 Migration manifest — YAML audit trail per converted block
 │
 ├── dashboard/
 │   └── app.py                          Streamlit app — Home · Analytics Dashboard · SAS → PySpark Converter
@@ -190,7 +183,8 @@ databricks-ai-automated-pipeline/
 │   └── workflows/
 │       └── test.yml                    GitHub Actions CI — runs pytest on push
 │
-├── config/                             Reserved for schema DDLs and pipeline configs
+├── config/
+│   └── migration_config_example.yaml   Example migration config — library mappings, macro vars, platform settings
 │
 ├── .env.example                        Template for API keys (copy to .env — never commit .env)
 ├── requirements.txt
@@ -296,6 +290,6 @@ Task results:
 
 - Portfolio: [Financial Analytics Pipeline on Databricks](https://madhurima-nath.github.io/project_related_files/data_migration.html)
 - Dashboard: [financial-analytics-databricks.streamlit.app](https://financial-analytics-databricks.streamlit.app)
-- Medium: *Migrating Financial Analytics to a Lakehouse on Databricks: A Working Demo* (forthcoming)
-- Medium: *The Join SAS Buries: Aligning Data in a Databricks Pipeline* (forthcoming)
+- Medium: [Migrating Financial Analytics to a Lakehouse on Databricks: A Working Demo](https://medium.com/@m.nath/migrating-financial-analytics-to-a-lakehouse-on-databricks-a-working-demo-38a3eb9f16d5)
+- Medium: *A SAS Migration on Databricks: A Hands-On Project* (forthcoming)
 - Medium: *Automating SAS-to-PySpark Code Migration with a Rule Engine and AI Fallback* (forthcoming)
