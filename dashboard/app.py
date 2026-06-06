@@ -92,11 +92,6 @@ st.sidebar.markdown(
 
 if page == "Home":
     st.title("Financial Analytics Pipeline on Databricks")
-    st.markdown(
-        "How financial teams move from SAS to Databricks: "
-        "a working pipeline on real market data, and a tool to migrate the legacy code."
-    )
-
     st.markdown("---")
 
     col_a, col_b = st.columns(2)
@@ -104,7 +99,7 @@ if page == "Home":
     CARD = (
         "background:#F8FAFC;border:1px solid #E2E8F0;"
         "border-top:3px solid #3B82F6;border-radius:10px;"
-        "padding:22px 24px;min-height:400px;box-sizing:border-box;"
+        "padding:22px 24px;box-sizing:border-box;"
     )
     BADGE = (
         "color:white;padding:2px 10px;border-radius:4px;font-size:0.85em;"
@@ -116,9 +111,6 @@ if page == "Home":
             f"""
             <div style="{CARD}">
                 <h3 style="color:#1E3A5F;margin-top:0;">The Pipeline</h3>
-                <p style="color:#374151;margin-bottom:14px;">
-                    15 years of US and European market data processed on Databricks through three Delta Lake layers:
-                </p>
                 <div style="font-size:0.9em;">
                     <div style="display:flex;align-items:flex-start;padding:5px 0;gap:10px;">
                         <span style="background:#7C3D12;{BADGE}">Bronze</span>
@@ -133,9 +125,6 @@ if page == "Home":
                         <span style="color:#374151;flex:1;">Volatility, correlations, drawdown, regime classifications</span>
                     </div>
                 </div>
-                <p style="color:#374151;margin-top:14px;margin-bottom:0;">
-                    The Analytics Dashboard shows the Gold layer output on real data.
-                </p>
             </div>
             """,
             unsafe_allow_html=True,
@@ -150,15 +139,11 @@ if page == "Home":
             f"""
             <div style="{CARD}">
                 <h3 style="color:#1E3A5F;margin-top:0;">The Migration Tool</h3>
-                <p style="color:#374151;margin-bottom:12px;">
-                    Financial teams have years of SAS analytics code that needs to move to Databricks.
-                    This converter translates legacy SAS into PySpark or Databricks SQL automatically.
-                </p>
                 <ul style="color:#374151;margin:0;padding-left:18px;line-height:1.9;">
                     <li><strong>Community:</strong> paste a SAS block, get PySpark or Databricks SQL back</li>
-                    <li><strong>Enterprise:</strong> YAML config for library and macro mapping, multi-block conversion, per-block confidence scores, downloadable manifest</li>
+                    <li><strong>Enterprise:</strong> YAML config for library and macro mapping, multi-block conversion, confidence scores, downloadable manifest</li>
                     <li>Unrecognised patterns fall back to Claude AI</li>
-                    <li>Tested with <strong>39 pytest cases</strong>, run automatically via GitHub Actions</li>
+                    <li>Tested with <strong>39 pytest cases</strong>, run via GitHub Actions</li>
                 </ul>
             </div>
             """,
@@ -188,11 +173,6 @@ if page == "Home":
         f"target='_blank' rel='noopener' style='color:#3B82F6;font-size:0.85em;text-decoration:none;'>"
         f"View on GitHub ↗</a></div>",
         unsafe_allow_html=True,
-    )
-    st.caption(
-        "Claude AI powers the SAS → PySpark converter fallback and was used as a development "
-        "collaborator (Claude Code) throughout — for architecture decisions, the quality checks "
-        "module, and the converter's rule engine."
     )
 
 
