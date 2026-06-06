@@ -139,12 +139,20 @@ if page == "Home":
             f"""
             <div style="{CARD}">
                 <h3 style="color:#1E3A5F;margin-top:0;">The Migration Tool</h3>
-                <ul style="color:#374151;margin:0;padding-left:18px;line-height:1.9;">
-                    <li><strong>Community:</strong> paste a SAS block, get PySpark or Databricks SQL back</li>
-                    <li><strong>Enterprise:</strong> YAML config for library and macro mapping, multi-block conversion, confidence scores, downloadable manifest</li>
-                    <li>Unrecognised patterns fall back to Claude AI</li>
-                    <li>Tested with <strong>39 pytest cases</strong>, run via GitHub Actions</li>
-                </ul>
+                <div style="font-size:0.9em;">
+                    <div style="display:flex;align-items:flex-start;padding:5px 0;gap:10px;">
+                        <span style="background:#1E40AF;{BADGE}">Community</span>
+                        <span style="color:#374151;flex:1;">Paste a SAS block, get PySpark or Databricks SQL back</span>
+                    </div>
+                    <div style="display:flex;align-items:flex-start;padding:5px 0;gap:10px;">
+                        <span style="background:#6B21A8;{BADGE}">Enterprise</span>
+                        <span style="color:#374151;flex:1;">YAML config · multi-block conversion · confidence scores · manifest</span>
+                    </div>
+                    <div style="display:flex;align-items:flex-start;padding:5px 0;gap:10px;">
+                        <span style="background:#065F46;{BADGE}">Tested</span>
+                        <span style="color:#374151;flex:1;">39 pytest cases · GitHub Actions CI</span>
+                    </div>
+                </div>
             </div>
             """,
             unsafe_allow_html=True,
