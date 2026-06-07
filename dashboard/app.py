@@ -584,20 +584,15 @@ elif page == "SAS → PySpark Converter":
 
             st.text_area("Output", value=result.output, height=250)
 
-            col_n, col_m = st.columns(2)
-            with col_n:
-                if result.notes:
-                    st.markdown("**Notes:**")
-                    for n in result.notes:
-                        st.markdown(f"- {n}")
-            with col_m:
-                if result.warnings:
-                    st.warning("**Needs review:**")
-                    for w in result.warnings:
-                        st.markdown(f"- {w}")
+            if result.warnings:
+                st.warning(
+                    "**Check before running:** the converter flagged the following in the converted code above. "
+                    "Review and fix these lines before running in Databricks:\n\n"
+                    + "\n".join(f"- {w}" for w in result.warnings)
+                )
 
             method_label = "Rule engine" if result.method == "rule_based" else "Claude AI"
-            st.caption(f"Converted by: {method_label} · Target: `{result.target}`")
+            st.caption(f"Converted by: {method_label}")
 
             st.markdown("**What next?** Paste this into a Databricks notebook. The `spark` session is available by default — no setup needed. Confirm the source table exists at the path shown, then run the cell.")
 
@@ -763,17 +758,11 @@ elif page == "SAS → PySpark Converter":
                 )
                 st.text_area(f"Output — block {i+1}", value=result.output, height=180, key=f"out_{i}")
 
-                if result.notes or result.warnings:
-                    col_n, col_w = st.columns(2)
-                    with col_n:
-                        if result.notes:
-                            for n in result.notes:
-                                st.markdown(f"- {n}")
-                    with col_w:
-                        if result.warnings:
-                            st.warning("Needs review:")
-                            for w in result.warnings:
-                                st.markdown(f"- {w}")
+                if result.warnings:
+                    st.warning(
+                        "**Check before running:** "
+                        + " · ".join(result.warnings)
+                    )
 
                 st.markdown("")
 
