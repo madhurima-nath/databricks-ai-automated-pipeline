@@ -627,7 +627,7 @@ elif page == "SAS → PySpark Converter":
               </div>
               <div style="display:flex;align-items:flex-start;gap:14px;padding:12px 16px;background:#F8FAFC;border-bottom:1px solid #E2E8F0;">
                 <span style="background:#1E3A5F;color:white;border-radius:50%;min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:0.82em;font-weight:700;flex-shrink:0;">2</span>
-                <div><div style="font-weight:600;color:#1E3A5F;font-size:0.88em;">SAS script</div><div style="color:#6B7280;font-size:0.82em;margin-top:2px;">One file at a time; the same config applies to every script</div></div>
+                <div><div style="font-weight:600;color:#1E3A5F;font-size:0.88em;">SAS script</div><div style="color:#6B7280;font-size:0.82em;margin-top:2px;">Each SAS file is passed through the converter with the same config — the config is written once and reused across the whole codebase</div></div>
               </div>
               <div style="display:flex;align-items:flex-start;gap:14px;padding:12px 16px;background:#EFF6FF;border-bottom:1px solid #BFDBFE;">
                 <span style="background:#1E40AF;color:white;border-radius:50%;min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:0.82em;font-weight:700;flex-shrink:0;">3</span>
