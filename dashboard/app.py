@@ -572,8 +572,7 @@ elif page == "SAS → PySpark Converter":
         )
 
         target = "pyspark"
-        st.markdown("**Output: PySpark** — DataFrame API code for Databricks notebooks and pipelines")
-        convert_btn = st.button("Convert →", type="primary", use_container_width=True)
+        convert_btn = st.button("Convert to PySpark →", type="primary", use_container_width=True)
 
         if convert_btn and sas_input.strip():
             with st.spinner("Converting..."):
@@ -682,8 +681,7 @@ elif page == "SAS → PySpark Converter":
             )
 
         target = "pyspark"
-        st.markdown("**Output: PySpark** — the standard target for Databricks notebooks and pipelines")
-        convert_btn = st.button("Convert →", type="primary", use_container_width=True, key="convert_enterprise")
+        convert_btn = st.button("Convert to PySpark →", type="primary", use_container_width=True, key="convert_enterprise")
 
         if convert_btn and sas_input.strip():
             import yaml as _yaml
