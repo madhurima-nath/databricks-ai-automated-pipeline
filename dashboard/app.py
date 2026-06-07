@@ -624,7 +624,8 @@ elif page == "SAS → PySpark Converter":
             "the converted code will not run until they are resolved to real paths. "
             "The YAML config on the left is the mapping: it tells the converter what each library name "
             "and macro variable maps to in Databricks. The SAS script on the right is the code that uses those names. "
-            "Together, they produce converted code that runs without any manual fixes."
+            "Together, they produce converted code that runs without any manual fixes. "
+            "The preloaded example below illustrates steps 2–4. In a real migration, you supply your own SAS files and config."
         )
         st.info(
             "The conversion runs entirely in Python — no Databricks connection needed. "
@@ -634,7 +635,6 @@ elif page == "SAS → PySpark Converter":
         )
 
         st.markdown("**How a large-scale migration works**")
-        st.caption("The demo below illustrates steps 2–4 using a preloaded example. In a real migration, you supply your own SAS files and config.")
         st.markdown(
             """
             <div style="margin:10px 0 18px 0;border:1px solid #E2E8F0;border-radius:8px;overflow:hidden;">
