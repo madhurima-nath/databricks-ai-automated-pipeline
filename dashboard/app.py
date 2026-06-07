@@ -489,7 +489,7 @@ elif page == "SAS → PySpark Converter":
     st.markdown("---")
 
     EXAMPLES_COMMUNITY = {
-        "Paste your own SAS code": "",
+        "Custom SAS code": "",
         "PROC SORT: sort customers by name": (
             "PROC SORT DATA=customers OUT=customers_sorted;\n"
             "    BY last_name first_name;\n"
@@ -560,12 +560,19 @@ elif page == "SAS → PySpark Converter":
     # ---------------------------------------------------------------------------
 
     if mode == "Community":
-        st.info("The preloaded examples work with no setup needed.")
-
         example_choice = st.selectbox(
-            "Choose an example or paste your own",
+            "Choose an example or enter your own SAS code",
             list(EXAMPLES_COMMUNITY.keys()),
         )
+        if example_choice == "Custom SAS code":
+            st.info(
+                "The rule engine handles common SAS constructs with no API key needed: "
+                "PROC SORT, PROC MEANS, PROC SQL, and DATA steps with KEEP, DROP, WHERE, "
+                "RENAME, and IF-THEN-ELSE. For anything outside those patterns, the LLM "
+                "fallback requires an API key (see Advanced above)."
+            )
+        else:
+            st.info("The preloaded examples run with no setup needed.")
         sas_input = st.text_area(
             "SAS code",
             value=EXAMPLES_COMMUNITY[example_choice],
@@ -615,10 +622,9 @@ elif page == "SAS → PySpark Converter":
 
     else:
         st.markdown(
-            "Enterprise mode adds: a migration config (YAML) that resolves SAS library "
-            "references to Databricks table paths and substitutes macro variables; multi-block "
-            "script conversion; confidence scoring per block; and downloadable outputs — "
-            "converted code and a migration manifest."
+            "Enterprise mode converts a full SAS script in one pass. "
+            "A YAML config maps SAS library references and macro variables to Databricks paths before conversion. "
+            "Each block gets a confidence score. Both the converted code and a migration manifest are downloadable."
         )
         st.info(
             "The conversion runs entirely in Python — no Databricks connection needed. "
