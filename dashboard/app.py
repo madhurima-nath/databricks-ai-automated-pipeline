@@ -594,12 +594,23 @@ elif page == "SAS → PySpark Converter":
             method_label = "Rule engine" if result.method == "rule_based" else "Claude AI"
             st.caption(f"Converted by: {method_label}")
 
-            st.markdown("**What next?** Paste this into a Databricks notebook. The `spark` session is available by default — no setup needed. Confirm the source table exists at the path shown, then run the cell.")
-
         elif convert_btn:
             st.info("Paste some SAS code above to convert.")
         else:
-            st.info("Select an example above and click **Convert →** to see the output here.")
+            st.info("Select an example above and click **Convert to PySpark →** to see the output here.")
+
+        st.markdown(
+            "<div style='background:#EFF6FF;border-left:4px solid #3B82F6;border-radius:6px;"
+            "padding:16px 20px;margin-top:20px;'>"
+            "<div style='font-weight:600;color:#1E40AF;margin-bottom:8px;'>After conversion: use in Databricks</div>"
+            "<ol style='margin:0;padding-left:20px;color:#374151;font-size:0.91em;line-height:1.8;'>"
+            "<li>Copy the PySpark code from the output box above</li>"
+            "<li>Paste into a Databricks notebook — <code>spark</code> is available by default, no imports needed</li>"
+            "<li>Confirm the source table exists at the path referenced in the code</li>"
+            "<li>Run the cell and verify the output matches the original SAS results</li>"
+            "</ol></div>",
+            unsafe_allow_html=True,
+        )
 
     # ---------------------------------------------------------------------------
     # Enterprise mode
@@ -766,7 +777,6 @@ elif page == "SAS → PySpark Converter":
 
                 st.markdown("")
 
-            st.markdown("**What next?** Paste each converted block into a Databricks notebook and run it. The `spark` session is available by default.")
             with st.expander("Migrating hundreds of files?"):
                 st.markdown(
                     "This dashboard converts one script at a time. For a large codebase, "
@@ -796,6 +806,19 @@ elif page == "SAS → PySpark Converter":
                 "The example shows a three-block financial analytics script mapped "
                 "to the Bronze layer of the Databricks pipeline used in this project."
             )
+
+        st.markdown(
+            "<div style='background:#EFF6FF;border-left:4px solid #3B82F6;border-radius:6px;"
+            "padding:16px 20px;margin-top:20px;'>"
+            "<div style='font-weight:600;color:#1E40AF;margin-bottom:8px;'>After conversion: steps 4 and 5</div>"
+            "<ol style='margin:0;padding-left:20px;color:#374151;font-size:0.91em;line-height:1.8;'>"
+            "<li>Download the converted code and migration manifest using the buttons that appear after conversion</li>"
+            "<li>Open the manifest — it shows a confidence score for each block and flags anything needing human review</li>"
+            "<li>Paste each converted block into a Databricks notebook; <code>spark</code> is available by default</li>"
+            "<li>Run and verify the output matches the original SAS results, then commit to your Databricks project</li>"
+            "</ol></div>",
+            unsafe_allow_html=True,
+        )
 
     with st.expander("What SAS patterns are supported?"):
         st.markdown("""
