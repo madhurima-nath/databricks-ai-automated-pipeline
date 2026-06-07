@@ -661,7 +661,7 @@ elif page == "SAS → PySpark Converter":
 
         with col_cfg:
             st.markdown("**Migration config (YAML)**")
-            st.caption("Maps each SAS library name and macro variable to its Databricks equivalent. The SAS script on the right uses these names — the config resolves them before conversion.")
+            st.caption("Maps each SAS library name and macro variable to its Databricks equivalent. The SAS script on the right uses these names; the config resolves them before conversion.")
             use_example_cfg = st.checkbox("Use example config (financial analytics pipeline)", value=True)
             if use_example_cfg:
                 config_text = st.text_area(
@@ -680,7 +680,7 @@ elif page == "SAS → PySpark Converter":
 
         with col_sas:
             st.markdown("**SAS script**")
-            st.caption("A full script with multiple PROC/DATA blocks. The example uses `risklib` and `outlib` — mapped to Databricks paths by the config on the left.")
+            st.caption("A full script with multiple PROC/DATA blocks. The example uses `risklib` and `outlib`, mapped to Databricks paths by the config on the left.")
             use_example_sas = st.checkbox("Use example SAS script (financial analytics)", value=True)
             sas_input = st.text_area(
                 "SAS code",
@@ -810,8 +810,8 @@ elif page == "SAS → PySpark Converter":
 | `IF x > 0 THEN y = 1; ELSE y = 0;` | `.withColumn("y", F.when(x > 0, 1).otherwise(0))` |
 | `WHERE date = TODAY();` | `.filter(F.col("date") == F.current_date())` |
 | `RENAME old=new;` | `.withColumnRenamed("old", "new")` |
-| `libname.dataset` (Enterprise) | Resolved to Unity Catalog path via migration config |
+| `libname.dataset` (Enterprise) | Resolved to Databricks path via migration config |
 | `&macro_var` (Enterprise) | Substituted from migration config `macro_vars` |
 
-Patterns not in this list are handled by the AI fallback, which will flag anything requiring manual review.
+Patterns not in this list will not convert in this demo.
         """)
