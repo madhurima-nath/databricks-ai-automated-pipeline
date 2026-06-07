@@ -142,7 +142,7 @@ if page == "Home":
                 <div style="font-size:0.9em;">
                     <div style="display:flex;align-items:flex-start;padding:5px 0;gap:10px;">
                         <span style="background:#1E40AF;{BADGE}">Community</span>
-                        <span style="color:#374151;flex:1;">Convert a single SAS block to PySpark or Databricks SQL</span>
+                        <span style="color:#374151;flex:1;">Convert a single SAS block to PySpark</span>
                     </div>
                     <div style="display:flex;align-items:flex-start;padding:5px 0;gap:10px;">
                         <span style="background:#6B21A8;{BADGE}">Enterprise</span>
@@ -571,14 +571,11 @@ elif page == "SAS → PySpark Converter":
             placeholder="PROC SORT DATA=customers;\n    BY last_name first_name;\nRUN;",
         )
 
-        c1, c2 = st.columns([2, 1])
-        with c1:
-            target = st.selectbox(
-                "Convert to",
-                ["pyspark"],
-                help="PySpark: DataFrame API code for Databricks notebooks and pipelines",
-            )
-        with c2:
+        target = "pyspark"
+        col_cap, col_btn = st.columns([3, 1])
+        with col_cap:
+            st.caption("Output: PySpark — DataFrame API code for Databricks notebooks and pipelines")
+        with col_btn:
             convert_btn = st.button("Convert →", type="primary", use_container_width=True)
 
         if convert_btn and sas_input.strip():
@@ -613,13 +610,8 @@ elif page == "SAS → PySpark Converter":
 
     else:
         st.markdown(
-            "SAS scripts reference named libraries (`risklib.sp500_prices`, `outlib.daily_analytics`) "
-            "and macro variables (`&start_date`). Those names mean nothing to Databricks — "
-            "the converted code will not run until they are resolved to real paths. "
-            "The YAML config on the left is the mapping: it tells the converter what each library name "
-            "and macro variable maps to in Databricks. The SAS script on the right is the code that uses those names. "
-            "Together, they produce converted code that runs without any manual fixes. "
-            "The preloaded example below illustrates steps 2–4. In a real migration, you supply your own SAS files and config."
+            "Enterprise mode takes two inputs: a config that maps SAS library names to Databricks paths, "
+            "and the SAS script that uses those names. Both are required — the converter reads them together."
         )
         st.info(
             "The conversion runs entirely in Python — no Databricks connection needed. "
@@ -661,7 +653,7 @@ elif page == "SAS → PySpark Converter":
 
         with col_cfg:
             st.markdown("**Migration config (YAML)**")
-            st.caption("Maps each SAS library name and macro variable to its Databricks equivalent. The SAS script on the right uses these names; the config resolves them before conversion.")
+            st.caption("Write this once for the whole codebase. It tells the converter what `risklib`, `outlib`, and `&start_date` in the SAS script (right) actually map to in Databricks. Without this, those names stay unresolved and the converted code will fail at runtime.")
             use_example_cfg = st.checkbox("Use example config (financial analytics pipeline)", value=True)
             if use_example_cfg:
                 config_text = st.text_area(
@@ -680,7 +672,7 @@ elif page == "SAS → PySpark Converter":
 
         with col_sas:
             st.markdown("**SAS script**")
-            st.caption("A full script with multiple PROC/DATA blocks. The example uses `risklib` and `outlib`, mapped to Databricks paths by the config on the left.")
+            st.caption("Uses the library names and macro variables defined in the config (left). The converter loads both files together and resolves all names before translating each block.")
             use_example_sas = st.checkbox("Use example SAS script (financial analytics)", value=True)
             sas_input = st.text_area(
                 "SAS code",
@@ -690,14 +682,11 @@ elif page == "SAS → PySpark Converter":
                 key="sas_input_enterprise",
             )
 
-        c1, c2 = st.columns([2, 1])
-        with c1:
-            target = "pyspark"
-            st.caption(
-                "Output: PySpark — the standard target for migrating SAS scripts to Databricks notebooks and pipelines. "
-                "The converter also supports Databricks SQL for PROC SQL-heavy scripts; see the source code."
-            )
-        with c2:
+        target = "pyspark"
+        col_cap, col_btn = st.columns([3, 1])
+        with col_cap:
+            st.caption("Output: PySpark — the standard target for Databricks notebooks and pipelines")
+        with col_btn:
             convert_btn = st.button("Convert →", type="primary", use_container_width=True, key="convert_enterprise")
 
         if convert_btn and sas_input.strip():
