@@ -576,7 +576,7 @@ elif page == "SAS → PySpark Converter":
             target = st.selectbox(
                 "Convert to",
                 ["pyspark", "databricks_sql"],
-                help="PySpark: DataFrame API code · Databricks SQL: SQL statements",
+                help="PySpark: for notebooks and pipelines · Databricks SQL: for PROC SQL blocks only",
             )
         with c2:
             convert_btn = st.button("Convert →", type="primary", use_container_width=True)
@@ -692,11 +692,8 @@ elif page == "SAS → PySpark Converter":
 
         c1, c2 = st.columns([2, 1])
         with c1:
-            target = st.selectbox(
-                "Convert to",
-                ["pyspark", "databricks_sql"],
-                key="target_enterprise",
-            )
+            target = "pyspark"
+            st.caption("Output: PySpark — the standard target for migrating SAS scripts to Databricks notebooks and pipelines.")
         with c2:
             convert_btn = st.button("Convert →", type="primary", use_container_width=True, key="convert_enterprise")
 
