@@ -633,30 +633,26 @@ elif page == "SAS → PySpark Converter":
         st.caption("The demo below illustrates steps 2–4 using a preloaded example. In a real migration, you supply your own SAS files and config.")
         st.markdown(
             """
-            <div style="display:flex;align-items:flex-start;gap:6px;flex-wrap:wrap;margin:10px 0 18px 0;">
-              <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:10px 12px;font-size:0.82em;min-width:110px;text-align:center;">
-                <div style="font-weight:600;color:#1E3A5F;">1. YAML config</div>
-                <div style="color:#6B7280;margin-top:4px;">Map SAS library refs to Databricks paths — once for the whole codebase</div>
+            <div style="margin:10px 0 18px 0;border:1px solid #E2E8F0;border-radius:8px;overflow:hidden;">
+              <div style="display:flex;align-items:flex-start;gap:14px;padding:12px 16px;background:#F8FAFC;border-bottom:1px solid #E2E8F0;">
+                <span style="background:#1E3A5F;color:white;border-radius:50%;min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:0.82em;font-weight:700;flex-shrink:0;">1</span>
+                <div><div style="font-weight:600;color:#1E3A5F;font-size:0.88em;">YAML config</div><div style="color:#6B7280;font-size:0.82em;margin-top:2px;">Map SAS library references to Databricks paths, written once for the whole codebase</div></div>
               </div>
-              <div style="color:#94A3B8;font-size:1.3em;padding-top:14px;">→</div>
-              <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:10px 12px;font-size:0.82em;min-width:110px;text-align:center;">
-                <div style="font-weight:600;color:#1E3A5F;">2. SAS script</div>
-                <div style="color:#6B7280;margin-top:4px;">One file at a time; same config applied to every script</div>
+              <div style="display:flex;align-items:flex-start;gap:14px;padding:12px 16px;background:#F8FAFC;border-bottom:1px solid #E2E8F0;">
+                <span style="background:#1E3A5F;color:white;border-radius:50%;min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:0.82em;font-weight:700;flex-shrink:0;">2</span>
+                <div><div style="font-weight:600;color:#1E3A5F;font-size:0.88em;">SAS script</div><div style="color:#6B7280;font-size:0.82em;margin-top:2px;">One file at a time; the same config applies to every script</div></div>
               </div>
-              <div style="color:#94A3B8;font-size:1.3em;padding-top:14px;">→</div>
-              <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:10px 12px;font-size:0.82em;min-width:110px;text-align:center;">
-                <div style="font-weight:600;color:#1E40AF;">3. Convert</div>
-                <div style="color:#6B7280;margin-top:4px;">Rule engine converts each block; confidence score assigned</div>
+              <div style="display:flex;align-items:flex-start;gap:14px;padding:12px 16px;background:#EFF6FF;border-bottom:1px solid #BFDBFE;">
+                <span style="background:#1E40AF;color:white;border-radius:50%;min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:0.82em;font-weight:700;flex-shrink:0;">3</span>
+                <div><div style="font-weight:600;color:#1E40AF;font-size:0.88em;">Convert</div><div style="color:#6B7280;font-size:0.82em;margin-top:2px;">Rule engine converts each block and assigns a confidence score</div></div>
               </div>
-              <div style="color:#94A3B8;font-size:1.3em;padding-top:14px;">→</div>
-              <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:10px 12px;font-size:0.82em;min-width:110px;text-align:center;">
-                <div style="font-weight:600;color:#1E3A5F;">4. Review manifest</div>
-                <div style="color:#6B7280;margin-top:4px;">Download summary; check low-confidence or flagged blocks</div>
+              <div style="display:flex;align-items:flex-start;gap:14px;padding:12px 16px;background:#F8FAFC;border-bottom:1px solid #E2E8F0;">
+                <span style="background:#1E3A5F;color:white;border-radius:50%;min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:0.82em;font-weight:700;flex-shrink:0;">4</span>
+                <div><div style="font-weight:600;color:#1E3A5F;font-size:0.88em;">Review manifest</div><div style="color:#6B7280;font-size:0.82em;margin-top:2px;">Download the YAML summary; check any low-confidence or flagged blocks</div></div>
               </div>
-              <div style="color:#94A3B8;font-size:1.3em;padding-top:14px;">→</div>
-              <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:10px 12px;font-size:0.82em;min-width:110px;text-align:center;">
-                <div style="font-weight:600;color:#166534;">5. Commit</div>
-                <div style="color:#6B7280;margin-top:4px;">Verified code committed to the Databricks project</div>
+              <div style="display:flex;align-items:flex-start;gap:14px;padding:12px 16px;background:#F0FDF4;">
+                <span style="background:#166534;color:white;border-radius:50%;min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:0.82em;font-weight:700;flex-shrink:0;">5</span>
+                <div><div style="font-weight:600;color:#166534;font-size:0.88em;">Verify and commit</div><div style="color:#6B7280;font-size:0.82em;margin-top:2px;">Confirm the converted code matches the original SAS output, then commit to the Databricks project</div></div>
               </div>
             </div>
             """,
