@@ -560,11 +560,7 @@ elif page == "SAS → PySpark Converter":
     # ---------------------------------------------------------------------------
 
     if mode == "Community":
-        st.info(
-            "The three examples work without an API key. "
-            "To convert your own SAS code that falls outside the supported patterns, "
-            "add your Anthropic API key in the Advanced section above."
-        )
+        st.info("The preloaded examples work with no setup needed.")
 
         example_choice = st.selectbox(
             "Choose an example or paste your own",
@@ -631,6 +627,40 @@ elif page == "SAS → PySpark Converter":
             "workspace with Unity Catalog enabled to run. Set `unity_catalog: false` to "
             "generate simpler table references compatible with Community Edition or the "
             "Hive Metastore."
+        )
+
+        st.markdown("**How a large-scale migration works**")
+        st.caption("The demo below illustrates steps 2–4 using a preloaded example. In a real migration, you supply your own SAS files and config.")
+        st.markdown(
+            """
+            <div style="display:flex;align-items:flex-start;gap:6px;flex-wrap:wrap;margin:10px 0 18px 0;">
+              <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:10px 12px;font-size:0.82em;min-width:110px;text-align:center;">
+                <div style="font-weight:600;color:#1E3A5F;">1. YAML config</div>
+                <div style="color:#6B7280;margin-top:4px;">Map SAS library refs to Databricks paths — once for the whole codebase</div>
+              </div>
+              <div style="color:#94A3B8;font-size:1.3em;padding-top:14px;">→</div>
+              <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:10px 12px;font-size:0.82em;min-width:110px;text-align:center;">
+                <div style="font-weight:600;color:#1E3A5F;">2. SAS script</div>
+                <div style="color:#6B7280;margin-top:4px;">One file at a time; same config applied to every script</div>
+              </div>
+              <div style="color:#94A3B8;font-size:1.3em;padding-top:14px;">→</div>
+              <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:10px 12px;font-size:0.82em;min-width:110px;text-align:center;">
+                <div style="font-weight:600;color:#1E40AF;">3. Convert</div>
+                <div style="color:#6B7280;margin-top:4px;">Rule engine converts each block; confidence score assigned</div>
+              </div>
+              <div style="color:#94A3B8;font-size:1.3em;padding-top:14px;">→</div>
+              <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:10px 12px;font-size:0.82em;min-width:110px;text-align:center;">
+                <div style="font-weight:600;color:#1E3A5F;">4. Review manifest</div>
+                <div style="color:#6B7280;margin-top:4px;">Download summary; check low-confidence or flagged blocks</div>
+              </div>
+              <div style="color:#94A3B8;font-size:1.3em;padding-top:14px;">→</div>
+              <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:10px 12px;font-size:0.82em;min-width:110px;text-align:center;">
+                <div style="font-weight:600;color:#166534;">5. Commit</div>
+                <div style="color:#6B7280;margin-top:4px;">Verified code committed to the Databricks project</div>
+              </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
 
         col_cfg, col_sas = st.columns(2)
