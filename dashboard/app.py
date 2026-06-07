@@ -459,6 +459,10 @@ if page == "Analytics Dashboard":
 # ---------------------------------------------------------------------------
 
 elif page == "SAS → PySpark Converter":
+    from converter.sas_to_pyspark import convert, convert_script
+    from converter.manifest import generate_manifest
+    from converter.migration_config import load_config_from_dict
+
     _bk, _ = st.columns([1, 5])
     with _bk:
         if st.button("← Home", key="home_from_converter", use_container_width=True):
@@ -626,7 +630,7 @@ elif page == "SAS → PySpark Converter":
               </div>
               <div style="display:flex;align-items:flex-start;gap:14px;padding:12px 16px;background:#F8FAFC;border-bottom:1px solid #E2E8F0;">
                 <span style="background:#1E3A5F;color:white;border-radius:50%;min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:0.82em;font-weight:700;flex-shrink:0;">2</span>
-                <div><div style="font-weight:600;color:#1E3A5F;font-size:0.88em;">SAS script</div><div style="color:#6B7280;font-size:0.82em;margin-top:2px;">Each SAS file is passed through the converter with the same config — the config is written once and reused across the whole codebase</div></div>
+                <div><div style="font-weight:600;color:#1E3A5F;font-size:0.88em;">SAS script</div><div style="color:#6B7280;font-size:0.82em;margin-top:2px;">Run each SAS file through the converter; the YAML config from step 1 applies to every script</div></div>
               </div>
               <div style="display:flex;align-items:flex-start;gap:14px;padding:12px 16px;background:#EFF6FF;border-bottom:1px solid #BFDBFE;">
                 <span style="background:#1E40AF;color:white;border-radius:50%;min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:0.82em;font-weight:700;flex-shrink:0;">3</span>
@@ -645,13 +649,12 @@ elif page == "SAS → PySpark Converter":
             unsafe_allow_html=True,
         )
 
-        st.markdown("**Both inputs are required.** The converter reads them together — library names and macro variables in the SAS script are resolved using the config before translation starts.")
+        st.markdown("**Both inputs are required.** The converter reads them together — library names and macro variables in the SAS script are resolved using the YAML config before translation starts.")
 
         col_cfg, col_sas = st.columns(2)
 
         with col_cfg:
             st.markdown("**Migration config (YAML)**")
-            st.caption("Write this once for the whole codebase. It tells the converter what `risklib`, `outlib`, and `&start_date` in the SAS script (right) actually map to in Databricks. Without this, those names stay unresolved and the converted code will fail at runtime.")
             use_example_cfg = st.checkbox("Use example config (financial analytics pipeline)", value=True)
             if use_example_cfg:
                 config_text = st.text_area(
@@ -670,7 +673,6 @@ elif page == "SAS → PySpark Converter":
 
         with col_sas:
             st.markdown("**SAS script**")
-            st.caption("Uses the library names and macro variables defined in the config (left). The converter loads both files together and resolves all names before translating each block.")
             use_example_sas = st.checkbox("Use example SAS script (financial analytics)", value=True)
             sas_input = st.text_area(
                 "SAS code",
