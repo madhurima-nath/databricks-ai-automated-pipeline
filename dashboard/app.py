@@ -489,7 +489,6 @@ elif page == "SAS → PySpark Converter":
     st.markdown("---")
 
     EXAMPLES_COMMUNITY = {
-        "Custom SAS code": "",
         "PROC SORT: sort customers by name": (
             "PROC SORT DATA=customers OUT=customers_sorted;\n"
             "    BY last_name first_name;\n"
@@ -561,18 +560,16 @@ elif page == "SAS → PySpark Converter":
 
     if mode == "Community":
         example_choice = st.selectbox(
-            "Choose an example or enter your own SAS code",
+            "Choose a preloaded example",
             list(EXAMPLES_COMMUNITY.keys()),
         )
-        if example_choice == "Custom SAS code":
-            st.info(
-                "The rule engine handles common SAS constructs with no API key needed: "
-                "PROC SORT, PROC MEANS, PROC SQL, and DATA steps with KEEP, DROP, WHERE, "
-                "RENAME, and IF-THEN-ELSE. For anything outside those patterns, the LLM "
-                "fallback requires an API key (see Advanced above)."
-            )
-        else:
-            st.info("The preloaded examples run with no setup needed.")
+        st.info(
+            "The preloaded examples run with no API key needed. "
+            "To try your own SAS code, select any example and edit the text box below. "
+            "The rule engine handles PROC SORT, PROC MEANS, PROC SQL, and DATA steps "
+            "(KEEP, DROP, WHERE, RENAME, IF-THEN-ELSE). "
+            "Other patterns require an API key (see Advanced above)."
+        )
         sas_input = st.text_area(
             "SAS code",
             value=EXAMPLES_COMMUNITY[example_choice],
@@ -622,17 +619,18 @@ elif page == "SAS → PySpark Converter":
 
     else:
         st.markdown(
-            "Enterprise mode converts a full SAS script in one pass. "
-            "A YAML config maps SAS library references and macro variables to Databricks paths before conversion. "
-            "Each block gets a confidence score. Both the converted code and a migration manifest are downloadable."
+            "SAS scripts reference named libraries (`risklib.sp500_prices`, `outlib.daily_analytics`) "
+            "and macro variables (`&start_date`). Those names mean nothing to Databricks — "
+            "the converted code will not run until they are resolved to real paths. "
+            "The YAML config on the left is the mapping: it tells the converter what each library name "
+            "and macro variable maps to in Databricks. The SAS script on the right is the code that uses those names. "
+            "Together, they produce converted code that runs without any manual fixes."
         )
         st.info(
             "The conversion runs entirely in Python — no Databricks connection needed. "
-            "When `unity_catalog: true` is set in the config, the generated code uses "
-            "fully qualified `catalog.schema.table` paths, which require a full Databricks "
-            "workspace with Unity Catalog enabled to run. Set `unity_catalog: false` to "
-            "generate simpler table references compatible with Community Edition or the "
-            "Hive Metastore."
+            "`unity_catalog: false` in the config generates simple table references, compatible with "
+            "Databricks Community Edition. Set it to `true` for fully qualified `catalog.schema.table` "
+            "paths, which require a full Databricks workspace with Unity Catalog enabled."
         )
 
         st.markdown("**How a large-scale migration works**")
@@ -669,7 +667,7 @@ elif page == "SAS → PySpark Converter":
 
         with col_cfg:
             st.markdown("**Migration config (YAML)**")
-            st.caption("Maps SAS libraries and macro variables to Databricks targets.")
+            st.caption("Maps each SAS library name and macro variable to its Databricks equivalent. The SAS script on the right uses these names — the config resolves them before conversion.")
             use_example_cfg = st.checkbox("Use example config (financial analytics pipeline)", value=True)
             if use_example_cfg:
                 config_text = st.text_area(
@@ -688,7 +686,7 @@ elif page == "SAS → PySpark Converter":
 
         with col_sas:
             st.markdown("**SAS script**")
-            st.caption("Can contain multiple PROC/DATA blocks — each is converted independently.")
+            st.caption("A full script with multiple PROC/DATA blocks. The example uses `risklib` and `outlib` — mapped to Databricks paths by the config on the left.")
             use_example_sas = st.checkbox("Use example SAS script (financial analytics)", value=True)
             sas_input = st.text_area(
                 "SAS code",
