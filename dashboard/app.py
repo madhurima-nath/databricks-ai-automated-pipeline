@@ -599,6 +599,8 @@ elif page == "SAS → PySpark Converter":
             method_label = "Rule engine" if result.method == "rule_based" else "Claude AI"
             st.caption(f"Converted by: {method_label} · Target: `{result.target}`")
 
+            st.markdown("**What next?** Paste this into a Databricks notebook. The `spark` session is available by default — no setup needed. Confirm the source table exists at the path shown, then run the cell.")
+
         elif convert_btn:
             st.info("Paste some SAS code above to convert.")
         else:
@@ -775,11 +777,33 @@ elif page == "SAS → PySpark Converter":
 
                 st.markdown("")
 
+            st.markdown("**What next?** Paste each converted block into a Databricks notebook and run it. The `spark` session is available by default.")
+            with st.expander("Migrating hundreds of files?"):
+                st.markdown(
+                    "This dashboard converts one script at a time. For a large codebase, "
+                    "call `convert_script()` directly in a Python loop — the same YAML config applies to every file:\n\n"
+                    "```python\n"
+                    "from converter.sas_to_pyspark import convert_script\n"
+                    "from converter.migration_config import load_config\n"
+                    "from converter.manifest import generate_manifest\n"
+                    "from pathlib import Path\n\n"
+                    "config = load_config('migration_config.yaml')  # written once\n\n"
+                    "for sas_file in Path('sas_scripts/').glob('*.sas'):\n"
+                    "    results = convert_script(sas_file.read_text(), target='pyspark', config=config)\n"
+                    "    out = Path('converted/') / sas_file.with_suffix('.py').name\n"
+                    "    out.write_text('\\n\\n'.join(r.output for r in results))\n"
+                    "    manifest = generate_manifest(results, source_label=sas_file.name, platform='enterprise', config_applied=True)\n"
+                    "    (Path('manifests/') / sas_file.with_suffix('.yaml').name).write_text(manifest)\n"
+                    "```\n\n"
+                    "Each manifest flags low-confidence blocks for human review. Fix those, then commit the converted notebooks to your Databricks project. "
+                    "Source code: [GitHub](https://github.com/madhurima-nath/databricks-ai-automated-pipeline)"
+                )
+
         elif convert_btn:
             st.info("Paste some SAS code to convert.")
         else:
             st.info(
-                "Select or paste a SAS script and click **Convert →**. "
+                "Select or paste a SAS script and click **Convert to PySpark →**. "
                 "The example shows a three-block financial analytics script mapped "
                 "to the Bronze layer of the Databricks pipeline used in this project."
             )
