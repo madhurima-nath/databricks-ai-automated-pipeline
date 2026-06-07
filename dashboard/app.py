@@ -546,13 +546,7 @@ elif page == "SAS → PySpark Converter":
         "  unity_catalog: false  # set true for Unity Catalog (full Databricks workspace only)\n"
     )
 
-    with st.expander("Advanced: Anthropic API key (for patterns outside the rule engine)"):
-        api_key = st.text_input(
-            "API key",
-            type="password",
-            value=_secret("ANTHROPIC_API_KEY"),
-            help="Only needed for SAS code the built-in rules cannot handle.",
-        )
+    api_key = _secret("ANTHROPIC_API_KEY")
 
     # ---------------------------------------------------------------------------
     # Community mode
