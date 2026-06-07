@@ -572,11 +572,8 @@ elif page == "SAS → PySpark Converter":
         )
 
         target = "pyspark"
-        col_cap, col_btn = st.columns([3, 1])
-        with col_cap:
-            st.caption("Output: PySpark — DataFrame API code for Databricks notebooks and pipelines")
-        with col_btn:
-            convert_btn = st.button("Convert →", type="primary", use_container_width=True)
+        st.markdown("**Output: PySpark** — DataFrame API code for Databricks notebooks and pipelines")
+        convert_btn = st.button("Convert →", type="primary", use_container_width=True)
 
         if convert_btn and sas_input.strip():
             with st.spinner("Converting..."):
@@ -649,6 +646,8 @@ elif page == "SAS → PySpark Converter":
             unsafe_allow_html=True,
         )
 
+        st.markdown("**Both inputs are required.** The converter reads them together — library names and macro variables in the SAS script are resolved using the config before translation starts.")
+
         col_cfg, col_sas = st.columns(2)
 
         with col_cfg:
@@ -683,11 +682,8 @@ elif page == "SAS → PySpark Converter":
             )
 
         target = "pyspark"
-        col_cap, col_btn = st.columns([3, 1])
-        with col_cap:
-            st.caption("Output: PySpark — the standard target for Databricks notebooks and pipelines")
-        with col_btn:
-            convert_btn = st.button("Convert →", type="primary", use_container_width=True, key="convert_enterprise")
+        st.markdown("**Output: PySpark** — the standard target for Databricks notebooks and pipelines")
+        convert_btn = st.button("Convert →", type="primary", use_container_width=True, key="convert_enterprise")
 
         if convert_btn and sas_input.strip():
             import yaml as _yaml
