@@ -468,9 +468,9 @@ elif page == "SAS → PySpark Converter":
     st.markdown(
         "SAS analytics code — risk models, regulatory reports, portfolio calculations — "
         "cannot move to Databricks on its own. Rewriting each script by hand is the bottleneck "
-        "that slows most migrations. This converter automates the translation: paste SAS, "
-        "get working PySpark or Databricks SQL back. Common patterns are handled by a rule engine "
-        "with no API key needed. Anything outside those patterns is sent to Claude AI."
+        "that slows most migrations. This converter automates the translation using a rule engine: "
+        "PROC SORT, PROC MEANS, PROC SQL, and DATA steps with common variable handling. "
+        "No API key needed."
     )
     st.markdown("---")
 
@@ -568,7 +568,7 @@ elif page == "SAS → PySpark Converter":
             "To try your own SAS code, select any example and edit the text box below. "
             "The rule engine handles PROC SORT, PROC MEANS, PROC SQL, and DATA steps "
             "(KEEP, DROP, WHERE, RENAME, IF-THEN-ELSE). "
-            "Other patterns require an API key (see Advanced above)."
+            "SAS code outside those patterns will not convert in this demo."
         )
         sas_input = st.text_area(
             "SAS code",
