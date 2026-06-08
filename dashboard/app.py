@@ -603,7 +603,7 @@ elif page == "SAS → PySpark Converter":
             "Three preloaded examples below — no API key needed."
         )
 
-        _tab1, _tab2, _tab3 = st.tabs(["PROC SORT", "PROC MEANS", "DATA step"])
+        _tab1, _tab2, _tab3, _tab4 = st.tabs(["PROC SORT", "PROC MEANS", "DATA step", "RETAIN — Claude AI"])
 
         with _tab1:
             st.markdown(
@@ -675,6 +675,63 @@ elif page == "SAS → PySpark Converter":
             elif btn_3:
                 st.info("No SAS code to convert.")
 
+        with _tab4:
+            st.markdown(
+                "`RETAIN` carries a value forward from one row to the next. "
+                "Running totals and cumulative portfolio returns are common examples. "
+                "The rule engine flags this for manual review rather than producing an incorrect translation. "
+                "Below is what Claude AI produces for the same input when an API key is configured."
+            )
+            _col_sas, _col_rule, _col_llm = st.columns(3)
+            with _col_sas:
+                st.markdown("**SAS input**")
+                st.code(
+                    "DATA cumulative;\n"
+                    "    SET monthly_returns;\n"
+                    "    RETAIN running_total 0;\n"
+                    "    running_total =\n"
+                    "        running_total + return;\n"
+                    "    OUTPUT;\n"
+                    "RUN;",
+                    language="text",
+                )
+            with _col_rule:
+                st.markdown(
+                    "<span style='color:#92400E;font-weight:600;'>⚠ Rule engine — needs review</span>",
+                    unsafe_allow_html=True,
+                )
+                st.code(
+                    "# RETAIN statement detected —\n"
+                    "# manual review required\n"
+                    "cumulative_df = monthly_returns_df",
+                    language="python",
+                )
+            with _col_llm:
+                st.markdown(
+                    "<span style='color:#166534;font-weight:600;'>✓ Claude AI</span>",
+                    unsafe_allow_html=True,
+                )
+                st.code(
+                    "from pyspark.sql import Window\n"
+                    "import pyspark.sql.functions as F\n\n"
+                    "window = (\n"
+                    "    Window\n"
+                    "    .orderBy(F.monotonically_increasing_id())\n"
+                    "    .rowsBetween(\n"
+                    "        Window.unboundedPreceding,\n"
+                    "        Window.currentRow))\n\n"
+                    "cumulative_df = (\n"
+                    "    monthly_returns_df\n"
+                    "    .withColumn(\n"
+                    "        'running_total',\n"
+                    "        F.sum('return').over(window)))",
+                    language="python",
+                )
+            st.markdown(
+                "The rule engine handles predictable patterns reliably; "
+                "the LLM handles what rules cannot."
+            )
+
         st.markdown(
             "<div style='background:#EFF6FF;border-left:4px solid #3B82F6;border-radius:6px;"
             "padding:16px 20px;margin-top:20px;margin-bottom:20px;'>"
@@ -690,70 +747,6 @@ elif page == "SAS → PySpark Converter":
             unsafe_allow_html=True,
         )
 
-        st.markdown("### When the rule engine is not enough")
-        st.markdown(
-            "The examples above follow patterns the rule engine knows. "
-            "Real SAS codebases also contain constructs where the correct translation "
-            "depends on what the code is doing, not just how it is written. "
-            "Rules cannot handle those reliably."
-        )
-        st.markdown(
-            "One common case: `RETAIN`, which carries a value forward row by row. "
-            "Running totals, cumulative portfolio returns, drawdown calculations all use this pattern. "
-            "In the live demo, the rule engine flags it for manual review. "
-            "Below is an example of what Claude AI produces for the same input when an API key is configured."
-        )
-
-        _col_sas, _col_rule, _col_llm = st.columns(3)
-        with _col_sas:
-            st.markdown("**SAS input**")
-            st.code(
-                "DATA cumulative;\n"
-                "    SET monthly_returns;\n"
-                "    RETAIN running_total 0;\n"
-                "    running_total =\n"
-                "        running_total + return;\n"
-                "    OUTPUT;\n"
-                "RUN;",
-                language="text",
-            )
-        with _col_rule:
-            st.markdown(
-                "<span style='color:#92400E;font-weight:600;'>⚠ Rule engine — needs review</span>",
-                unsafe_allow_html=True,
-            )
-            st.code(
-                "# RETAIN statement detected —\n"
-                "# manual review required\n"
-                "cumulative_df = monthly_returns_df",
-                language="python",
-            )
-        with _col_llm:
-            st.markdown(
-                "<span style='color:#166534;font-weight:600;'>✓ Claude AI</span>",
-                unsafe_allow_html=True,
-            )
-            st.code(
-                "from pyspark.sql import Window\n"
-                "import pyspark.sql.functions as F\n\n"
-                "window = (\n"
-                "    Window\n"
-                "    .orderBy(F.monotonically_increasing_id())\n"
-                "    .rowsBetween(\n"
-                "        Window.unboundedPreceding,\n"
-                "        Window.currentRow))\n\n"
-                "cumulative_df = (\n"
-                "    monthly_returns_df\n"
-                "    .withColumn(\n"
-                "        'running_total',\n"
-                "        F.sum('return').over(window)))",
-                language="python",
-            )
-
-        st.markdown(
-            "This is the case for LLM-powered translation in a real migration: "
-            "the rule engine handles predictable patterns fast; the LLM handles what rules cannot."
-        )
         _ent_col, _ = st.columns([2, 3])
         with _ent_col:
             if st.button("Try Enterprise mode →", key="switch_enterprise", use_container_width=True):
