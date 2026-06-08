@@ -951,10 +951,6 @@ elif page == "SAS → PySpark Converter":
                         ")",
                         language="python",
                     )
-                    st.caption(
-                        "With an API key configured, the converter calls the LLM automatically for blocks the rule engine cannot handle. "
-                        "This output should also be validated before use in production."
-                    )
 
                 st.markdown("")
 
