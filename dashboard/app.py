@@ -793,7 +793,7 @@ elif page == "SAS → PySpark Converter":
             "keep only date, closing price, and daily return\n"
             "- **Block 4 — DATA step with RETAIN:** Calculate a running cumulative return. "
             "`RETAIN` carries a value from one row to the next — a pattern the rule engine cannot fully translate. "
-            "Block 4 is flagged for manual review; the 'Where LLM helps' tab in Community mode shows the correct PySpark window function equivalent."
+            "Block 4 is flagged for review; the Claude AI window function equivalent appears directly below the rule engine output."
         )
         st.markdown(
             "Input: **Bronze layer** (raw market data). "
@@ -921,6 +921,35 @@ elif page == "SAS → PySpark Converter":
                     st.warning(
                         "**Translation note:** "
                         + " · ".join(result.warnings)
+                    )
+
+                # For RETAIN blocks: show the Claude AI equivalent as a static example
+                if any("RETAIN" in w for w in result.warnings):
+                    st.markdown(
+                        "<span style='color:#166534;font-weight:600;font-size:0.9em;'>"
+                        "✓ Claude AI — window function equivalent</span>",
+                        unsafe_allow_html=True,
+                    )
+                    st.code(
+                        "# RETAIN → window function (cumulative sum over ordered rows)\n"
+                        "from pyspark.sql import Window\n"
+                        "import pyspark.sql.functions as F\n\n"
+                        "window = (\n"
+                        "    Window\n"
+                        "    .orderBy('date')\n"
+                        "    .rowsBetween(Window.unboundedPreceding, Window.currentRow)\n"
+                        ")\n\n"
+                        "cumulative_returns_df = (\n"
+                        "    daily_analytics_df\n"
+                        "    .withColumn(\n"
+                        "        'cumulative_return',\n"
+                        "        F.sum('log_return').over(window))\n"
+                        ")",
+                        language="python",
+                    )
+                    st.caption(
+                        "This is an example of what Claude AI produces for this block. "
+                        "With an API key configured, the converter calls Claude AI automatically."
                     )
 
                 st.markdown("")
