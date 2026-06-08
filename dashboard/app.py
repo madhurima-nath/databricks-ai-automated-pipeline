@@ -494,11 +494,12 @@ elif page == "SAS → PySpark Converter":
     st.title("SAS → PySpark Converter")
     st.markdown(
         "Moving analytics from SAS to Databricks means translating every script into a different language. "
-        "The rule engine covers the most common SAS patterns. "
-        "For complex cases the rules cannot handle, the code supports LLM-powered translation "
-        "via the Anthropic API. In the live demo, examples run through the rule engine; "
-        "enterprises with an API key get both. "
-        "LLM output should be reviewed for accuracy before running in production."
+        "This converter does that in two ways. "
+        "A rule engine matches known SAS patterns and produces a consistent translation. "
+        "For patterns the rules cannot handle, it calls the Anthropic API for LLM-powered translation. "
+        "In the live demo, examples run through the rule engine. "
+        "Enterprises with an API key configured get both. "
+        "LLM output should be reviewed for accuracy before use in production."
     )
     st.markdown(
         "<div style='display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:16px 0 8px 0;'>"
@@ -654,10 +655,9 @@ elif page == "SAS → PySpark Converter":
             st.markdown(
                 "**Customer tiering with conditional logic.** "
                 "A DATA step applies business rules row by row across a dataset. "
-                "IF-THEN-ELSE conditions map to `F.when()` in PySpark; "
-                "WHERE filtering maps to `.filter()`; KEEP maps to `.select()`. "
-                "This pattern — classifying records by threshold values — is one of the most "
-                "common in financial analytics."
+                "In this example, IF-THEN-ELSE conditions become `F.when()` calls in PySpark, "
+                "WHERE filtering becomes `.filter()`, and KEEP becomes `.select()`. "
+                "This pattern is one of the most common in financial analytics."
             )
             sas_input_3 = st.text_area(
                 "SAS code",
@@ -684,9 +684,9 @@ elif page == "SAS → PySpark Converter":
             )
             st.markdown(
                 "The rule engine translates patterns it recognises. "
-                "`RETAIN` carries state across rows — each row's result depends on what the previous rows produced — "
-                "which the rule engine cannot reason about. "
-                "It flags these cases for manual review rather than producing an incorrect translation. "
+                "`RETAIN` carries state across rows: each row's result depends on what the previous rows produced. "
+                "The rule engine cannot reason about accumulated state, so it flags these cases for manual review "
+                "rather than producing an incorrect translation. "
                 "Claude AI produces the correct PySpark equivalent using a window function, "
                 "which calculates a value across a sequence of rows."
             )
@@ -934,7 +934,7 @@ elif page == "SAS → PySpark Converter":
                     "    manifest = generate_manifest(results, source_label=sas_file.name, platform='enterprise', config_applied=True)\n"
                     "    (Path('manifests/') / sas_file.with_suffix('.yaml').name).write_text(manifest)\n"
                     "```\n\n"
-                    "Each manifest flags low-confidence blocks for human review. Fix those, then commit the converted notebooks to your Databricks project. "
+                    "Each manifest flags low-confidence blocks for review. Check those blocks before committing the converted notebooks to the Databricks project. "
                     "Source code: [GitHub](https://github.com/madhurima-nath/databricks-ai-automated-pipeline)"
                 )
 
@@ -952,7 +952,7 @@ elif page == "SAS → PySpark Converter":
               </div>
               <div style="display:flex;align-items:flex-start;gap:14px;padding:12px 16px;background:#F8FAFC;border-bottom:1px solid #E2E8F0;">
                 <span style="background:#1E3A5F;color:white;border-radius:50%;min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:0.82em;font-weight:700;flex-shrink:0;">2</span>
-                <div><div style="font-weight:600;color:#1E3A5F;font-size:0.88em;">Map the data</div><div style="color:#6B7280;font-size:0.82em;margin-top:2px;">Identify which SAS data sources correspond to which Databricks tables and catalog paths; document source-to-target mapping for the whole codebase</div></div>
+                <div><div style="font-weight:600;color:#1E3A5F;font-size:0.88em;">Map the data</div><div style="color:#6B7280;font-size:0.82em;margin-top:2px;">Identify which SAS data sources correspond to which Databricks tables and catalog paths; record these mappings for the whole codebase</div></div>
               </div>
               <div style="display:flex;align-items:flex-start;gap:14px;padding:12px 16px;background:#F8FAFC;border-bottom:1px solid #E2E8F0;">
                 <span style="background:#1E3A5F;color:white;border-radius:50%;min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:0.82em;font-weight:700;flex-shrink:0;">3</span>
@@ -960,15 +960,15 @@ elif page == "SAS → PySpark Converter":
               </div>
               <div style="display:flex;align-items:flex-start;gap:14px;padding:12px 16px;background:#EFF6FF;border-bottom:1px solid #BFDBFE;">
                 <span style="background:#1E40AF;color:white;border-radius:50%;min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:0.82em;font-weight:700;flex-shrink:0;">4</span>
-                <div><div style="font-weight:600;color:#1E40AF;font-size:0.88em;">Convert the scripts</div><div style="color:#6B7280;font-size:0.82em;margin-top:2px;">Run each SAS file through Enterprise mode — rule engine for common patterns, Claude AI for complex cases; for large codebases, run the converter programmatically across all files at once</div></div>
+                <div><div style="font-weight:600;color:#1E40AF;font-size:0.88em;">Convert the scripts</div><div style="color:#6B7280;font-size:0.82em;margin-top:2px;">Run each SAS file through Enterprise mode: the rule engine handles common patterns, Claude AI handles complex cases. For large codebases, run the converter programmatically across all files at once.</div></div>
               </div>
               <div style="display:flex;align-items:flex-start;gap:14px;padding:12px 16px;background:#F8FAFC;border-bottom:1px solid #E2E8F0;">
                 <span style="background:#1E3A5F;color:white;border-radius:50%;min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:0.82em;font-weight:700;flex-shrink:0;">5</span>
-                <div><div style="font-weight:600;color:#1E3A5F;font-size:0.88em;">Review the output</div><div style="color:#6B7280;font-size:0.82em;margin-top:2px;">Download the migration manifest; each block has a confidence score — flagged blocks and any Claude AI translations need a manual check before proceeding</div></div>
+                <div><div style="font-weight:600;color:#1E3A5F;font-size:0.88em;">Review the output</div><div style="color:#6B7280;font-size:0.82em;margin-top:2px;">Download the migration manifest. Each block has a confidence score; flagged blocks and any Claude AI translations need a manual check before proceeding.</div></div>
               </div>
               <div style="display:flex;align-items:flex-start;gap:14px;padding:12px 16px;background:#F8FAFC;border-bottom:1px solid #E2E8F0;">
                 <span style="background:#1E3A5F;color:white;border-radius:50%;min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:0.82em;font-weight:700;flex-shrink:0;">6</span>
-                <div><div style="font-weight:600;color:#1E3A5F;font-size:0.88em;">Test in Databricks</div><div style="color:#6B7280;font-size:0.82em;margin-top:2px;">Paste each converted block into a Databricks notebook — <code>spark</code> is available by default, no imports needed — and run it</div></div>
+                <div><div style="font-weight:600;color:#1E3A5F;font-size:0.88em;">Test in Databricks</div><div style="color:#6B7280;font-size:0.82em;margin-top:2px;">Paste each converted block into a Databricks notebook. <code>spark</code> is available by default, no imports needed. Run the cell.</div></div>
               </div>
               <div style="display:flex;align-items:flex-start;gap:14px;padding:12px 16px;background:#F0FDF4;">
                 <span style="background:#166534;color:white;border-radius:50%;min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:0.82em;font-weight:700;flex-shrink:0;">7</span>
