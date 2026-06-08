@@ -798,11 +798,15 @@ elif page == "SAS → PySpark Converter":
             "- **Platform settings** — target catalog, default schema, Unity Catalog flag"
         )
         st.markdown("Written once, the config applies to every file in the migration.")
+        st.markdown(
+            "The config and script below are already loaded with the three-block example above. "
+            "Click **Convert to PySpark →** to see all three blocks translated."
+        )
 
         col_cfg, col_sas = st.columns(2)
 
         with col_cfg:
-            st.markdown("**Migration config (YAML)**")
+            st.markdown("**Migration config (YAML)** — maps the three SAS data references to Databricks paths")
             config_text = st.text_area(
                 "Config YAML",
                 value=EXAMPLE_CONFIG,
@@ -811,7 +815,7 @@ elif page == "SAS → PySpark Converter":
             )
 
         with col_sas:
-            st.markdown("**SAS script**")
+            st.markdown("**SAS script** — the three-block financial analytics script")
             sas_input = st.text_area(
                 "SAS code",
                 value=EXAMPLE_ENTERPRISE,
@@ -819,6 +823,11 @@ elif page == "SAS → PySpark Converter":
                 key="sas_input_enterprise",
             )
 
+        st.caption(
+            "Each block gets a confidence score (green ≥ 85%, amber ≥ 70%, red < 70%) "
+            "and a method label (rule engine or Claude AI). "
+            "Converted code and a per-block review report are both downloadable."
+        )
         target = "pyspark"
         convert_btn = st.button("Convert to PySpark →", type="primary", use_container_width=True, key="convert_enterprise")
 
@@ -861,7 +870,7 @@ elif page == "SAS → PySpark Converter":
                 )
             with dl2:
                 st.download_button(
-                    "Download migration manifest (.yaml)",
+                    "Download review report (.yaml) — confidence scores and flags per block",
                     data=manifest_str,
                     file_name="migration_manifest.yaml",
                     mime="text/yaml",
@@ -906,7 +915,7 @@ elif page == "SAS → PySpark Converter":
 
                 st.markdown("")
 
-            with st.expander("Migrating hundreds of files?"):
+            with st.expander("Running this at scale — batch conversion for large codebases"):
                 st.markdown(
                     "This dashboard converts one script at a time. For a large codebase, "
                     "call `convert_script()` directly in a Python loop — the same YAML config applies to every file:\n\n"
