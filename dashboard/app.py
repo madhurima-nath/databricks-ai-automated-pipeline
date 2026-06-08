@@ -613,6 +613,7 @@ elif page == "SAS → PySpark Converter":
             "a DATA step transforms it row by row. "
             "Three preloaded examples below — no API key needed."
         )
+        st.info("Always validate converted code against the original SAS results before use in production.")
 
         _tab1, _tab2, _tab3, _tab4 = st.tabs(["PROC SORT", "PROC MEANS", "DATA step", "Where LLM helps"])
 
@@ -632,7 +633,6 @@ elif page == "SAS → PySpark Converter":
             if btn_1 and sas_input_1.strip():
                 with st.spinner("Converting..."):
                     result_1 = convert(sas_input_1, target="pyspark", api_key=api_key or None)
-                st.info("Always validate converted code against the original SAS results before use in production.")
                 st.text_area("Output", value=result_1.output, height=180, key="out_c1")
                 if result_1.warnings:
                     st.warning("**Translation note:** " + " · ".join(result_1.warnings))
@@ -656,7 +656,6 @@ elif page == "SAS → PySpark Converter":
             if btn_2 and sas_input_2.strip():
                 with st.spinner("Converting..."):
                     result_2 = convert(sas_input_2, target="pyspark", api_key=api_key or None)
-                st.info("Always validate converted code against the original SAS results before use in production.")
                 st.text_area("Output", value=result_2.output, height=180, key="out_c2")
                 if result_2.warnings:
                     st.warning("**Translation note:** " + " · ".join(result_2.warnings))
@@ -681,7 +680,6 @@ elif page == "SAS → PySpark Converter":
             if btn_3 and sas_input_3.strip():
                 with st.spinner("Converting..."):
                     result_3 = convert(sas_input_3, target="pyspark", api_key=api_key or None)
-                st.info("Always validate converted code against the original SAS results before use in production.")
                 st.text_area("Output", value=result_3.output, height=200, key="out_c3")
                 if result_3.warnings:
                     st.warning("**Translation note:** " + " · ".join(result_3.warnings))
