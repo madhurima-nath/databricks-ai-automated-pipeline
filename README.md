@@ -11,11 +11,12 @@ which appears clearly in the regime classifications and the US–EU rate differe
 
 **Migration tool:** Translates legacy SAS code (PROC SORT, PROC MEANS, PROC SQL, DATA steps)
 to PySpark. Community mode converts a single block with three preloaded examples (PROC SORT,
-PROC MEANS, DATA step) and a fourth tab showing the rule engine limit and the Claude AI fallback.
-Enterprise mode converts a full script using a config file that maps SAS library names and
-variables to Databricks paths — the dashboard preloads a four-block example: three blocks handled
-by the rule engine and one RETAIN block flagged for Claude AI. Each block gets a confidence score;
-converted code and a per-block review manifest are downloadable.
+PROC MEANS, DATA step) and a fourth tab showing the rule engine limit alongside an LLM-produced
+equivalent. Enterprise mode converts a full script using a config file that maps SAS library names
+and variables to Databricks paths — the dashboard preloads a four-block example: three blocks
+handled by the rule engine and one RETAIN block the rule engine cannot fully translate. Each block
+gets a confidence score; blocks below 85% are flagged for review. Converted code and a per-block
+review manifest are downloadable.
 
 **Built with Claude Code** as a development collaborator — for architecture decisions, the quality
 checks module, and the converter's rule engine.
@@ -133,8 +134,9 @@ print(result.notes)
 **Enterprise mode** converts a full SAS script using a config file that maps SAS library names
 and variables to Databricks table paths. The dashboard preloads a four-block example — PROC SORT,
 PROC MEANS, a DATA step filter, and a RETAIN cumulative-return block. Blocks 1–3 are handled by
-the rule engine; Block 4 (`RETAIN`) is flagged for review and handled by Claude AI when an API
-key is configured. Each block gets a confidence score; output appears per block, then converted
+the rule engine; Block 4 (`RETAIN`) cannot be fully translated by the rule engine and is flagged
+for review. The dashboard shows the LLM-produced window function equivalent alongside the flag.
+Output appears per block; confidence score below 85% triggers a "Needs review" label. Converted
 code and manifest are downloadable.
 
 ```python
@@ -192,7 +194,7 @@ databricks-ai-automated-pipeline/
 ├── src/
 │   └── converter/
 │       ├── __init__.py
-│       ├── sas_to_pyspark.py           SAS→PySpark/SQL converter — rule engine + Claude AI fallback
+│       ├── sas_to_pyspark.py           SAS→PySpark/SQL converter — rule engine + LLM fallback
 │       ├── migration_config.py         Config loader — maps SAS library names and variables to Databricks paths
 │       └── manifest.py                 Generates a conversion summary per block
 │
