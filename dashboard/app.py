@@ -518,17 +518,20 @@ elif page == "SAS → PySpark Converter":
     )
     st.markdown("---")
 
-    # Mode toggle
+    # Mode toggle — managed via _conv_mode so the button can switch it without a widget key conflict
+    if "_conv_mode" not in st.session_state:
+        st.session_state["_conv_mode"] = "Community"
     mode = st.radio(
         "Mode",
         ["Community", "Enterprise"],
+        index=["Community", "Enterprise"].index(st.session_state["_conv_mode"]),
         horizontal=True,
-        key="conv_mode",
     )
+    st.session_state["_conv_mode"] = mode
     if mode == "Community":
         st.markdown("Single SAS operation — three preloaded examples, no setup needed.")
     else:
-        st.markdown("Complete SAS file — three-block financial analytics example, config included.")
+        st.markdown("Complete SAS file — four-block financial analytics example, three handled by the rule engine and one requiring Claude AI. Config included.")
 
     st.markdown("---")
 
@@ -569,6 +572,13 @@ elif page == "SAS → PySpark Converter":
         "    SET sp500_sorted;\n"
         "    WHERE date >= &start_date;\n"
         "    KEEP date close log_return;\n"
+        "RUN;\n\n"
+        "/* Cumulative return — RETAIN carries state row by row; requires Claude AI */\n"
+        "DATA outlib.cumulative_returns;\n"
+        "    SET outlib.daily_analytics;\n"
+        "    RETAIN cumulative_return 0;\n"
+        "    cumulative_return = cumulative_return + log_return;\n"
+        "    OUTPUT;\n"
         "RUN;"
     )
 
@@ -759,7 +769,7 @@ elif page == "SAS → PySpark Converter":
         _ent_col, _ = st.columns([2, 3])
         with _ent_col:
             if st.button("Try Enterprise mode →", key="switch_enterprise", use_container_width=True):
-                st.session_state["conv_mode"] = "Enterprise"
+                st.session_state["_conv_mode"] = "Enterprise"
                 st.rerun()
 
     # ---------------------------------------------------------------------------
@@ -768,22 +778,31 @@ elif page == "SAS → PySpark Converter":
 
     else:
         st.markdown(
-            "Real SAS analytics files chain many steps in sequence — sort the data, calculate statistics, "
+            "A real SAS analytics file chains many steps in sequence — sort the data, calculate statistics, "
             "apply filters, apply business rules — all in one file, run top to bottom. "
-            "Enterprise mode converts the whole file at once."
-        )
-        st.markdown("**The preloaded example** is a three-block financial analytics script built on actual market data:")
-        st.markdown(
-            "- **Block 1 — PROC SORT:** Sort S&P 500 price data by date\n"
-            "- **Block 2 — PROC MEANS:** Calculate monthly statistics on Federal Reserve rate data "
-            "(mean, min, max rate per month)\n"
-            "- **Block 3 — DATA step:** Filter the sorted S&P 500 data from the start date set in the config "
-            "(2010-01-01 in the example); keep only date, closing price, and daily return"
+            "Enterprise mode converts the whole file at once, one block at a time, and produces a single Python file."
         )
         st.markdown(
-            "Input: **Bronze layer** (raw market data) · "
+            "**The preloaded script** (visible in the editor below) is a four-block financial analytics file built on actual market data:"
+        )
+        st.markdown(
+            "- **Block 1 — PROC SORT:** Sort S&P 500 price data by date · *rule engine*\n"
+            "- **Block 2 — PROC MEANS:** Monthly statistics on Federal Reserve rate data "
+            "(mean, min, max per month) · *rule engine*\n"
+            "- **Block 3 — DATA step:** Filter the sorted S&P 500 data from 2010-01-01; "
+            "keep only date, closing price, and daily return · *rule engine*\n"
+            "- **Block 4 — DATA step with RETAIN:** Calculate a running cumulative return. "
+            "`RETAIN` carries a value from one row to the next — the rule engine flags this for manual review. "
+            "Claude AI produces the correct PySpark window function when an API key is configured. · *Claude AI*"
+        )
+        st.markdown(
+            "Input: **Bronze layer** (raw market data). "
             "Output: **Silver layer** (filtered, structured data ready for analytics). "
             "The Analytics Dashboard shows the Gold layer metrics built from this Silver layer data."
+        )
+        st.markdown(
+            "The converter produces **one Python file** with each block separated by a comment. "
+            "In Databricks, paste each block into its own notebook cell and run them in order."
         )
         _db_col, _ = st.columns([2, 3])
         with _db_col:
@@ -827,9 +846,11 @@ elif page == "SAS → PySpark Converter":
 
         st.markdown(
             "Each block gets a confidence score (green ≥ 85%, amber ≥ 70%, red < 70%) "
-            "and a method label (rule engine or Claude AI). "
-            "Converted code and a per-block review report are both downloadable."
+            "and a method label — rule engine or Claude AI. "
+            "Block 4 uses `RETAIN`, which the rule engine cannot translate; it will be flagged for review. "
+            "With an API key configured, Claude AI produces the window function equivalent instead."
         )
+        st.markdown("Converted output appears below the button, one section per block.")
         target = "pyspark"
         convert_btn = st.button("Convert to PySpark →", type="primary", use_container_width=True, key="convert_enterprise")
 
@@ -861,24 +882,8 @@ elif page == "SAS → PySpark Converter":
                 config_applied=config is not None,
             )
 
-            # Download row
-            dl1, dl2, _ = st.columns([2, 2, 3])
-            with dl1:
-                st.download_button(
-                    "Download converted code (.py)",
-                    data=all_output,
-                    file_name="converted.py",
-                    mime="text/plain",
-                )
-            with dl2:
-                st.download_button(
-                    "Download review report (.yaml) — confidence scores and flags per block",
-                    data=manifest_str,
-                    file_name="migration_manifest.yaml",
-                    mime="text/yaml",
-                )
-
             st.markdown("---")
+            st.markdown("**Converted output** — one block per section, in the order they appear in the script")
 
             # Per-block results
             for i, result in enumerate(results):
@@ -916,6 +921,24 @@ elif page == "SAS → PySpark Converter":
                     )
 
                 st.markdown("")
+
+            # Download row — after reviewing the output
+            st.markdown("**Download**")
+            dl1, dl2, _ = st.columns([2, 2, 3])
+            with dl1:
+                st.download_button(
+                    "Download converted code (.py)",
+                    data=all_output,
+                    file_name="converted.py",
+                    mime="text/plain",
+                )
+            with dl2:
+                st.download_button(
+                    "Download review report (.yaml) — confidence scores and flags per block",
+                    data=manifest_str,
+                    file_name="migration_manifest.yaml",
+                    mime="text/yaml",
+                )
 
             with st.expander("Running this at scale — batch conversion for large codebases"):
                 st.markdown(
