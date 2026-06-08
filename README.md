@@ -10,9 +10,12 @@ rate went negative in 2014 and stayed there until 2022 — a regime the US Fed n
 which appears clearly in the regime classifications and the US–EU rate differential.
 
 **Migration tool:** Translates legacy SAS code (PROC SORT, PROC MEANS, PROC SQL, DATA steps)
-to PySpark or Databricks SQL. Community mode converts a single block; Enterprise mode converts
-a full script using a config file that maps SAS library names and variables to Databricks paths.
-Common patterns are handled automatically; anything outside those patterns falls back to Claude AI.
+to PySpark. Community mode converts a single block with three preloaded examples (PROC SORT,
+PROC MEANS, DATA step) and a fourth tab showing the rule engine limit and the Claude AI fallback.
+Enterprise mode converts a full script using a config file that maps SAS library names and
+variables to Databricks paths — the dashboard preloads a four-block example: three blocks handled
+by the rule engine and one RETAIN block flagged for Claude AI. Each block gets a confidence score;
+converted code and a per-block review manifest are downloadable.
 
 **Built with Claude Code** as a development collaborator — for architecture decisions, the quality
 checks module, and the converter's rule engine.
@@ -128,7 +131,11 @@ print(result.notes)
 ```
 
 **Enterprise mode** converts a full SAS script using a config file that maps SAS library names
-and variables to Databricks table paths:
+and variables to Databricks table paths. The dashboard preloads a four-block example — PROC SORT,
+PROC MEANS, a DATA step filter, and a RETAIN cumulative-return block. Blocks 1–3 are handled by
+the rule engine; Block 4 (`RETAIN`) is flagged for review and handled by Claude AI when an API
+key is configured. Each block gets a confidence score; output appears per block, then converted
+code and manifest are downloadable.
 
 ```python
 from src.converter import convert_script, load_config_from_dict, generate_manifest
