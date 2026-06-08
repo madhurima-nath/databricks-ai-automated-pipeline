@@ -10,13 +10,17 @@ rate went negative in 2014 and stayed there until 2022 — a regime the US Fed n
 which appears clearly in the regime classifications and the US–EU rate differential.
 
 **Migration tool:** Translates legacy SAS code (PROC SORT, PROC MEANS, PROC SQL, DATA steps)
-to PySpark using a rule engine — a set of deterministic pattern-matching rules — for common
-constructs, and an LLM for anything the rules cannot handle. Community mode converts a single
-block with three preloaded examples (PROC SORT, PROC MEANS, DATA step) and a fourth tab that
-shows the rule engine's limitation on a RETAIN example, alongside the LLM-produced equivalent. Enterprise mode converts a full script using a config file that maps SAS library names
-and variables to Databricks paths — the dashboard preloads a four-block example: three blocks
-handled by the rule engine and one RETAIN block the rule engine cannot fully translate. Each block
-gets a confidence score; blocks below 85% are flagged for review. Converted code and a per-block
+to PySpark. A rule engine — a set of deterministic pattern-matching rules — handles common
+constructs. For anything the rules cannot handle, an LLM produces the translation.
+
+Community mode converts a single block with three preloaded examples (PROC SORT, PROC MEANS,
+DATA step) and a fourth tab showing, on a RETAIN example, what the rule engine cannot translate
+and what an LLM produces instead.
+
+Enterprise mode converts a full script using a config file that maps SAS library names and
+variables to Databricks paths. The dashboard preloads a four-block example: three blocks handled
+by the rule engine and one RETAIN block the rule engine cannot fully translate. Each block gets
+a confidence score; blocks below 85% are flagged for review. Converted code and a per-block
 review manifest are downloadable.
 
 **Built with Claude Code** as a development collaborator — for architecture decisions, the quality
