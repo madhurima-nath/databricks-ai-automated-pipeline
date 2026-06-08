@@ -576,7 +576,7 @@ elif page == "SAS → PySpark Converter":
         )
 
         target = "pyspark"
-        st.caption("Select an example above, edit if needed, then click Convert to PySpark → to see the output.")
+        st.markdown("Choose an example, edit the code if needed, then click **Convert to PySpark →**.")
         convert_btn = st.button("Convert to PySpark →", type="primary", use_container_width=True)
 
         if convert_btn and sas_input.strip():
@@ -592,15 +592,12 @@ elif page == "SAS → PySpark Converter":
                     + "\n".join(f"- {w}" for w in result.warnings)
                 )
 
-            method_label = "Rule engine" if result.method == "rule_based" else "Claude AI"
-            st.caption(f"Converted by: {method_label}")
-
         elif convert_btn:
             st.info("Paste some SAS code above to convert.")
 
         st.markdown(
             "<div style='background:#EFF6FF;border-left:4px solid #3B82F6;border-radius:6px;"
-            "padding:16px 20px;margin-top:20px;'>"
+            "padding:16px 20px;margin-top:20px;margin-bottom:20px;'>"
             "<div style='font-weight:600;color:#1E40AF;margin-bottom:8px;'>After conversion: use in Databricks</div>"
             "<ol style='margin:0;padding-left:20px;color:#374151;font-size:0.91em;line-height:1.8;'>"
             "<li>Copy the PySpark code from the output box above</li>"
