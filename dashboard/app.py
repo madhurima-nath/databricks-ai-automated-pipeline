@@ -496,7 +496,7 @@ elif page == "SAS → PySpark Converter":
         "Moving analytics from SAS to Databricks means translating every script into a different language. "
         "This converter does that in two ways. "
         "A rule engine matches known SAS patterns and produces a consistent translation. "
-        "For patterns the rules cannot handle, it calls the Anthropic API for LLM-powered translation. "
+        "For patterns the rules cannot handle, it calls an LLM via API. "
         "In the live demo, examples run through the rule engine. "
         "Enterprises with an API key configured get both. "
         "LLM output should be reviewed for accuracy before use in production."
@@ -573,7 +573,7 @@ elif page == "SAS → PySpark Converter":
         "    WHERE date >= &start_date;\n"
         "    KEEP date close log_return;\n"
         "RUN;\n\n"
-        "/* Cumulative return — RETAIN carries state row by row; requires Claude AI */\n"
+        "/* Cumulative return — RETAIN carries state row by row; requires LLM */\n"
         "DATA outlib.cumulative_returns;\n"
         "    SET outlib.daily_analytics;\n"
         "    RETAIN cumulative_return 0;\n"
@@ -697,7 +697,7 @@ elif page == "SAS → PySpark Converter":
                 "`RETAIN` carries state across rows: each row's result depends on what the previous rows produced. "
                 "The rule engine cannot reason about accumulated state, so it flags these cases for manual review "
                 "rather than producing an incorrect translation. "
-                "Claude AI produces the correct PySpark equivalent using a window function, "
+                "An LLM produces the correct PySpark equivalent using a window function, "
                 "which calculates a value across a sequence of rows."
             )
             st.markdown("Below is what each produces for the same input.")
@@ -727,7 +727,7 @@ elif page == "SAS → PySpark Converter":
                 )
             with _col_llm:
                 st.markdown(
-                    "<span style='color:#166534;font-weight:600;'>✓ Claude AI</span>",
+                    "<span style='color:#166534;font-weight:600;'>✓ LLM output</span>",
                     unsafe_allow_html=True,
                 )
                 st.code(
@@ -751,12 +751,11 @@ elif page == "SAS → PySpark Converter":
                 "the LLM handles what rules cannot."
             )
 
+        st.info("Always validate converted code against the original SAS results before use in production.")
         st.markdown(
             "<div style='background:#EFF6FF;border-left:4px solid #3B82F6;border-radius:6px;"
-            "padding:16px 20px;margin-top:20px;margin-bottom:20px;'>"
-            "<div style='font-weight:600;color:#1E40AF;margin-bottom:6px;'>Using the output in Databricks</div>"
-            "<div style='color:#1E40AF;font-size:0.88em;margin-bottom:10px;border-bottom:1px solid #BFDBFE;padding-bottom:8px;'>"
-            "Always validate converted code against the original SAS results before use in production.</div>"
+            "padding:16px 20px;margin-top:8px;margin-bottom:20px;'>"
+            "<div style='font-weight:600;color:#1E40AF;margin-bottom:8px;'>Using the output in Databricks</div>"
             "<ol style='margin:0;padding-left:20px;color:#374151;font-size:0.91em;line-height:1.8;'>"
             "<li>Copy the PySpark code from the output box</li>"
             "<li>Paste into a Databricks notebook — <code>spark</code> is available by default, no imports needed</li>"
@@ -795,7 +794,7 @@ elif page == "SAS → PySpark Converter":
             "keep only date, closing price, and daily return\n"
             "- **Block 4 — DATA step with RETAIN:** Calculate a running cumulative return. "
             "`RETAIN` carries a value from one row to the next — a pattern the rule engine cannot fully translate. "
-            "Block 4 is flagged for review; the Claude AI window function equivalent appears directly below the rule engine output."
+            "Block 4 is flagged for review; the LLM window function equivalent appears directly below the rule engine output."
         )
         st.markdown(
             "Input: **Bronze layer** (raw market data). "
@@ -851,6 +850,7 @@ elif page == "SAS → PySpark Converter":
             "Block 4 will be flagged — the rule engine translates what it can and marks the `RETAIN` statement for manual review. "
             "All converted code should be validated against the original SAS output before use in production."
         )
+        st.info("Always validate converted code against the original SAS results before use in production.")
         st.markdown("Converted output appears below the button, one section per block.")
         target = "pyspark"
         convert_btn = st.button("Convert to PySpark →", type="primary", use_container_width=True, key="convert_enterprise")
@@ -885,10 +885,6 @@ elif page == "SAS → PySpark Converter":
 
             st.markdown("---")
             st.markdown("**Converted output** — one block per section, in the order they appear in the script.")
-            st.info(
-                "Always validate converted code against the original SAS results before use in production. "
-                "Blocks marked 'Needs review' require particular attention."
-            )
 
             # Per-block results
             for i, result in enumerate(results):
@@ -903,7 +899,7 @@ elif page == "SAS → PySpark Converter":
                     conf_color = "#ef4444"
                     conf_label = "Low"
 
-                method_label = "Rule engine" if result.method == "rule_based" else "Claude AI"
+                method_label = "Rule engine" if result.method == "rule_based" else "LLM"
                 review_badge = (
                     " &nbsp;<span style='background:#fef2f2;color:#b91c1c;padding:1px 8px;"
                     "border-radius:4px;font-size:0.82em;border:1px solid #fca5a5;'>"
@@ -925,16 +921,16 @@ elif page == "SAS → PySpark Converter":
                         + " · ".join(result.warnings)
                     )
 
-                # For RETAIN blocks: show the Claude AI equivalent as a static example
+                # For RETAIN blocks: show the LLM equivalent as a static example
                 if any("RETAIN" in w for w in result.warnings):
                     st.markdown(
                         "The rule engine cannot translate `RETAIN` — it flags the block rather than produce incorrect output. "
-                        "Below is the complete PySpark replacement that Claude AI produces: "
+                        "Below is the complete PySpark replacement an LLM produces: "
                         "a window function that replicates the row-by-row accumulation."
                     )
                     st.markdown(
                         "<span style='color:#166534;font-weight:600;font-size:0.9em;'>"
-                        "✓ Claude AI — complete PySpark replacement (Block 4)</span>",
+                        "✓ LLM output — complete PySpark replacement (Block 4)</span>",
                         unsafe_allow_html=True,
                     )
                     st.code(
@@ -955,7 +951,7 @@ elif page == "SAS → PySpark Converter":
                         language="python",
                     )
                     st.caption(
-                        "With an API key configured, the converter calls Claude AI automatically for blocks the rule engine cannot handle. "
+                        "With an API key configured, the converter calls the LLM automatically for blocks the rule engine cannot handle. "
                         "This output should also be validated before use in production."
                     )
 
@@ -1022,11 +1018,11 @@ elif page == "SAS → PySpark Converter":
               </div>
               <div style="display:flex;align-items:flex-start;gap:14px;padding:12px 16px;background:#EFF6FF;border-bottom:1px solid #BFDBFE;">
                 <span style="background:#1E40AF;color:white;border-radius:50%;min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:0.82em;font-weight:700;flex-shrink:0;">4</span>
-                <div><div style="font-weight:600;color:#1E40AF;font-size:0.88em;">Convert the scripts</div><div style="color:#6B7280;font-size:0.82em;margin-top:2px;">Run each SAS file through Enterprise mode: the rule engine handles common patterns, Claude AI handles complex cases. For large codebases, run the converter programmatically across all files at once.</div></div>
+                <div><div style="font-weight:600;color:#1E40AF;font-size:0.88em;">Convert the scripts</div><div style="color:#6B7280;font-size:0.82em;margin-top:2px;">Run each SAS file through Enterprise mode: the rule engine handles common patterns, the LLM handles complex cases. For large codebases, run the converter programmatically across all files at once.</div></div>
               </div>
               <div style="display:flex;align-items:flex-start;gap:14px;padding:12px 16px;background:#F8FAFC;border-bottom:1px solid #E2E8F0;">
                 <span style="background:#1E3A5F;color:white;border-radius:50%;min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:0.82em;font-weight:700;flex-shrink:0;">5</span>
-                <div><div style="font-weight:600;color:#1E3A5F;font-size:0.88em;">Review the output</div><div style="color:#6B7280;font-size:0.82em;margin-top:2px;">Download the migration manifest. Each block has a confidence score; flagged blocks and any Claude AI translations need a manual check before proceeding.</div></div>
+                <div><div style="font-weight:600;color:#1E3A5F;font-size:0.88em;">Review the output</div><div style="color:#6B7280;font-size:0.82em;margin-top:2px;">Download the migration manifest. Each block has a confidence score; flagged blocks and any LLM translations need a manual check before proceeding.</div></div>
               </div>
               <div style="display:flex;align-items:flex-start;gap:14px;padding:12px 16px;background:#F8FAFC;border-bottom:1px solid #E2E8F0;">
                 <span style="background:#1E3A5F;color:white;border-radius:50%;min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:0.82em;font-weight:700;flex-shrink:0;">6</span>
