@@ -522,12 +522,12 @@ elif page == "SAS → PySpark Converter":
         "Mode",
         ["Community", "Enterprise"],
         horizontal=True,
-        help=(
-            "Community: paste a single SAS block and convert. "
-            "Enterprise: upload a migration config, convert a full script with multiple blocks, "
-            "and download the converted code and a migration manifest."
-        ),
+        key="conv_mode",
     )
+    if mode == "Community":
+        st.caption("Single SAS operation — three preloaded examples, no setup needed.")
+    else:
+        st.caption("Complete SAS file — three-block financial analytics example, config included.")
 
     st.markdown("---")
 
@@ -690,12 +690,11 @@ elif page == "SAS → PySpark Converter":
             unsafe_allow_html=True,
         )
 
-        st.markdown("---")
         st.markdown("### When the rule engine is not enough")
         st.markdown(
             "The examples above follow patterns the rule engine knows. "
-            "Real SAS codebases also contain constructs where translation depends on intent — "
-            "what a variable is accumulating across rows, how a placeholder value is used across steps. "
+            "Real SAS codebases also contain constructs where the correct translation "
+            "depends on what the code is doing, not just how it is written. "
             "Rules cannot handle those reliably."
         )
         st.markdown(
@@ -753,9 +752,13 @@ elif page == "SAS → PySpark Converter":
 
         st.markdown(
             "This is the case for LLM-powered translation in a real migration: "
-            "the rule engine handles predictable patterns fast; the LLM handles what rules cannot. "
-            "Switch to **Enterprise mode** to convert a complete multi-block SAS script."
+            "the rule engine handles predictable patterns fast; the LLM handles what rules cannot."
         )
+        _ent_col, _ = st.columns([2, 3])
+        with _ent_col:
+            if st.button("Try Enterprise mode →", key="switch_enterprise", use_container_width=True):
+                st.session_state["conv_mode"] = "Enterprise"
+                st.rerun()
 
     # ---------------------------------------------------------------------------
     # Enterprise mode
@@ -795,36 +798,24 @@ elif page == "SAS → PySpark Converter":
             "- **Platform settings** — target catalog, default schema, Unity Catalog flag"
         )
         st.markdown("Written once, the config applies to every file in the migration.")
-        st.markdown("---")
 
         col_cfg, col_sas = st.columns(2)
 
         with col_cfg:
             st.markdown("**Migration config (YAML)**")
-            use_example_cfg = st.checkbox("Use example config (financial analytics pipeline)", value=True)
-            if use_example_cfg:
-                config_text = st.text_area(
-                    "Config YAML",
-                    value=EXAMPLE_CONFIG,
-                    height=260,
-                    key="config_text_example",
-                )
-            else:
-                uploaded = st.file_uploader("Upload migration config YAML", type=["yaml", "yml"])
-                if uploaded:
-                    config_text = uploaded.read().decode("utf-8")
-                    st.text_area("Config YAML (loaded)", value=config_text, height=200, disabled=True)
-                else:
-                    config_text = ""
+            config_text = st.text_area(
+                "Config YAML",
+                value=EXAMPLE_CONFIG,
+                height=260,
+                key="config_text_example",
+            )
 
         with col_sas:
             st.markdown("**SAS script**")
-            use_example_sas = st.checkbox("Use example SAS script (financial analytics)", value=True)
             sas_input = st.text_area(
                 "SAS code",
-                value=EXAMPLE_ENTERPRISE if use_example_sas else "",
+                value=EXAMPLE_ENTERPRISE,
                 height=260,
-                placeholder="Paste a full SAS script here...",
                 key="sas_input_enterprise",
             )
 
