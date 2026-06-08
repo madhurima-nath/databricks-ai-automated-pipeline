@@ -628,8 +628,7 @@ elif page == "SAS → PySpark Converter":
 
         st.markdown(
             "The **YAML config** maps SAS library names and macro variables to their Databricks equivalents — "
-            "write it once and it applies to every script. "
-            "The **SAS script** is what you want to convert."
+            "write it once and it applies to every script in the migration."
         )
 
         col_cfg, col_sas = st.columns(2)
