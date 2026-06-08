@@ -632,6 +632,7 @@ elif page == "SAS → PySpark Converter":
             if btn_1 and sas_input_1.strip():
                 with st.spinner("Converting..."):
                     result_1 = convert(sas_input_1, target="pyspark", api_key=api_key or None)
+                st.info("Always validate converted code against the original SAS results before use in production.")
                 st.text_area("Output", value=result_1.output, height=180, key="out_c1")
                 if result_1.warnings:
                     st.warning("**Translation note:** " + " · ".join(result_1.warnings))
@@ -655,6 +656,7 @@ elif page == "SAS → PySpark Converter":
             if btn_2 and sas_input_2.strip():
                 with st.spinner("Converting..."):
                     result_2 = convert(sas_input_2, target="pyspark", api_key=api_key or None)
+                st.info("Always validate converted code against the original SAS results before use in production.")
                 st.text_area("Output", value=result_2.output, height=180, key="out_c2")
                 if result_2.warnings:
                     st.warning("**Translation note:** " + " · ".join(result_2.warnings))
@@ -679,6 +681,7 @@ elif page == "SAS → PySpark Converter":
             if btn_3 and sas_input_3.strip():
                 with st.spinner("Converting..."):
                     result_3 = convert(sas_input_3, target="pyspark", api_key=api_key or None)
+                st.info("Always validate converted code against the original SAS results before use in production.")
                 st.text_area("Output", value=result_3.output, height=200, key="out_c3")
                 if result_3.warnings:
                     st.warning("**Translation note:** " + " · ".join(result_3.warnings))
@@ -751,10 +754,9 @@ elif page == "SAS → PySpark Converter":
                 "the LLM handles what rules cannot."
             )
 
-        st.info("Always validate converted code against the original SAS results before use in production.")
         st.markdown(
             "<div style='background:#EFF6FF;border-left:4px solid #3B82F6;border-radius:6px;"
-            "padding:16px 20px;margin-top:8px;margin-bottom:20px;'>"
+            "padding:16px 20px;margin-top:20px;margin-bottom:20px;'>"
             "<div style='font-weight:600;color:#1E40AF;margin-bottom:8px;'>Using the output in Databricks</div>"
             "<ol style='margin:0;padding-left:20px;color:#374151;font-size:0.91em;line-height:1.8;'>"
             "<li>Copy the PySpark code from the output box</li>"
@@ -850,7 +852,6 @@ elif page == "SAS → PySpark Converter":
             "Block 4 will be flagged — the rule engine translates what it can and marks the `RETAIN` statement for manual review. "
             "All converted code should be validated against the original SAS output before use in production."
         )
-        st.info("Always validate converted code against the original SAS results before use in production.")
         st.markdown("Converted output appears below the button, one section per block.")
         target = "pyspark"
         convert_btn = st.button("Convert to PySpark →", type="primary", use_container_width=True, key="convert_enterprise")
@@ -885,6 +886,7 @@ elif page == "SAS → PySpark Converter":
 
             st.markdown("---")
             st.markdown("**Converted output** — one block per section, in the order they appear in the script.")
+            st.info("Always validate converted code against the original SAS results before use in production.")
 
             # Per-block results
             for i, result in enumerate(results):
@@ -975,26 +977,12 @@ elif page == "SAS → PySpark Converter":
                     mime="text/yaml",
                 )
 
-            with st.expander("Running this at scale — batch conversion for large codebases"):
-                st.markdown(
-                    "This dashboard converts one script at a time. For a large codebase, "
-                    "call `convert_script()` directly in a Python loop — the same YAML config applies to every file:\n\n"
-                    "```python\n"
-                    "from converter.sas_to_pyspark import convert_script\n"
-                    "from converter.migration_config import load_config\n"
-                    "from converter.manifest import generate_manifest\n"
-                    "from pathlib import Path\n\n"
-                    "config = load_config('migration_config.yaml')  # written once\n\n"
-                    "for sas_file in Path('sas_scripts/').glob('*.sas'):\n"
-                    "    results = convert_script(sas_file.read_text(), target='pyspark', config=config)\n"
-                    "    out = Path('converted/') / sas_file.with_suffix('.py').name\n"
-                    "    out.write_text('\\n\\n'.join(r.output for r in results))\n"
-                    "    manifest = generate_manifest(results, source_label=sas_file.name, platform='enterprise', config_applied=True)\n"
-                    "    (Path('manifests/') / sas_file.with_suffix('.yaml').name).write_text(manifest)\n"
-                    "```\n\n"
-                    "Each manifest flags low-confidence blocks for review. Check those blocks before committing the converted notebooks to the Databricks project. "
-                    "Source code: [GitHub](https://github.com/madhurima-nath/databricks-ai-automated-pipeline)"
-                )
+            st.markdown(
+                "This dashboard converts one script at a time. "
+                "For a large codebase, the same converter can be run programmatically across all files at once — "
+                "one YAML config applies to every script, and each file produces a converted Python file and a review manifest. "
+                "See the [project on GitHub](https://github.com/madhurima-nath/databricks-ai-automated-pipeline) for implementation details."
+            )
 
         elif convert_btn:
             st.info("Paste some SAS code to convert.")
