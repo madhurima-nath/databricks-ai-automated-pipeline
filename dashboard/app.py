@@ -465,6 +465,17 @@ if page == "Analytics Dashboard":
 
     st.caption("Data covers 2010 – June 2026. Produced by the Bronze → Silver → Gold medallion pipeline on Databricks.")
 
+    st.markdown("---")
+    st.markdown(
+        "The **SAS → PySpark Converter** shows how SAS analytics scripts can be migrated "
+        "to build pipelines like this one."
+    )
+    _cv_col, _ = st.columns([2, 3])
+    with _cv_col:
+        if st.button("Open SAS → PySpark Converter →", key="converter_from_analytics", use_container_width=True):
+            st.session_state["_nav_target"] = "SAS → PySpark Converter"
+            st.rerun()
+
 
 # ---------------------------------------------------------------------------
 # SAS → PySpark Converter
@@ -482,11 +493,27 @@ elif page == "SAS → PySpark Converter":
             st.rerun()
     st.title("SAS → PySpark Converter")
     st.markdown(
-        "SAS analytics code — risk models, regulatory reports, portfolio calculations — "
-        "cannot move to Databricks on its own. Rewriting each script by hand is the bottleneck "
-        "that slows most migrations. This converter automates the translation using a rule engine: "
-        "PROC SORT, PROC MEANS, PROC SQL, and DATA steps with common variable handling. "
-        "No API key needed."
+        "Moving analytics from SAS to Databricks means translating every script into a different language. "
+        "The rule engine covers the most common SAS patterns. "
+        "For complex cases the rules cannot handle, the code supports LLM-powered translation "
+        "via the Anthropic API. In the live demo, examples run through the rule engine; "
+        "enterprises with an API key get both. "
+        "LLM output should be reviewed for accuracy before running in production."
+    )
+    st.markdown(
+        "<div style='display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:16px 0 8px 0;'>"
+        "<div style='background:#F3F4F6;border-radius:6px;padding:7px 14px;font-size:0.84em;color:#374151;'>Architecture design</div>"
+        "<span style='color:#9CA3AF;'>→</span>"
+        "<div style='background:#F3F4F6;border-radius:6px;padding:7px 14px;font-size:0.84em;color:#374151;'>Data mapping</div>"
+        "<span style='color:#9CA3AF;'>→</span>"
+        "<div style='background:#EFF6FF;border:2px solid #3B82F6;border-radius:6px;padding:7px 14px;"
+        "font-size:0.84em;color:#1E40AF;font-weight:600;'>Code translation · this tool</div>"
+        "<span style='color:#9CA3AF;'>→</span>"
+        "<div style='background:#F3F4F6;border-radius:6px;padding:7px 14px;font-size:0.84em;color:#374151;'>Review &amp; test</div>"
+        "<span style='color:#9CA3AF;'>→</span>"
+        "<div style='background:#F3F4F6;border-radius:6px;padding:7px 14px;font-size:0.84em;color:#374151;'>Deploy</div>"
+        "</div>",
+        unsafe_allow_html=True,
     )
     st.markdown("---")
 
@@ -570,51 +597,164 @@ elif page == "SAS → PySpark Converter":
 
     if mode == "Community":
         st.markdown(
-            "- No API key needed — examples run immediately\n"
-            "- Edit any example, or replace the code with your own SAS\n"
-            "- Converts: PROC SORT · PROC MEANS · PROC SQL · DATA steps (KEEP, DROP, WHERE, RENAME, IF-THEN-ELSE)"
-        )
-        example_choice = st.selectbox(
-            "Choose a preloaded example",
-            list(EXAMPLES_COMMUNITY.keys()),
-        )
-        sas_input = st.text_area(
-            "SAS code",
-            value=EXAMPLES_COMMUNITY[example_choice],
-            height=200,
-            placeholder="PROC SORT DATA=customers;\n    BY last_name first_name;\nRUN;",
+            "In SAS, analytics operations are written as **procedures** (PROCs) or **DATA steps**. "
+            "Each is a self-contained block: a PROC sorts, aggregates, or queries data; "
+            "a DATA step transforms it row by row. "
+            "Three preloaded examples below — no API key needed."
         )
 
-        target = "pyspark"
-        convert_btn = st.button("Convert to PySpark →", type="primary", use_container_width=True)
+        _tab1, _tab2, _tab3 = st.tabs(["PROC SORT", "PROC MEANS", "DATA step"])
 
-        if convert_btn and sas_input.strip():
-            with st.spinner("Converting..."):
-                result = convert(sas_input, target=target, api_key=api_key or None)
+        with _tab1:
+            st.markdown(
+                "**Sort customers by name.** "
+                "PROC SORT in SAS always maps to `.orderBy()` in PySpark. "
+                "The rule engine handles this reliably and without variation."
+            )
+            sas_input_1 = st.text_area(
+                "SAS code",
+                value=EXAMPLES_COMMUNITY["PROC SORT: sort customers by name"],
+                height=150,
+                key="sas_c1",
+            )
+            btn_1 = st.button("Convert to PySpark →", type="primary", key="btn_c1", use_container_width=True)
+            if btn_1 and sas_input_1.strip():
+                with st.spinner("Converting..."):
+                    result_1 = convert(sas_input_1, target="pyspark", api_key=api_key or None)
+                st.text_area("Output", value=result_1.output, height=180, key="out_c1")
+                if result_1.warnings:
+                    st.warning("**Check before running:** " + " · ".join(result_1.warnings))
+            elif btn_1:
+                st.info("No SAS code to convert.")
 
-            st.text_area("Output", value=result.output, height=250)
+        with _tab2:
+            st.markdown(
+                "**Regional sales summary.** "
+                "PROC MEANS calculates summary statistics — mean, standard deviation, min, max — "
+                "grouped by a category. It maps to `.groupBy().agg()` in PySpark, "
+                "with each statistic mapped to its PySpark equivalent."
+            )
+            sas_input_2 = st.text_area(
+                "SAS code",
+                value=EXAMPLES_COMMUNITY["PROC MEANS: regional sales summary"],
+                height=150,
+                key="sas_c2",
+            )
+            btn_2 = st.button("Convert to PySpark →", type="primary", key="btn_c2", use_container_width=True)
+            if btn_2 and sas_input_2.strip():
+                with st.spinner("Converting..."):
+                    result_2 = convert(sas_input_2, target="pyspark", api_key=api_key or None)
+                st.text_area("Output", value=result_2.output, height=180, key="out_c2")
+                if result_2.warnings:
+                    st.warning("**Check before running:** " + " · ".join(result_2.warnings))
+            elif btn_2:
+                st.info("No SAS code to convert.")
 
-            if result.warnings:
-                st.warning(
-                    "**Check before running:** the converter flagged the following in the converted code above. "
-                    "Review and fix these lines before running in Databricks:\n\n"
-                    + "\n".join(f"- {w}" for w in result.warnings)
-                )
-
-        elif convert_btn:
-            st.info("Paste some SAS code above to convert.")
+        with _tab3:
+            st.markdown(
+                "**Customer tiering with conditional logic.** "
+                "A DATA step applies business rules row by row across a dataset. "
+                "IF-THEN-ELSE conditions map to `F.when()` in PySpark; "
+                "WHERE filtering maps to `.filter()`; KEEP maps to `.select()`. "
+                "This pattern — classifying records by threshold values — is one of the most "
+                "common in financial analytics."
+            )
+            sas_input_3 = st.text_area(
+                "SAS code",
+                value=EXAMPLES_COMMUNITY["DATA step: customer tiering with IF-THEN-ELSE"],
+                height=190,
+                key="sas_c3",
+            )
+            btn_3 = st.button("Convert to PySpark →", type="primary", key="btn_c3", use_container_width=True)
+            if btn_3 and sas_input_3.strip():
+                with st.spinner("Converting..."):
+                    result_3 = convert(sas_input_3, target="pyspark", api_key=api_key or None)
+                st.text_area("Output", value=result_3.output, height=200, key="out_c3")
+                if result_3.warnings:
+                    st.warning("**Check before running:** " + " · ".join(result_3.warnings))
+            elif btn_3:
+                st.info("No SAS code to convert.")
 
         st.markdown(
             "<div style='background:#EFF6FF;border-left:4px solid #3B82F6;border-radius:6px;"
             "padding:16px 20px;margin-top:20px;margin-bottom:20px;'>"
-            "<div style='font-weight:600;color:#1E40AF;margin-bottom:8px;'>After conversion: use in Databricks</div>"
+            "<div style='font-weight:600;color:#1E40AF;margin-bottom:8px;'>Using the output in Databricks</div>"
             "<ol style='margin:0;padding-left:20px;color:#374151;font-size:0.91em;line-height:1.8;'>"
-            "<li>Copy the PySpark code from the output box above</li>"
+            "<li>Copy the PySpark code from the output box</li>"
             "<li>Paste into a Databricks notebook — <code>spark</code> is available by default, no imports needed</li>"
             "<li>Confirm the source table exists at the path referenced in the code</li>"
             "<li>Run the cell and verify the output matches the original SAS results</li>"
+            "<li>In a migration, this code goes into the Databricks pipeline at the same stage "
+            "the original SAS script occupied: data transformation, aggregation, or reporting</li>"
             "</ol></div>",
             unsafe_allow_html=True,
+        )
+
+        st.markdown("---")
+        st.markdown("### When the rule engine is not enough")
+        st.markdown(
+            "The examples above follow patterns the rule engine knows. "
+            "Real SAS codebases also contain constructs where translation depends on intent — "
+            "what a variable is accumulating across rows, how a placeholder value is used across steps. "
+            "Rules cannot handle those reliably."
+        )
+        st.markdown(
+            "One common case: `RETAIN`, which carries a value forward row by row. "
+            "Running totals, cumulative portfolio returns, drawdown calculations all use this pattern. "
+            "In the live demo, the rule engine flags it for manual review. "
+            "Below is an example of what Claude AI produces for the same input when an API key is configured."
+        )
+
+        _col_sas, _col_rule, _col_llm = st.columns(3)
+        with _col_sas:
+            st.markdown("**SAS input**")
+            st.code(
+                "DATA cumulative;\n"
+                "    SET monthly_returns;\n"
+                "    RETAIN running_total 0;\n"
+                "    running_total =\n"
+                "        running_total + return;\n"
+                "    OUTPUT;\n"
+                "RUN;",
+                language="text",
+            )
+        with _col_rule:
+            st.markdown(
+                "<span style='color:#92400E;font-weight:600;'>⚠ Rule engine — needs review</span>",
+                unsafe_allow_html=True,
+            )
+            st.code(
+                "# RETAIN statement detected —\n"
+                "# manual review required\n"
+                "cumulative_df = monthly_returns_df",
+                language="python",
+            )
+        with _col_llm:
+            st.markdown(
+                "<span style='color:#166534;font-weight:600;'>✓ Claude AI</span>",
+                unsafe_allow_html=True,
+            )
+            st.code(
+                "from pyspark.sql import Window\n"
+                "import pyspark.sql.functions as F\n\n"
+                "window = (\n"
+                "    Window\n"
+                "    .orderBy(F.monotonically_increasing_id())\n"
+                "    .rowsBetween(\n"
+                "        Window.unboundedPreceding,\n"
+                "        Window.currentRow))\n\n"
+                "cumulative_df = (\n"
+                "    monthly_returns_df\n"
+                "    .withColumn(\n"
+                "        'running_total',\n"
+                "        F.sum('return').over(window)))",
+                language="python",
+            )
+
+        st.markdown(
+            "This is the case for LLM-powered translation in a real migration: "
+            "the rule engine handles predictable patterns fast; the LLM handles what rules cannot. "
+            "Switch to **Enterprise mode** to convert a complete multi-block SAS script."
         )
 
     # ---------------------------------------------------------------------------
@@ -623,13 +763,39 @@ elif page == "SAS → PySpark Converter":
 
     else:
         st.markdown(
-            "Provide a YAML config and a SAS script — the converter reads both together and produces PySpark for every block in the script."
+            "Real SAS analytics files chain many steps in sequence — sort the data, calculate statistics, "
+            "apply filters, apply business rules — all in one file, run top to bottom. "
+            "Enterprise mode converts the whole file at once."
         )
-
+        st.markdown("**The preloaded example** is a three-block financial analytics script built on actual market data:")
         st.markdown(
-            "The **YAML config** maps SAS library names and macro variables to their Databricks equivalents — "
-            "write it once and it applies to every script in the migration."
+            "- **Block 1 — PROC SORT:** Sort S&P 500 price data by date\n"
+            "- **Block 2 — PROC MEANS:** Calculate monthly statistics on Federal Reserve rate data "
+            "(mean, min, max rate per month)\n"
+            "- **Block 3 — DATA step:** Filter the sorted S&P 500 data from the start date set in the config "
+            "(2010-01-01 in the example); keep only date, closing price, and daily return"
         )
+        st.markdown(
+            "Input: **Bronze layer** (raw market data) · "
+            "Output: **Silver layer** (filtered, structured data ready for analytics). "
+            "The Analytics Dashboard shows the Gold layer metrics built from this Silver layer data."
+        )
+        _db_col, _ = st.columns([2, 3])
+        with _db_col:
+            if st.button("Open Analytics Dashboard →", key="dash_from_converter", use_container_width=True):
+                st.session_state["_nav_target"] = "Analytics Dashboard"
+                st.rerun()
+        st.markdown("---")
+        st.markdown("**The config file** maps four things that SAS uses but Databricks does not recognise:")
+        st.markdown(
+            "- **Library shortcuts** — named pointers to data locations on the SAS server → Databricks catalog paths "
+            "(e.g. `risklib` → `trading.bronze`)\n"
+            "- **Dataset paths** — specific SAS dataset names → specific Databricks table paths\n"
+            "- **Macro variable values** — placeholders like `&start_date` → actual values like `2010-01-01`\n"
+            "- **Platform settings** — target catalog, default schema, Unity Catalog flag"
+        )
+        st.markdown("Written once, the config applies to every file in the migration.")
+        st.markdown("---")
 
         col_cfg, col_sas = st.columns(2)
 
@@ -780,23 +946,31 @@ elif page == "SAS → PySpark Converter":
             <div style="border:1px solid #E2E8F0;border-radius:8px;overflow:hidden;margin-bottom:16px;">
               <div style="display:flex;align-items:flex-start;gap:14px;padding:12px 16px;background:#F8FAFC;border-bottom:1px solid #E2E8F0;">
                 <span style="background:#1E3A5F;color:white;border-radius:50%;min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:0.82em;font-weight:700;flex-shrink:0;">1</span>
-                <div><div style="font-weight:600;color:#1E3A5F;font-size:0.88em;">YAML config</div><div style="color:#6B7280;font-size:0.82em;margin-top:2px;">Map SAS library references to Databricks paths — written once for the whole codebase</div></div>
+                <div><div style="font-weight:600;color:#1E3A5F;font-size:0.88em;">Design the target architecture</div><div style="color:#6B7280;font-size:0.82em;margin-top:2px;">Plan the pipeline layers — Bronze (raw data), Silver (transformed), Gold (reporting) — and decide which layer each SAS script's output feeds</div></div>
               </div>
               <div style="display:flex;align-items:flex-start;gap:14px;padding:12px 16px;background:#F8FAFC;border-bottom:1px solid #E2E8F0;">
                 <span style="background:#1E3A5F;color:white;border-radius:50%;min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:0.82em;font-weight:700;flex-shrink:0;">2</span>
-                <div><div style="font-weight:600;color:#1E3A5F;font-size:0.88em;">SAS script</div><div style="color:#6B7280;font-size:0.82em;margin-top:2px;">Run each SAS file through the converter; the same config applies to every script</div></div>
-              </div>
-              <div style="display:flex;align-items:flex-start;gap:14px;padding:12px 16px;background:#EFF6FF;border-bottom:1px solid #BFDBFE;">
-                <span style="background:#1E40AF;color:white;border-radius:50%;min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:0.82em;font-weight:700;flex-shrink:0;">3</span>
-                <div><div style="font-weight:600;color:#1E40AF;font-size:0.88em;">Convert</div><div style="color:#6B7280;font-size:0.82em;margin-top:2px;">Rule engine converts each block and assigns a confidence score — use this dashboard or run in a loop for hundreds of files</div></div>
+                <div><div style="font-weight:600;color:#1E3A5F;font-size:0.88em;">Map the data</div><div style="color:#6B7280;font-size:0.82em;margin-top:2px;">Identify which SAS data sources correspond to which Databricks tables and catalog paths; document source-to-target mapping for the whole codebase</div></div>
               </div>
               <div style="display:flex;align-items:flex-start;gap:14px;padding:12px 16px;background:#F8FAFC;border-bottom:1px solid #E2E8F0;">
-                <span style="background:#1E3A5F;color:white;border-radius:50%;min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:0.82em;font-weight:700;flex-shrink:0;">4</span>
-                <div><div style="font-weight:600;color:#1E3A5F;font-size:0.88em;">Review manifest</div><div style="color:#6B7280;font-size:0.82em;margin-top:2px;">Download the YAML summary; check confidence scores and fix any flagged blocks before deploying</div></div>
+                <span style="background:#1E3A5F;color:white;border-radius:50%;min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:0.82em;font-weight:700;flex-shrink:0;">3</span>
+                <div><div style="font-weight:600;color:#1E3A5F;font-size:0.88em;">Write the config</div><div style="color:#6B7280;font-size:0.82em;margin-top:2px;">Map each SAS data reference — library shortcuts, dataset paths, macro variable values — to its Databricks equivalent; one config applies to every file</div></div>
+              </div>
+              <div style="display:flex;align-items:flex-start;gap:14px;padding:12px 16px;background:#EFF6FF;border-bottom:1px solid #BFDBFE;">
+                <span style="background:#1E40AF;color:white;border-radius:50%;min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:0.82em;font-weight:700;flex-shrink:0;">4</span>
+                <div><div style="font-weight:600;color:#1E40AF;font-size:0.88em;">Convert the scripts</div><div style="color:#6B7280;font-size:0.82em;margin-top:2px;">Run each SAS file through Enterprise mode — rule engine for common patterns, Claude AI for complex cases; for large codebases, run the converter programmatically across all files at once</div></div>
+              </div>
+              <div style="display:flex;align-items:flex-start;gap:14px;padding:12px 16px;background:#F8FAFC;border-bottom:1px solid #E2E8F0;">
+                <span style="background:#1E3A5F;color:white;border-radius:50%;min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:0.82em;font-weight:700;flex-shrink:0;">5</span>
+                <div><div style="font-weight:600;color:#1E3A5F;font-size:0.88em;">Review the output</div><div style="color:#6B7280;font-size:0.82em;margin-top:2px;">Download the migration manifest; each block has a confidence score — flagged blocks and any Claude AI translations need a manual check before proceeding</div></div>
+              </div>
+              <div style="display:flex;align-items:flex-start;gap:14px;padding:12px 16px;background:#F8FAFC;border-bottom:1px solid #E2E8F0;">
+                <span style="background:#1E3A5F;color:white;border-radius:50%;min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:0.82em;font-weight:700;flex-shrink:0;">6</span>
+                <div><div style="font-weight:600;color:#1E3A5F;font-size:0.88em;">Test in Databricks</div><div style="color:#6B7280;font-size:0.82em;margin-top:2px;">Paste each converted block into a Databricks notebook — <code>spark</code> is available by default, no imports needed — and run it</div></div>
               </div>
               <div style="display:flex;align-items:flex-start;gap:14px;padding:12px 16px;background:#F0FDF4;">
-                <span style="background:#166534;color:white;border-radius:50%;min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:0.82em;font-weight:700;flex-shrink:0;">5</span>
-                <div><div style="font-weight:600;color:#166534;font-size:0.88em;">Verify and commit</div><div style="color:#6B7280;font-size:0.82em;margin-top:2px;">Paste each converted block into a Databricks notebook (<code>spark</code> is available by default), confirm the output matches the original SAS results, then commit to the project</div></div>
+                <span style="background:#166534;color:white;border-radius:50%;min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:0.82em;font-weight:700;flex-shrink:0;">7</span>
+                <div><div style="font-weight:600;color:#166534;font-size:0.88em;">Validate and deploy</div><div style="color:#6B7280;font-size:0.82em;margin-top:2px;">Confirm the output matches the original SAS results, then deploy to production</div></div>
               </div>
             </div>
             """,
