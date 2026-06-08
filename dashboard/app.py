@@ -803,10 +803,4 @@ elif page == "SAS → PySpark Converter":
             unsafe_allow_html=True,
         )
 
-        with st.expander("About the YAML config options"):
-            st.info(
-                "The conversion runs entirely in Python — no Databricks connection needed. "
-                "`unity_catalog: false` generates simple table references, compatible with Databricks Community Edition. "
-                "Set it to `true` for fully qualified `catalog.schema.table` paths, which require a full Databricks workspace with Unity Catalog enabled."
-            )
 
