@@ -847,9 +847,9 @@ elif page == "SAS → PySpark Converter":
 
         st.markdown(
             "Each block gets a confidence score (green ≥ 85%, amber ≥ 70%, red < 70%). "
-            "Block 4 will be flagged — the rule engine translates what it can and marks the `RETAIN` statement for manual review. "
-            "All converted code should be validated against the original SAS output before use in production."
+            "Block 4 will be flagged — the rule engine translates what it can and marks the `RETAIN` statement for manual review."
         )
+        st.info("Always validate converted code against the original SAS results before use in production.")
         st.markdown("Converted output appears below the button, one section per block.")
         target = "pyspark"
         convert_btn = st.button("Convert to PySpark →", type="primary", use_container_width=True, key="convert_enterprise")
@@ -884,7 +884,6 @@ elif page == "SAS → PySpark Converter":
 
             st.markdown("---")
             st.markdown("**Converted output** — one block per section, in the order they appear in the script.")
-            st.info("Always validate converted code against the original SAS results before use in production.")
 
             # Per-block results
             for i, result in enumerate(results):
