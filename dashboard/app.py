@@ -525,9 +525,9 @@ elif page == "SAS → PySpark Converter":
         key="conv_mode",
     )
     if mode == "Community":
-        st.caption("Single SAS operation — three preloaded examples, no setup needed.")
+        st.markdown("Single SAS operation — three preloaded examples, no setup needed.")
     else:
-        st.caption("Complete SAS file — three-block financial analytics example, config included.")
+        st.markdown("Complete SAS file — three-block financial analytics example, config included.")
 
     st.markdown("---")
 
@@ -677,17 +677,20 @@ elif page == "SAS → PySpark Converter":
 
         with _tab4:
             st.markdown(
-                "The rule engine translates patterns it recognises — the same input always produces the same output. "
-                "Some SAS constructs carry state across rows: each row's result depends on what the previous rows produced. "
-                "The rule engine cannot reason about accumulated state, so it flags those cases for manual review."
+                "A running total adds each new value to the sum of all previous rows. "
+                "In SAS, this is written with `RETAIN` — a keyword that keeps a variable's value "
+                "as SAS moves from one row to the next. "
+                "Running totals and cumulative portfolio returns are common examples."
             )
             st.markdown(
-                "A common example is a running total — where each row's value is the previous row's total plus the current value. "
-                "In SAS this uses `RETAIN`, a keyword that keeps a variable's value as SAS moves from one row to the next. "
-                "The correct PySpark equivalent uses a window function, which calculates a value across a sequence of rows. "
-                "Claude AI produces this translation; the rule engine cannot."
+                "The rule engine translates patterns it recognises. "
+                "`RETAIN` carries state across rows — each row's result depends on what the previous rows produced — "
+                "which the rule engine cannot reason about. "
+                "It flags these cases for manual review rather than producing an incorrect translation. "
+                "Claude AI produces the correct PySpark equivalent using a window function, "
+                "which calculates a value across a sequence of rows."
             )
-            st.markdown("Below is an example of what each produces for the same input, when an API key is configured.")
+            st.markdown("Below is what each produces for the same input.")
             _col_sas, _col_rule, _col_llm = st.columns(3)
             with _col_sas:
                 st.markdown("**SAS input**")
@@ -745,7 +748,7 @@ elif page == "SAS → PySpark Converter":
             "<ol style='margin:0;padding-left:20px;color:#374151;font-size:0.91em;line-height:1.8;'>"
             "<li>Copy the PySpark code from the output box</li>"
             "<li>Paste into a Databricks notebook — <code>spark</code> is available by default, no imports needed</li>"
-            "<li>Confirm the source table exists at the path referenced in the code</li>"
+            "<li>Confirm the source data is accessible in your Databricks environment</li>"
             "<li>Run the cell and verify the output matches the original SAS results</li>"
             "<li>In a migration, this code goes into the Databricks pipeline at the same stage "
             "the original SAS script occupied: data transformation, aggregation, or reporting</li>"
