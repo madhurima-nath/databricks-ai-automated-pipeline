@@ -176,13 +176,13 @@ if page == "Home":
 
     st.markdown("---")
     PILL = (
-        "background:#EFF6FF;color:#1E40AF;padding:3px 12px;"
-        "border-radius:12px;font-size:0.82em;font-weight:500;"
-        "border:1px solid #BFDBFE;white-space:nowrap;"
+        "background:#DBEAFE;color:#1E40AF;padding:5px 14px;"
+        "border-radius:12px;font-size:0.9em;font-weight:600;"
+        "border:1px solid #93C5FD;white-space:nowrap;"
     )
     st.markdown(
-        f"<div style='display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:4px 0;'>"
-        f"<span style='color:#4B5563;font-size:0.82em;font-weight:500;margin-right:2px;'>Built with</span>"
+        f"<div style='display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:6px 0;'>"
+        f"<span style='color:#374151;font-size:0.9em;font-weight:600;margin-right:2px;'>Built with</span>"
         f"<span style='{PILL}'>Databricks</span>"
         f"<span style='{PILL}'>PySpark</span>"
         f"<span style='{PILL}'>Delta Lake</span>"
@@ -190,7 +190,7 @@ if page == "Home":
         f"<span style='{PILL}'>Streamlit</span>"
         f"<span style='{PILL}'>Claude AI</span>"
         f"&nbsp;&nbsp;<a href='https://github.com/madhurima-nath/databricks-ai-automated-pipeline' "
-        f"target='_blank' rel='noopener' style='color:#3B82F6;font-size:0.85em;text-decoration:none;'>"
+        f"target='_blank' rel='noopener' style='color:#1D4ED8;font-size:0.9em;font-weight:600;text-decoration:none;'>"
         f"View on GitHub ↗</a></div>",
         unsafe_allow_html=True,
     )
