@@ -847,7 +847,8 @@ elif page == "SAS → PySpark Converter":
 
         st.markdown(
             "Each block gets a confidence score (green ≥ 85%, amber ≥ 70%, red < 70%). "
-            "Block 4 will be flagged — the rule engine translates what it can and marks the `RETAIN` statement for manual review."
+            "Blocks below 85% show a 'Needs review' badge. "
+            "All blocks with translation notes should be checked before use in production."
         )
         st.info("Always validate converted code against the original SAS results before use in production.")
         st.markdown("Converted output appears below the button, one section per block.")
@@ -903,7 +904,7 @@ elif page == "SAS → PySpark Converter":
                     " &nbsp;<span style='background:#fef2f2;color:#b91c1c;padding:1px 8px;"
                     "border-radius:4px;font-size:0.82em;border:1px solid #fca5a5;'>"
                     "Needs review</span>"
-                    if result.review_required else ""
+                    if conf < 0.85 else ""
                 )
 
                 st.markdown(
