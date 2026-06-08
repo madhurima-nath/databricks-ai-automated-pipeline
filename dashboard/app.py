@@ -603,7 +603,7 @@ elif page == "SAS → PySpark Converter":
             "Three preloaded examples below — no API key needed."
         )
 
-        _tab1, _tab2, _tab3, _tab4 = st.tabs(["PROC SORT", "PROC MEANS", "DATA step", "RETAIN — Claude AI"])
+        _tab1, _tab2, _tab3, _tab4 = st.tabs(["PROC SORT", "PROC MEANS", "DATA step", "Where LLM helps"])
 
         with _tab1:
             st.markdown(
@@ -677,11 +677,17 @@ elif page == "SAS → PySpark Converter":
 
         with _tab4:
             st.markdown(
-                "`RETAIN` carries a value forward from one row to the next. "
-                "Running totals and cumulative portfolio returns are common examples. "
-                "The rule engine flags this for manual review rather than producing an incorrect translation. "
-                "Below is what Claude AI produces for the same input when an API key is configured."
+                "The rule engine translates patterns it recognises — the same input always produces the same output. "
+                "Some SAS constructs carry state across rows: each row's result depends on what the previous rows produced. "
+                "The rule engine cannot reason about accumulated state, so it flags those cases for manual review."
             )
+            st.markdown(
+                "A common example is a running total — where each row's value is the previous row's total plus the current value. "
+                "In SAS this uses `RETAIN`, a keyword that keeps a variable's value as SAS moves from one row to the next. "
+                "The correct PySpark equivalent uses a window function, which calculates a value across a sequence of rows. "
+                "Claude AI produces this translation; the rule engine cannot."
+            )
+            st.markdown("Below is an example of what each produces for the same input, when an API key is configured.")
             _col_sas, _col_rule, _col_llm = st.columns(3)
             with _col_sas:
                 st.markdown("**SAS input**")
@@ -799,7 +805,7 @@ elif page == "SAS → PySpark Converter":
         col_cfg, col_sas = st.columns(2)
 
         with col_cfg:
-            st.markdown("**Migration config (YAML)** — maps the three SAS data references to Databricks paths")
+            st.markdown("**Migration config (YAML)**")
             config_text = st.text_area(
                 "Config YAML",
                 value=EXAMPLE_CONFIG,
@@ -808,7 +814,7 @@ elif page == "SAS → PySpark Converter":
             )
 
         with col_sas:
-            st.markdown("**SAS script** — the three-block financial analytics script")
+            st.markdown("**SAS script**")
             sas_input = st.text_area(
                 "SAS code",
                 value=EXAMPLE_ENTERPRISE,
@@ -816,7 +822,7 @@ elif page == "SAS → PySpark Converter":
                 key="sas_input_enterprise",
             )
 
-        st.caption(
+        st.markdown(
             "Each block gets a confidence score (green ≥ 85%, amber ≥ 70%, red < 70%) "
             "and a method label (rule engine or Claude AI). "
             "Converted code and a per-block review report are both downloadable."
