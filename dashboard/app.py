@@ -754,12 +754,14 @@ elif page == "SAS → PySpark Converter":
         st.markdown(
             "<div style='background:#EFF6FF;border-left:4px solid #3B82F6;border-radius:6px;"
             "padding:16px 20px;margin-top:20px;margin-bottom:20px;'>"
-            "<div style='font-weight:600;color:#1E40AF;margin-bottom:8px;'>Using the output in Databricks</div>"
+            "<div style='font-weight:600;color:#1E40AF;margin-bottom:6px;'>Using the output in Databricks</div>"
+            "<div style='color:#1E40AF;font-size:0.88em;margin-bottom:10px;border-bottom:1px solid #BFDBFE;padding-bottom:8px;'>"
+            "Always validate converted code against the original SAS results before use in production.</div>"
             "<ol style='margin:0;padding-left:20px;color:#374151;font-size:0.91em;line-height:1.8;'>"
             "<li>Copy the PySpark code from the output box</li>"
             "<li>Paste into a Databricks notebook — <code>spark</code> is available by default, no imports needed</li>"
             "<li>Confirm the source data is accessible in your Databricks environment</li>"
-            "<li>Run the cell and verify the output matches the original SAS results</li>"
+            "<li>Run the cell and check that the output matches the original SAS results</li>"
             "<li>In a migration, this code goes into the Databricks pipeline at the same stage "
             "the original SAS script occupied: data transformation, aggregation, or reporting</li>"
             "</ol></div>",
@@ -882,9 +884,9 @@ elif page == "SAS → PySpark Converter":
             )
 
             st.markdown("---")
-            st.markdown(
-                "**Converted output** — one block per section, in the order they appear in the script. "
-                "Review and test all output against the original SAS results before use in production. "
+            st.markdown("**Converted output** — one block per section, in the order they appear in the script.")
+            st.info(
+                "Always validate converted code against the original SAS results before use in production. "
                 "Blocks marked 'Needs review' require particular attention."
             )
 
@@ -926,12 +928,17 @@ elif page == "SAS → PySpark Converter":
                 # For RETAIN blocks: show the Claude AI equivalent as a static example
                 if any("RETAIN" in w for w in result.warnings):
                     st.markdown(
+                        "The rule engine cannot translate `RETAIN` — it flags the block rather than produce incorrect output. "
+                        "Below is the complete PySpark replacement that Claude AI produces: "
+                        "a window function that replicates the row-by-row accumulation."
+                    )
+                    st.markdown(
                         "<span style='color:#166534;font-weight:600;font-size:0.9em;'>"
-                        "✓ Claude AI — window function equivalent</span>",
+                        "✓ Claude AI — complete PySpark replacement (Block 4)</span>",
                         unsafe_allow_html=True,
                     )
                     st.code(
-                        "# RETAIN → window function (cumulative sum over ordered rows)\n"
+                        "# RETAIN → window function: cumulative sum over rows ordered by date\n"
                         "from pyspark.sql import Window\n"
                         "import pyspark.sql.functions as F\n\n"
                         "window = (\n"
@@ -948,8 +955,8 @@ elif page == "SAS → PySpark Converter":
                         language="python",
                     )
                     st.caption(
-                        "This is an example of what Claude AI produces for this block. "
-                        "With an API key configured, the converter calls Claude AI automatically."
+                        "With an API key configured, the converter calls Claude AI automatically for blocks the rule engine cannot handle. "
+                        "This output should also be validated before use in production."
                     )
 
                 st.markdown("")
