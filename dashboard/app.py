@@ -618,51 +618,14 @@ elif page == "SAS → PySpark Converter":
 
     else:
         st.markdown(
-            "Enterprise mode takes two inputs: a config that maps SAS library names to Databricks paths, "
-            "and the SAS script that uses those names. Both are required — the converter reads them together."
+            "Provide a YAML config and a SAS script — the converter reads both together and produces PySpark for every block in the script."
         )
-        st.info(
-            "The conversion runs entirely in Python — no Databricks connection needed. "
-            "`unity_catalog: false` in the config generates simple table references, compatible with "
-            "Databricks Community Edition. Set it to `true` for fully qualified `catalog.schema.table` "
-            "paths, which require a full Databricks workspace with Unity Catalog enabled."
-        )
-
-        st.markdown("**How a large-scale migration works**")
-        st.markdown(
-            """
-            <div style="margin:10px 0 18px 0;border:1px solid #E2E8F0;border-radius:8px;overflow:hidden;">
-              <div style="display:flex;align-items:flex-start;gap:14px;padding:12px 16px;background:#F8FAFC;border-bottom:1px solid #E2E8F0;">
-                <span style="background:#1E3A5F;color:white;border-radius:50%;min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:0.82em;font-weight:700;flex-shrink:0;">1</span>
-                <div><div style="font-weight:600;color:#1E3A5F;font-size:0.88em;">YAML config</div><div style="color:#6B7280;font-size:0.82em;margin-top:2px;">Map SAS library references to Databricks paths, written once for the whole codebase</div></div>
-              </div>
-              <div style="display:flex;align-items:flex-start;gap:14px;padding:12px 16px;background:#F8FAFC;border-bottom:1px solid #E2E8F0;">
-                <span style="background:#1E3A5F;color:white;border-radius:50%;min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:0.82em;font-weight:700;flex-shrink:0;">2</span>
-                <div><div style="font-weight:600;color:#1E3A5F;font-size:0.88em;">SAS script</div><div style="color:#6B7280;font-size:0.82em;margin-top:2px;">Run each SAS file through the converter; the YAML config from step 1 applies to every script</div></div>
-              </div>
-              <div style="display:flex;align-items:flex-start;gap:14px;padding:12px 16px;background:#EFF6FF;border-bottom:1px solid #BFDBFE;">
-                <span style="background:#1E40AF;color:white;border-radius:50%;min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:0.82em;font-weight:700;flex-shrink:0;">3</span>
-                <div><div style="font-weight:600;color:#1E40AF;font-size:0.88em;">Convert</div><div style="color:#6B7280;font-size:0.82em;margin-top:2px;">Rule engine converts each block and assigns a confidence score</div></div>
-              </div>
-              <div style="display:flex;align-items:flex-start;gap:14px;padding:12px 16px;background:#F8FAFC;border-bottom:1px solid #E2E8F0;">
-                <span style="background:#1E3A5F;color:white;border-radius:50%;min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:0.82em;font-weight:700;flex-shrink:0;">4</span>
-                <div><div style="font-weight:600;color:#1E3A5F;font-size:0.88em;">Review manifest</div><div style="color:#6B7280;font-size:0.82em;margin-top:2px;">Download the YAML summary; check any low-confidence or flagged blocks</div></div>
-              </div>
-              <div style="display:flex;align-items:flex-start;gap:14px;padding:12px 16px;background:#F0FDF4;">
-                <span style="background:#166534;color:white;border-radius:50%;min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:0.82em;font-weight:700;flex-shrink:0;">5</span>
-                <div><div style="font-weight:600;color:#166534;font-size:0.88em;">Verify and commit</div><div style="color:#6B7280;font-size:0.82em;margin-top:2px;">Confirm the converted code matches the original SAS output, then commit to the Databricks project</div></div>
-              </div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-        st.markdown("**Both inputs are required.** The converter reads them together — library names and macro variables in the SAS script are resolved using the YAML config before translation starts.")
 
         col_cfg, col_sas = st.columns(2)
 
         with col_cfg:
-            st.markdown("**Migration config (YAML)**")
+            st.markdown("**Step 1 — Migration config (YAML)**")
+            st.caption("Maps SAS library names and macro variables to their Databricks equivalents. Write this once; the same config applies to every SAS file in the migration.")
             use_example_cfg = st.checkbox("Use example config (financial analytics pipeline)", value=True)
             if use_example_cfg:
                 config_text = st.text_area(
@@ -680,7 +643,8 @@ elif page == "SAS → PySpark Converter":
                     config_text = ""
 
         with col_sas:
-            st.markdown("**SAS script**")
+            st.markdown("**Step 2 — SAS script**")
+            st.caption("A full SAS script with one or more PROC/DATA blocks. Library names like `risklib` and macro variables like `&start_date` are resolved using the config on the left before conversion.")
             use_example_sas = st.checkbox("Use example SAS script (financial analytics)", value=True)
             sas_input = st.text_area(
                 "SAS code",
@@ -690,6 +654,7 @@ elif page == "SAS → PySpark Converter":
                 key="sas_input_enterprise",
             )
 
+        st.markdown("**Step 3 — Convert**")
         target = "pyspark"
         convert_btn = st.button("Convert to PySpark →", type="primary", use_container_width=True, key="convert_enterprise")
 
@@ -812,13 +777,49 @@ elif page == "SAS → PySpark Converter":
             "padding:16px 20px;margin-top:20px;'>"
             "<div style='font-weight:600;color:#1E40AF;margin-bottom:8px;'>After conversion: steps 4 and 5</div>"
             "<ol style='margin:0;padding-left:20px;color:#374151;font-size:0.91em;line-height:1.8;'>"
-            "<li>Download the converted code and migration manifest using the buttons that appear after conversion</li>"
+            "<li>Download the converted code and migration manifest using the buttons above</li>"
             "<li>Open the manifest — it shows a confidence score for each block and flags anything needing human review</li>"
             "<li>Paste each converted block into a Databricks notebook; <code>spark</code> is available by default</li>"
             "<li>Run and verify the output matches the original SAS results, then commit to your Databricks project</li>"
             "</ol></div>",
             unsafe_allow_html=True,
         )
+
+        with st.expander("How does a full migration work? (5-step overview)"):
+            st.markdown(
+                """
+                <div style="border:1px solid #E2E8F0;border-radius:8px;overflow:hidden;">
+                  <div style="display:flex;align-items:flex-start;gap:14px;padding:12px 16px;background:#F8FAFC;border-bottom:1px solid #E2E8F0;">
+                    <span style="background:#1E3A5F;color:white;border-radius:50%;min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:0.82em;font-weight:700;flex-shrink:0;">1</span>
+                    <div><div style="font-weight:600;color:#1E3A5F;font-size:0.88em;">YAML config</div><div style="color:#6B7280;font-size:0.82em;margin-top:2px;">Map SAS library references to Databricks paths — written once for the whole codebase</div></div>
+                  </div>
+                  <div style="display:flex;align-items:flex-start;gap:14px;padding:12px 16px;background:#F8FAFC;border-bottom:1px solid #E2E8F0;">
+                    <span style="background:#1E3A5F;color:white;border-radius:50%;min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:0.82em;font-weight:700;flex-shrink:0;">2</span>
+                    <div><div style="font-weight:600;color:#1E3A5F;font-size:0.88em;">SAS script</div><div style="color:#6B7280;font-size:0.82em;margin-top:2px;">Run each SAS file through the converter; the same config applies to every script</div></div>
+                  </div>
+                  <div style="display:flex;align-items:flex-start;gap:14px;padding:12px 16px;background:#EFF6FF;border-bottom:1px solid #BFDBFE;">
+                    <span style="background:#1E40AF;color:white;border-radius:50%;min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:0.82em;font-weight:700;flex-shrink:0;">3</span>
+                    <div><div style="font-weight:600;color:#1E40AF;font-size:0.88em;">Convert</div><div style="color:#6B7280;font-size:0.82em;margin-top:2px;">Rule engine converts each block and assigns a confidence score</div></div>
+                  </div>
+                  <div style="display:flex;align-items:flex-start;gap:14px;padding:12px 16px;background:#F8FAFC;border-bottom:1px solid #E2E8F0;">
+                    <span style="background:#1E3A5F;color:white;border-radius:50%;min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:0.82em;font-weight:700;flex-shrink:0;">4</span>
+                    <div><div style="font-weight:600;color:#1E3A5F;font-size:0.88em;">Review manifest</div><div style="color:#6B7280;font-size:0.82em;margin-top:2px;">Download the YAML summary; check low-confidence or flagged blocks</div></div>
+                  </div>
+                  <div style="display:flex;align-items:flex-start;gap:14px;padding:12px 16px;background:#F0FDF4;">
+                    <span style="background:#166534;color:white;border-radius:50%;min-width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:0.82em;font-weight:700;flex-shrink:0;">5</span>
+                    <div><div style="font-weight:600;color:#166534;font-size:0.88em;">Verify and commit</div><div style="color:#6B7280;font-size:0.82em;margin-top:2px;">Confirm the converted code matches the original SAS output, then commit to the Databricks project</div></div>
+                  </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        with st.expander("About the YAML config options"):
+            st.info(
+                "The conversion runs entirely in Python — no Databricks connection needed. "
+                "`unity_catalog: false` generates simple table references, compatible with Databricks Community Edition. "
+                "Set it to `true` for fully qualified `catalog.schema.table` paths, which require a full Databricks workspace with Unity Catalog enabled."
+            )
 
     with st.expander("What SAS patterns are supported?"):
         st.markdown("""
