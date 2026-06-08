@@ -576,6 +576,7 @@ elif page == "SAS → PySpark Converter":
         )
 
         target = "pyspark"
+        st.caption("Select an example above, edit if needed, then click Convert to PySpark → to see the output.")
         convert_btn = st.button("Convert to PySpark →", type="primary", use_container_width=True)
 
         if convert_btn and sas_input.strip():
@@ -596,8 +597,6 @@ elif page == "SAS → PySpark Converter":
 
         elif convert_btn:
             st.info("Paste some SAS code above to convert.")
-        else:
-            st.info("Select an example above and click **Convert to PySpark →** to see the output here.")
 
         st.markdown(
             "<div style='background:#EFF6FF;border-left:4px solid #3B82F6;border-radius:6px;"
