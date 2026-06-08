@@ -64,16 +64,28 @@ st.markdown("""
 # Sidebar navigation
 # ---------------------------------------------------------------------------
 
+_pages = ["Home", "Analytics Dashboard", "SAS → PySpark Converter"]
+
+# On fresh load (session state cleared by refresh), restore page from URL
+if "_url_loaded" not in st.session_state:
+    st.session_state["_url_loaded"] = True
+    _url_page = st.query_params.get("page", "Home")
+    if _url_page in _pages:
+        st.session_state["nav_page"] = _url_page
+
 # Apply any pending navigation before the radio widget renders
 if st.session_state.get("_nav_target"):
     st.session_state["nav_page"] = st.session_state.pop("_nav_target")
 
 page = st.sidebar.radio(
     "Navigation",
-    ["Home", "Analytics Dashboard", "SAS → PySpark Converter"],
+    _pages,
     index=0,
     key="nav_page",
 )
+
+# Keep URL in sync so refresh returns to the same page
+st.query_params["page"] = page
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("**Data** · 2010 – June 2026")
@@ -557,16 +569,14 @@ elif page == "SAS → PySpark Converter":
     # ---------------------------------------------------------------------------
 
     if mode == "Community":
+        st.markdown(
+            "- No API key needed — examples run immediately\n"
+            "- Edit any example, or replace the code with your own SAS\n"
+            "- Converts: PROC SORT · PROC MEANS · PROC SQL · DATA steps (KEEP, DROP, WHERE, RENAME, IF-THEN-ELSE)"
+        )
         example_choice = st.selectbox(
             "Choose a preloaded example",
             list(EXAMPLES_COMMUNITY.keys()),
-        )
-        st.info(
-            "The preloaded examples run with no API key needed. "
-            "To try your own SAS code, select any example and edit the text box below. "
-            "The rule engine handles PROC SORT, PROC MEANS, PROC SQL, and DATA steps "
-            "(KEEP, DROP, WHERE, RENAME, IF-THEN-ELSE). "
-            "SAS code outside those patterns will not convert in this demo."
         )
         sas_input = st.text_area(
             "SAS code",
@@ -576,7 +586,6 @@ elif page == "SAS → PySpark Converter":
         )
 
         target = "pyspark"
-        st.markdown("Choose an example, edit the code if needed, then click **Convert to PySpark →**.")
         convert_btn = st.button("Convert to PySpark →", type="primary", use_container_width=True)
 
         if convert_btn and sas_input.strip():
@@ -802,19 +811,3 @@ elif page == "SAS → PySpark Converter":
                 "Set it to `true` for fully qualified `catalog.schema.table` paths, which require a full Databricks workspace with Unity Catalog enabled."
             )
 
-    with st.expander("What SAS patterns are supported?"):
-        st.markdown("""
-| SAS construct | Converts to |
-|---|---|
-| `PROC SORT DATA=x; BY col; RUN;` | `x_df.orderBy("col")` |
-| `PROC MEANS DATA=x; CLASS g; VAR v; RUN;` | `x_df.groupBy("g").agg(F.mean("v"))` |
-| `PROC SQL; SELECT ... QUIT;` | `spark.sql("SELECT ...")` |
-| `DATA out; SET in; KEEP a b; RUN;` | `in_df.select("a", "b")` |
-| `IF x > 0 THEN y = 1; ELSE y = 0;` | `.withColumn("y", F.when(x > 0, 1).otherwise(0))` |
-| `WHERE date = TODAY();` | `.filter(F.col("date") == F.current_date())` |
-| `RENAME old=new;` | `.withColumnRenamed("old", "new")` |
-| `libname.dataset` (Enterprise) | Resolved to Databricks path via migration config |
-| `&macro_var` (Enterprise) | Substituted from migration config `macro_vars` |
-
-Patterns not in this list will not convert in this demo.
-        """)
