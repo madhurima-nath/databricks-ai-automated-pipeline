@@ -923,9 +923,11 @@ elif page == "SAS → PySpark Converter":
                 # For RETAIN blocks: show the LLM equivalent as a static example
                 if any("RETAIN" in w for w in result.warnings):
                     st.markdown(
-                        "The rule engine cannot translate `RETAIN` — it flags the block rather than produce incorrect output. "
+                        "Block 4 of the SAS script above contains `RETAIN cumulative_return 0;` — "
+                        "a SAS keyword that carries a variable's value from one row to the next. "
+                        "The rule engine flags this rather than produce an incorrect translation. "
                         "Below is the complete PySpark replacement an LLM produces: "
-                        "a window function that replicates the row-by-row accumulation."
+                        "a window function that replicates the same row-by-row accumulation."
                     )
                     st.markdown(
                         "<span style='color:#166534;font-weight:600;font-size:0.9em;'>"
