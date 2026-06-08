@@ -617,11 +617,16 @@ elif page == "SAS → PySpark Converter":
             "Provide a YAML config and a SAS script — the converter reads both together and produces PySpark for every block in the script."
         )
 
+        st.markdown(
+            "The **YAML config** maps SAS library names and macro variables to their Databricks equivalents — "
+            "write it once and it applies to every script. "
+            "The **SAS script** is what you want to convert."
+        )
+
         col_cfg, col_sas = st.columns(2)
 
         with col_cfg:
-            st.markdown("**Step 1 — Migration config (YAML)**")
-            st.caption("Maps SAS library names and macro variables to their Databricks equivalents. Write this once; the same config applies to every SAS file in the migration.")
+            st.markdown("**Migration config (YAML)**")
             use_example_cfg = st.checkbox("Use example config (financial analytics pipeline)", value=True)
             if use_example_cfg:
                 config_text = st.text_area(
@@ -639,8 +644,7 @@ elif page == "SAS → PySpark Converter":
                     config_text = ""
 
         with col_sas:
-            st.markdown("**Step 2 — SAS script**")
-            st.caption("A full SAS script with one or more PROC/DATA blocks. Library names like `risklib` and macro variables like `&start_date` are resolved using the config on the left before conversion.")
+            st.markdown("**SAS script**")
             use_example_sas = st.checkbox("Use example SAS script (financial analytics)", value=True)
             sas_input = st.text_area(
                 "SAS code",
@@ -650,7 +654,6 @@ elif page == "SAS → PySpark Converter":
                 key="sas_input_enterprise",
             )
 
-        st.markdown("**Step 3 — Convert**")
         target = "pyspark"
         convert_btn = st.button("Convert to PySpark →", type="primary", use_container_width=True, key="convert_enterprise")
 
