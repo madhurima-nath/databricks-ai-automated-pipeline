@@ -531,7 +531,7 @@ elif page == "SAS → PySpark Converter":
     if mode == "Community":
         st.markdown("Single SAS operation — three preloaded examples, no setup needed.")
     else:
-        st.markdown("Complete SAS file — four-block financial analytics example, three handled by the rule engine and one requiring Claude AI. Config included.")
+        st.markdown("Complete SAS file — four-block financial analytics example. The rule engine translates all four blocks; Block 4 contains a `RETAIN` statement that it cannot fully translate and flags for manual review. Config included.")
 
     st.markdown("---")
 
@@ -634,7 +634,7 @@ elif page == "SAS → PySpark Converter":
                     result_1 = convert(sas_input_1, target="pyspark", api_key=api_key or None)
                 st.text_area("Output", value=result_1.output, height=180, key="out_c1")
                 if result_1.warnings:
-                    st.warning("**Check before running:** " + " · ".join(result_1.warnings))
+                    st.warning("**Translation note:** " + " · ".join(result_1.warnings))
             elif btn_1:
                 st.info("No SAS code to convert.")
 
@@ -657,7 +657,7 @@ elif page == "SAS → PySpark Converter":
                     result_2 = convert(sas_input_2, target="pyspark", api_key=api_key or None)
                 st.text_area("Output", value=result_2.output, height=180, key="out_c2")
                 if result_2.warnings:
-                    st.warning("**Check before running:** " + " · ".join(result_2.warnings))
+                    st.warning("**Translation note:** " + " · ".join(result_2.warnings))
             elif btn_2:
                 st.info("No SAS code to convert.")
 
@@ -681,7 +681,7 @@ elif page == "SAS → PySpark Converter":
                     result_3 = convert(sas_input_3, target="pyspark", api_key=api_key or None)
                 st.text_area("Output", value=result_3.output, height=200, key="out_c3")
                 if result_3.warnings:
-                    st.warning("**Check before running:** " + " · ".join(result_3.warnings))
+                    st.warning("**Translation note:** " + " · ".join(result_3.warnings))
             elif btn_3:
                 st.info("No SAS code to convert.")
 
@@ -786,14 +786,14 @@ elif page == "SAS → PySpark Converter":
             "**The preloaded script** (visible in the editor below) is a four-block financial analytics file built on actual market data:"
         )
         st.markdown(
-            "- **Block 1 — PROC SORT:** Sort S&P 500 price data by date · *rule engine*\n"
+            "- **Block 1 — PROC SORT:** Sort S&P 500 price data by date\n"
             "- **Block 2 — PROC MEANS:** Monthly statistics on Federal Reserve rate data "
-            "(mean, min, max per month) · *rule engine*\n"
+            "(mean, min, max per month)\n"
             "- **Block 3 — DATA step:** Filter the sorted S&P 500 data from 2010-01-01; "
-            "keep only date, closing price, and daily return · *rule engine*\n"
+            "keep only date, closing price, and daily return\n"
             "- **Block 4 — DATA step with RETAIN:** Calculate a running cumulative return. "
-            "`RETAIN` carries a value from one row to the next — the rule engine flags this for manual review. "
-            "Claude AI produces the correct PySpark window function when an API key is configured. · *Claude AI*"
+            "`RETAIN` carries a value from one row to the next — a pattern the rule engine cannot fully translate. "
+            "Block 4 is flagged for manual review; the 'Where LLM helps' tab in Community mode shows the correct PySpark window function equivalent."
         )
         st.markdown(
             "Input: **Bronze layer** (raw market data). "
@@ -845,10 +845,9 @@ elif page == "SAS → PySpark Converter":
             )
 
         st.markdown(
-            "Each block gets a confidence score (green ≥ 85%, amber ≥ 70%, red < 70%) "
-            "and a method label — rule engine or Claude AI. "
-            "Block 4 uses `RETAIN`, which the rule engine cannot translate; it will be flagged for review. "
-            "With an API key configured, Claude AI produces the window function equivalent instead."
+            "Each block gets a confidence score (green ≥ 85%, amber ≥ 70%, red < 70%). "
+            "Block 4 will be flagged — the rule engine translates what it can and marks the `RETAIN` statement for manual review. "
+            "All converted code should be validated against the original SAS output before use in production."
         )
         st.markdown("Converted output appears below the button, one section per block.")
         target = "pyspark"
@@ -883,7 +882,11 @@ elif page == "SAS → PySpark Converter":
             )
 
             st.markdown("---")
-            st.markdown("**Converted output** — one block per section, in the order they appear in the script")
+            st.markdown(
+                "**Converted output** — one block per section, in the order they appear in the script. "
+                "Review and test all output against the original SAS results before use in production. "
+                "Blocks marked 'Needs review' require particular attention."
+            )
 
             # Per-block results
             for i, result in enumerate(results):
@@ -916,7 +919,7 @@ elif page == "SAS → PySpark Converter":
 
                 if result.warnings:
                     st.warning(
-                        "**Check before running:** "
+                        "**Translation note:** "
                         + " · ".join(result.warnings)
                     )
 
