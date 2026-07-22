@@ -243,8 +243,8 @@ if page == "Analytics Dashboard":
             "Databricks connection not configured. "
             "Add **DATABRICKS_HOST**, **DATABRICKS_TOKEN**, and **DATABRICKS_HTTP_PATH** "
             "to your Streamlit secrets (or `.env` locally).\n\n"
-            "Find HTTP_PATH in Databricks → Compute → your cluster → "
-            "Advanced Options → JDBC/ODBC."
+            "Free Edition is serverless-only, so find HTTP_PATH under "
+            "Databricks → SQL Warehouses → your warehouse → Connection Details."
         )
         st.stop()
 
@@ -1020,5 +1020,3 @@ elif page == "SAS → PySpark Converter":
             """,
             unsafe_allow_html=True,
         )
-
-
