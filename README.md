@@ -31,9 +31,10 @@ checks module, and the converter's rule engine.
 ## Architecture
 
 ```
-External APIs
-  yfinance  →  ^GSPC (S&P 500)   ^STOXX50E (Euro Stoxx 50)   ^VIX
-  FRED      →  FEDFUNDS (US rate, monthly)   ECBDFR (ECB rate, monthly)
+Source data (yfinance + FRED)
+  Downloaded locally via scripts/download_data.py, committed to data/raw/, synced
+  into the Databricks workspace via a Git folder. Serverless compute has no outbound
+  internet access, so nothing is fetched live from inside a notebook.
                       │
               ┌───────▼────────┐
               │  Bronze Layer  │  Raw Delta tables — no transforms
@@ -55,6 +56,9 @@ External APIs
               │   Dashboard    │  Streamlit — Home · Analytics Dashboard · SAS → PySpark Converter
               └────────────────┘
 ```
+
+All tables live in Unity Catalog under the `financial_sas_project` catalog, `default` schema
+(e.g. `financial_sas_project.default.bronze_sp500`).
 
 ---
 
@@ -149,10 +153,10 @@ from src.converter import convert_script, load_config_from_dict, generate_manife
 
 config = load_config_from_dict({
     "source": {
-        "library_mappings": {"risklib": "trading.bronze"},
+        "library_mappings": {"risklib": "financial_sas_project.default"},
         "macro_vars": {"start_date": "2010-01-01"},  # SAS &start_date → "2010-01-01"
     },
-    "target": {"platform": "enterprise", "unity_catalog": False},  # set True for a full workspace
+    "target": {"platform": "enterprise", "unity_catalog": True},
 })
 
 results = convert_script(sas_script, config=config)
@@ -166,22 +170,20 @@ Tested with 46 pytest cases: 39 covering the SAS converter (all supported patter
 
 ---
 
-## Community Edition constraints
+## Databricks Free Edition constraints
 
-This project runs on Databricks Community Edition. Compared to a full workspace:
+This project runs on Databricks Free Edition. A few things that shape how the pipeline works:
 
-| Feature | Community Edition | Premium |
-|---------|-----------------|---------|
-| Delta Lake | ✅ | ✅ |
-| Hive Metastore | ✅ | ✅ |
-| Unity Catalog | ❌ | ✅ |
-| Delta Live Tables | ❌ | ✅ |
-| Databricks Apps | ❌ | ✅ |
-| Multi-task Jobs API | ❌ | ✅ |
-| Cluster auto-scaling | ❌ | ✅ |
-
-Code is written to be Unity Catalog-ready — adding catalog prefixes (`trading.bronze.sp500`)
-is the only change required when migrating to a full workspace.
+- **Unity Catalog only.** Free Edition is Unity Catalog by default — there is no Hive Metastore
+  option to fall back on. Every table uses a three-level path: `financial_sas_project.default.bronze_sp500`.
+- **Serverless-only compute.** There are no traditional clusters to configure — notebooks attach
+  to serverless compute automatically.
+- **No outbound internet access from notebooks.** This is why Bronze reads from CSVs in
+  `data/raw/` instead of calling yfinance or FRED directly. Source data is downloaded locally
+  with `scripts/download_data.py`, committed to the repo, and synced into the workspace through
+  a Git folder.
+- **One workspace, one metastore per account**, and usage is subject to a fair-use quota —
+  if exceeded, compute is paused for the rest of the day (or, in extreme cases, the month).
 
 ---
 
@@ -190,11 +192,18 @@ is the only change required when migrating to a full workspace.
 ```
 databricks-ai-automated-pipeline/
 │
-├── notebooks/                          Databricks notebooks (sync via Repos)
-│   ├── 00_quality_checks.py            Reusable quality check module — imported by 02 and 03
-│   ├── 01_bronze_ingest.py             Raw ingestion from yfinance + FRED; writes 5 Delta tables
+├── notebooks/                          Databricks notebooks (sync via Git folder)
+│   ├── 00_quality_checks.py            Reusable quality check module — imported by 01, 02, 03
+│   ├── 01_bronze_ingest.py             Reads data/raw/ CSVs; writes 5 bronze Delta tables
 │   ├── 02_silver_transform.py          Clean, join, forward-fill rates; derives log returns
 │   └── 03_gold_analytics.py            Rolling vol, correlations, rate regimes, % decline from 52-week high
+│
+├── scripts/
+│   ├── download_data.py                Run locally — pulls yfinance + FRED data into data/raw/
+│   └── run_pipeline.py                 Submit the Databricks job and poll for completion
+│
+├── data/
+│   └── raw/                            Downloaded CSVs, committed to the repo and read by Bronze
 │
 ├── src/
 │   └── converter/
@@ -209,9 +218,6 @@ databricks-ai-automated-pipeline/
 ├── tests/
 │   ├── test_sas_converter.py           39 pytest cases — all supported SAS patterns, Community and Enterprise modes
 │   └── test_scripts.py                 7 pytest cases for run_pipeline.py + download_gold.py
-│
-├── scripts/
-│   └── run_pipeline.py                 Submit the Databricks job and poll for completion
 │
 ├── jobs/
 │   └── pipeline_job.json               Databricks Jobs API 2.1 job definition template
@@ -253,6 +259,11 @@ DATABRICKS_TOKEN=your_personal_access_token
 DATABRICKS_JOB_ID=12345                   # set after registering the job below
 ```
 
+Download the source data (writes CSVs to `data/raw/`):
+```bash
+python scripts/download_data.py
+```
+
 Run tests:
 ```bash
 pytest tests/ -v
@@ -262,10 +273,13 @@ pytest tests/ -v
 
 **First time:**
 
-1. Go to **Repos → Add Repo** and enter this repository URL.
-2. Open `notebooks/01_bronze_ingest.py`. A **FRED API Key** widget appears at the top —
-   paste your key there before running. The key is never saved to a file or committed to git.
-3. Register the pipeline job:
+1. Go to **Catalog** and confirm you're on the `financial_sas_project` catalog (created once
+   via `CREATE CATALOG IF NOT EXISTS financial_sas_project;`).
+2. Set up a Git folder pointing at this repository, so `notebooks/` and `data/raw/` sync into
+   the workspace.
+3. Run `notebooks/01_bronze_ingest.py`, then `02_silver_transform.py`, then `03_gold_analytics.py`,
+   in that order — each reads the previous layer's output.
+4. Register the pipeline job (optional, for running all three notebooks as one job):
    ```bash
    databricks jobs create --json @jobs/pipeline_job.json
    ```
@@ -277,7 +291,9 @@ pytest tests/ -v
 python scripts/run_pipeline.py --job-id 12345
 ```
 
-The pipeline fetches from Yahoo Finance and FRED on every run — all five series are updated through the current date automatically. Re-run at any time to pull the latest data.
+This reruns the three notebooks against whatever CSVs are currently in `data/raw/`. To pull
+newer market data, run `scripts/download_data.py` locally again, commit the updated CSVs, sync
+the Git folder, then rerun the pipeline.
 
 Live dashboard: [financial-analytics-databricks.streamlit.app](https://financial-analytics-databricks.streamlit.app)
 
@@ -320,6 +336,9 @@ Task results:
 | VIX | `^VIX` | Yahoo Finance | Daily close |
 | US Fed Funds Rate | `FEDFUNDS` | FRED (Federal Reserve Economic Data) | Monthly — free API key |
 | ECB Deposit Facility Rate | `ECBDFR` | FRED | Monthly |
+
+Downloaded locally via `scripts/download_data.py` and committed to `data/raw/` — Databricks
+serverless compute has no outbound internet access to call these APIs directly.
 
 ---
 
