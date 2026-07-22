@@ -233,7 +233,7 @@ if page == "Analytics Dashboard":
         )
         with dbsql.connect(**conn_args) as conn:
             with conn.cursor() as cur:
-                cur.execute("SELECT * FROM gold_analytics ORDER BY date")
+                cur.execute("SELECT * FROM financial_sas_project.default.gold_analytics ORDER BY date")
                 cols = [d[0] for d in cur.description]
                 rows = cur.fetchall()
         return pd.DataFrame(rows, columns=cols)
@@ -389,7 +389,7 @@ if page == "Analytics Dashboard":
         neg_days = int((d_rates["ecb_rate"] < 0).sum())
         rate_msg = f"**US rates peaked at {peak_fed:.2f}% ({peak_fed_date}) in this period.**"
         if neg_days > 0:
-            rate_msg += f" The ECB rate was negative on **{neg_days:,} trading days** — European banks were charged to hold cash rather than earning interest on it."
+            rate_msg += f" The ECB rate was negative on **{neg_days:,} financial_sas_project days** — European banks were charged to hold cash rather than earning interest on it."
         st.info(rate_msg)
 
     # --- Chart 3: Volatility ---
@@ -560,7 +560,7 @@ elif page == "SAS → PySpark Converter":
     }
 
     EXAMPLE_ENTERPRISE = (
-        "/* Financial analytics migration — risklib → trading.bronze */\n\n"
+        "/* Financial analytics migration — risklib → financial_sas_project.bronze */\n\n"
         "PROC SORT DATA=risklib.sp500_prices OUT=sp500_sorted;\n"
         "    BY date;\n"
         "RUN;\n\n"
@@ -583,22 +583,22 @@ elif page == "SAS → PySpark Converter":
     )
 
     EXAMPLE_CONFIG = (
-        "source:\n"
-        "  library_mappings:\n"
-        "    risklib: trading.bronze\n"
-        "    outlib: trading.silver\n"
-        "  dataset_mappings:\n"
-        "    risklib.sp500_prices: trading.bronze.bronze_sp500\n"
-        "    risklib.fed_rate: trading.bronze.bronze_fed_rate\n"
-        "    outlib.daily_analytics: trading.silver.silver_market\n"
-        "  macro_vars:\n"
-        "    start_date: '2010-01-01'\n"
-        "target:\n"
-        "  platform: enterprise\n"
-        "  catalog: trading\n"
-        "  default_schema: silver\n"
-        "  unity_catalog: false  # set true for Unity Catalog (full Databricks workspace only)\n"
-    )
+    "source:\n"
+    "  library_mappings:\n"
+    "    risklib: financial_sas_project.default\n"
+    "    outlib: financial_sas_project.default\n"
+    "  dataset_mappings:\n"
+    "    risklib.sp500_prices: financial_sas_project.default.bronze_sp500\n"
+    "    risklib.fed_rate: financial_sas_project.default.bronze_fed_rate\n"
+    "    outlib.daily_analytics: financial_sas_project.default.silver_market\n"
+    "  macro_vars:\n"
+    "    start_date: '2010-01-01'\n"
+    "target:\n"
+    "  platform: enterprise\n"
+    "  catalog: financial_sas_project\n"
+    "  default_schema: default\n"
+    "  unity_catalog: true # set true for Unity Catalog (full Databricks workspace only)\n"
+)
 
     api_key = _secret("ANTHROPIC_API_KEY")
 
@@ -814,7 +814,7 @@ elif page == "SAS → PySpark Converter":
         st.markdown("**The config file** maps four things that SAS uses but Databricks does not recognise:")
         st.markdown(
             "- **Library shortcuts** — named pointers to data locations on the SAS server → Databricks catalog paths "
-            "(e.g. `risklib` → `trading.bronze`)\n"
+            "(e.g. `risklib` → `financial_sas_project.bronze`)\n"
             "- **Dataset paths** — specific SAS dataset names → specific Databricks table paths\n"
             "- **Macro variable values** — placeholders like `&start_date` → actual values like `2010-01-01`\n"
             "- **Platform settings** — target catalog, default schema, Unity Catalog flag"
