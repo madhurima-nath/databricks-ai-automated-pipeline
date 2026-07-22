@@ -1,5 +1,6 @@
 # Databricks notebook source
 
+
 # COMMAND ----------
 
 # MAGIC %md
@@ -19,6 +20,10 @@
 # MAGIC **Data source:** CSV files in `data/raw/` — downloaded locally via `scripts/download_data.py`
 # MAGIC and committed to the repo. Serverless compute has no outbound internet access, so
 # MAGIC data is fetched on a laptop and synced here via Repos.
+
+# COMMAND ----------
+
+# MAGIC %run ./00_quality_checks
 
 # COMMAND ----------
 
@@ -73,9 +78,9 @@ display(sp500_pd.head(3))
     .withColumn("close",  F.col("close").cast(DoubleType()))
     .withColumn("volume", F.col("volume").cast(DoubleType()))
     .withColumn("ingested_at", F.current_timestamp())
-    .write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("bronze_sp500")
+    .write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("financial_sas_project.default.bronze_sp500")
 )
-print(f"Saved bronze_sp500: {spark.table('bronze_sp500').count():,} rows")
+print(f"Saved bronze_sp500: {spark.table('financial_sas_project.default.bronze_sp500').count():,} rows")
 
 # COMMAND ----------
 
@@ -95,9 +100,9 @@ display(eurostoxx_pd.head(3))
     .withColumn("date",            F.col("date").cast(DateType()))
     .withColumn("eurostoxx_close", F.col("eurostoxx_close").cast(DoubleType()))
     .withColumn("ingested_at",     F.current_timestamp())
-    .write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("bronze_eurostoxx")
+    .write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("financial_sas_project.default.bronze_eurostoxx")
 )
-print(f"Saved bronze_eurostoxx: {spark.table('bronze_eurostoxx').count():,} rows")
+print(f"Saved bronze_eurostoxx: {spark.table('financial_sas_project.default.bronze_eurostoxx').count():,} rows")
 
 # COMMAND ----------
 
@@ -117,9 +122,9 @@ display(vix_pd.head(3))
     .withColumn("date",      F.col("date").cast(DateType()))
     .withColumn("vix_close", F.col("vix_close").cast(DoubleType()))
     .withColumn("ingested_at", F.current_timestamp())
-    .write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("bronze_vix")
+    .write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("financial_sas_project.default.bronze_vix")
 )
-print(f"Saved bronze_vix: {spark.table('bronze_vix').count():,} rows")
+print(f"Saved bronze_vix: {spark.table('financial_sas_project.default.bronze_vix').count():,} rows")
 
 # COMMAND ----------
 
@@ -139,9 +144,9 @@ display(fed_pd.head(3))
     .withColumn("date",     F.col("date").cast(DateType()))
     .withColumn("fed_rate", F.col("fed_rate").cast(DoubleType()))
     .withColumn("ingested_at", F.current_timestamp())
-    .write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("bronze_fed_rate")
+    .write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("financial_sas_project.default.bronze_fed_rate")
 )
-print(f"Saved bronze_fed_rate: {spark.table('bronze_fed_rate').count():,} rows")
+print(f"Saved bronze_fed_rate: {spark.table('financial_sas_project.default.bronze_fed_rate').count():,} rows")
 
 # COMMAND ----------
 
@@ -161,9 +166,9 @@ display(ecb_pd.head(3))
     .withColumn("date",     F.col("date").cast(DateType()))
     .withColumn("ecb_rate", F.col("ecb_rate").cast(DoubleType()))
     .withColumn("ingested_at", F.current_timestamp())
-    .write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("bronze_ecb_rate")
+    .write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("financial_sas_project.default.bronze_ecb_rate")
 )
-print(f"Saved bronze_ecb_rate: {spark.table('bronze_ecb_rate').count():,} rows")
+print(f"Saved bronze_ecb_rate: {spark.table('financial_sas_project.default.bronze_ecb_rate').count():,} rows")
 
 # COMMAND ----------
 
@@ -172,7 +177,13 @@ print(f"Saved bronze_ecb_rate: {spark.table('bronze_ecb_rate').count():,} rows")
 
 # COMMAND ----------
 
-tables = ["bronze_sp500", "bronze_eurostoxx", "bronze_vix", "bronze_fed_rate", "bronze_ecb_rate"]
+tables = [
+    "financial_sas_project.default.bronze_sp500",
+    "financial_sas_project.default.bronze_eurostoxx",
+    "financial_sas_project.default.bronze_vix",
+    "financial_sas_project.default.bronze_fed_rate",
+    "financial_sas_project.default.bronze_ecb_rate",
+]
 print("Bronze ingestion complete.")
 for t in tables:
     print(f"  {t}: {spark.table(t).count():,} rows")
@@ -188,4 +199,4 @@ for t in tables:
     log_pipeline_run(spark, "bronze", t, spark.table(t))
 
 print("\nRun log (most recent entries):")
-spark.table("pipeline_run_log").orderBy("run_timestamp", ascending=False).show(10, truncate=False)
+spark.table("financial_sas_project.default.pipeline_run_log").orderBy("run_timestamp", ascending=False).show(10, truncate=False)

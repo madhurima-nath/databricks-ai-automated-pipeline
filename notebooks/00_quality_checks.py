@@ -1,5 +1,6 @@
 # Databricks notebook source
 
+
 # COMMAND ----------
 
 # MAGIC %md
@@ -163,5 +164,5 @@ def log_pipeline_run(spark, stage: str, table_name: str, df: DataFrame, date_col
         [(datetime.now(timezone.utc), stage, table_name, row_count, date_min, date_max, "SUCCESS")],
         schema=schema,
     )
-    log_row.write.format("delta").mode("append").saveAsTable("pipeline_run_log")
+    log_row.write.format("delta").mode("append").saveAsTable("financial_sas_project.default.pipeline_run_log")
     print(f"  [pipeline_run_log] {stage} | {table_name}: {row_count:,} rows | {date_min} → {date_max}")

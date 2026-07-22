@@ -1,5 +1,6 @@
 # Databricks notebook source
 
+
 # COMMAND ----------
 
 # MAGIC %md
@@ -43,11 +44,11 @@ from pyspark.sql.types import DoubleType
 
 # COMMAND ----------
 
-sp500      = spark.table("bronze_sp500").select("date", "open", "high", "low", "close", "volume")
-eurostoxx  = spark.table("bronze_eurostoxx").select("date", "eurostoxx_close")
-vix        = spark.table("bronze_vix").select("date", "vix_close")
-fed        = spark.table("bronze_fed_rate").select("date", "fed_rate")
-ecb        = spark.table("bronze_ecb_rate").select("date", "ecb_rate")
+sp500      = spark.table("financial_sas_project.default.bronze_sp500").select("date", "open", "high", "low", "close", "volume")
+eurostoxx  = spark.table("financial_sas_project.default.bronze_eurostoxx").select("date", "eurostoxx_close")
+vix        = spark.table("financial_sas_project.default.bronze_vix").select("date", "vix_close")
+fed        = spark.table("financial_sas_project.default.bronze_fed_rate").select("date", "fed_rate")
+ecb        = spark.table("financial_sas_project.default.bronze_ecb_rate").select("date", "ecb_rate")
 
 # Quality checks — fail fast if Bronze data is not usable
 run_quality_checks(sp500,     "bronze_sp500",    min_rows=3000, null_cols=["close"],        range_checks={"close": (100, 10000)})
@@ -160,9 +161,9 @@ run_quality_checks(
 
 # COMMAND ----------
 
-market.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("silver_market")
+market.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("financial_sas_project.default.silver_market")
 
-result = spark.table("silver_market")
+result = spark.table("financial_sas_project.default.silver_market")
 print(f"Saved silver_market: {result.count():,} rows")
 result.orderBy("date").show(5, truncate=False)
 result.printSchema()
@@ -174,7 +175,7 @@ result.printSchema()
 
 # COMMAND ----------
 
-log_pipeline_run(spark, "silver", "silver_market", result)
+log_pipeline_run(spark, "silver", "financial_sas_project.default.silver_market", result)
 
 print("\nRun log (most recent entries):")
-spark.table("pipeline_run_log").orderBy("run_timestamp", ascending=False).show(10, truncate=False)
+spark.table("financial_sas_project.default.pipeline_run_log").orderBy("run_timestamp", ascending=False).show(10, truncate=False)

@@ -1,5 +1,6 @@
 # Databricks notebook source
 
+
 # COMMAND ----------
 
 # MAGIC %md
@@ -45,7 +46,7 @@ TRADING_DAYS = 252
 
 # COMMAND ----------
 
-silver = spark.table("silver_market")
+silver = spark.table("financial_sas_project.default.silver_market")
 run_quality_checks(silver, "silver_market", min_rows=3000, null_cols=["sp500_close", "eurostoxx_close", "fed_rate", "ecb_rate"])
 print(f"silver_market: {silver.count():,} rows")
 
@@ -163,7 +164,7 @@ gold = (
 
 run_quality_checks(gold, "gold_analytics", min_rows=2500, null_cols=["sp500_vol_60d", "eurostoxx_vol_60d"])
 
-gold.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("gold_analytics")
+gold.write.format("delta").mode("overwrite").option("overwriteSchema", "true").saveAsTable("financial_sas_project.default.gold_analytics")
 
 # COMMAND ----------
 
@@ -172,7 +173,7 @@ gold.write.format("delta").mode("overwrite").option("overwriteSchema", "true").s
 
 # COMMAND ----------
 
-result = spark.table("gold_analytics")
+result = spark.table("financial_sas_project.default.gold_analytics")
 print(f"Saved gold_analytics: {result.count():,} rows")
 
 print("\nRate regime distribution:")
@@ -195,10 +196,10 @@ result.orderBy(F.col("date").desc()).show(5, truncate=False)
 
 # COMMAND ----------
 
-log_pipeline_run(spark, "gold", "gold_analytics", result)
+log_pipeline_run(spark, "gold", "financial_sas_project.default.gold_analytics", result)
 
 print("\nFull pipeline run log:")
-spark.table("pipeline_run_log").orderBy("run_timestamp", ascending=False).show(20, truncate=False)
+spark.table("financial_sas_project.default.pipeline_run_log").orderBy("run_timestamp", ascending=False).show(20, truncate=False)
 
 # COMMAND ----------
 
@@ -211,6 +212,6 @@ spark.table("pipeline_run_log").orderBy("run_timestamp", ascending=False).show(2
 # COMMAND ----------
 
 print("gold_analytics version history:")
-spark.sql("DESCRIBE HISTORY gold_analytics").select(
+spark.sql("DESCRIBE HISTORY financial_sas_project.default.gold_analytics").select(
     "version", "timestamp", "operation", "operationMetrics"
 ).show(10, truncate=False)
