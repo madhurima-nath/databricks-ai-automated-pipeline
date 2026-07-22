@@ -5,12 +5,12 @@
     "Then trigger with: python scripts/run_pipeline.py --job-id <JOB_ID>",
     "",
     "Replace these placeholders before registering:",
-    "  {{NOTEBOOK_BASE_PATH}} — e.g. /Repos/your@email.com/databricks-ai-automated-pipeline/notebooks",
-    "  {{CLUSTER_ID}}         — all-purpose cluster ID (Community Edition uses all-purpose clusters only)",
+    "  {{NOTEBOOK_BASE_PATH}} — e.g. /Workspace/Repos/your@email.com/databricks-ai-automated-pipeline/notebooks",
     "  {{NOTIFICATION_EMAIL}} — email address for failure alerts",
     "",
-    "For a full Databricks workspace, replace existing_cluster_id with a new_cluster block",
-    "using job_clusters (see commented section below) for cost-efficient isolated runs."
+    "Databricks Free Edition is serverless-only. Tasks below have no cluster field —",
+    "no existing_cluster_id, no new_cluster — and that absence is what makes them run",
+    "on serverless compute. Do not add a cluster field on Free Edition."
   ],
   "name": "financial-analytics-pipeline",
   "max_concurrent_runs": 1,
@@ -22,8 +22,7 @@
   "tasks": [
     {
       "task_key": "bronze_ingest",
-      "description": "Ingest raw S&P 500, Euro Stoxx 50, VIX, US Fed Rate, ECB Rate from yfinance and FRED",
-      "existing_cluster_id": "{{CLUSTER_ID}}",
+      "description": "Ingest raw S&P 500, Euro Stoxx 50, VIX, US Fed Rate, ECB Rate from data/raw CSVs",
       "notebook_task": {
         "notebook_path": "{{NOTEBOOK_BASE_PATH}}/01_bronze_ingest",
         "source": "WORKSPACE"
@@ -36,7 +35,6 @@
       "task_key": "silver_transform",
       "description": "Clean, join, forward-fill rates, compute log returns and policy differential",
       "depends_on": [{"task_key": "bronze_ingest"}],
-      "existing_cluster_id": "{{CLUSTER_ID}}",
       "notebook_task": {
         "notebook_path": "{{NOTEBOOK_BASE_PATH}}/02_silver_transform",
         "source": "WORKSPACE"
@@ -48,7 +46,6 @@
       "task_key": "gold_analytics",
       "description": "Rolling volatility, correlations, drawdown, regime classifications",
       "depends_on": [{"task_key": "silver_transform"}],
-      "existing_cluster_id": "{{CLUSTER_ID}}",
       "notebook_task": {
         "notebook_path": "{{NOTEBOOK_BASE_PATH}}/03_gold_analytics",
         "source": "WORKSPACE"
@@ -60,9 +57,8 @@
   "run_as": {
     "user_name": "{{NOTIFICATION_EMAIL}}"
   },
-
-  "_new_cluster_example": {
-    "_note": "On Databricks Premium/Standard, replace existing_cluster_id with job_clusters + new_cluster for isolated per-run clusters.",
+  "_classic_compute_example": {
+    "_note": "This job runs on serverless compute — no cluster field on any task above. For a full Databricks workspace using classic compute instead, add job_clusters with a new_cluster block like the one below, and reference it per task via job_cluster_key.",
     "job_clusters": [
       {
         "job_cluster_key": "pipeline_cluster",
