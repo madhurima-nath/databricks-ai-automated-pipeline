@@ -389,7 +389,7 @@ if page == "Analytics Dashboard":
         neg_days = int((d_rates["ecb_rate"] < 0).sum())
         rate_msg = f"**US rates peaked at {peak_fed:.2f}% ({peak_fed_date}) in this period.**"
         if neg_days > 0:
-            rate_msg += f" The ECB rate was negative on **{neg_days:,} financial_sas_project days** — European banks were charged to hold cash rather than earning interest on it."
+            rate_msg += f" The ECB rate was negative on **{neg_days:,} trading days** — European banks were charged to hold cash rather than earning interest on it."
         st.info(rate_msg)
 
     # --- Chart 3: Volatility ---
