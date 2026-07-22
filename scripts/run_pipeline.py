@@ -156,9 +156,9 @@ def main() -> None:
 
     print()
     if result_state == "SUCCESS":
-        print(f"[{_ts()}] All tasks completed. Gold table is ready.")
-        print(f"[{_ts()}] Export parquet: run notebooks/04_export_parquet.py on Databricks,")
-        print(f"[{_ts()}] then: python scripts/download_gold.py")
+        print(f"[{_ts()}] All tasks completed. financial_sas_project.default.gold_analytics is ready.")
+        print(f"[{_ts()}] The Streamlit dashboard reads this table directly via the SQL connector —")
+        print(f"[{_ts()}] no export step needed.")
         sys.exit(0)
     else:
         print(f"[{_ts()}] Run details: {run_url}")
