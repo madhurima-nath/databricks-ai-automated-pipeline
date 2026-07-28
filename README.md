@@ -344,8 +344,10 @@ serverless compute has no outbound internet access to call these APIs directly.
 
 ## Related
 
+## Related
+
 - Portfolio: [Financial Analytics Pipeline on Databricks](https://madhurima-nath.github.io/project_related_files/data_migration.html)
 - Dashboard: [Live Streamlit dashboard](https://financial-analytics-databricks.streamlit.app)
+- Medium (Part 1): [A SAS Migration on Databricks: A Hands-On Project](https://medium.com/@m.nath/a-sas-migration-on-databricks-a-hands-on-project-13582e8f7004)
+- Medium (Part 2): [Automating SAS-to-PySpark Migration: Rule Engine First, AI for the Rest](https://medium.com/@m.nath/automating-sas-to-pyspark-migration-rule-engine-first-ai-for-the-rest-d9d0b19ca1a8)
 - Medium: [Migrating Financial Analytics to a Lakehouse on Databricks: A Working Demo](https://medium.com/@m.nath/migrating-financial-analytics-to-a-lakehouse-on-databricks-a-working-demo-38a3eb9f16d5)
-- Medium: [A SAS Migration on Databricks: A Hands-On Project](https://medium.com/@m.nath/a-sas-migration-on-databricks-a-hands-on-project-13582e8f7004)
-- Medium: *Automating SAS-to-PySpark Code Migration with a Rule Engine and AI Fallback* (forthcoming)
