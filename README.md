@@ -23,7 +23,7 @@ by the rule engine and one RETAIN block the rule engine cannot fully translate. 
 a confidence score; blocks below 85% are flagged for review. Converted code and a per-block
 review manifest are downloadable.
 
-**Built with Claude Code** as a development collaborator — for architecture decisions, the quality
+**Built with Claude Code** as a development assistant for architecture decisions, the quality
 checks module, and the converter's rule engine.
 
 ---
