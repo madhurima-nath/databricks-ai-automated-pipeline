@@ -13,7 +13,7 @@ which appears clearly in the regime classifications and the US–EU rate differe
 to PySpark. A rule engine — a set of deterministic pattern-matching rules — handles common
 constructs. For anything the rules cannot handle, an LLM produces the translation.
 
-Community mode converts a single block with three preloaded examples (PROC SORT, PROC MEANS,
+Free Edition mode converts a single block with three preloaded examples (PROC SORT, PROC MEANS,
 DATA step) and a fourth tab showing, on a RETAIN example, what the rule engine cannot translate
 and what an LLM produces instead.
 
@@ -166,7 +166,7 @@ manifest_yaml = generate_manifest(results, source_label="risk_models.sas")
 `generate_manifest()` produces a YAML summary of each block — how it was converted, its
 confidence score, and anything that needs a manual check.
 
-Tested with 46 pytest cases: 39 covering the SAS converter (all supported patterns, Community and Enterprise modes) and 7 covering the pipeline script (credential loading, exit codes, job status handling). Pipeline notebook execution is validated on Databricks through quality checks at every layer transition.
+Tested with 46 pytest cases: 39 covering the SAS converter (all supported patterns, Free Edition and Enterprise modes) and 7 covering the pipeline script (credential loading, exit codes, job status handling). Pipeline notebook execution is validated on Databricks through quality checks at every layer transition.
 
 ---
 
@@ -216,7 +216,7 @@ databricks-ai-automated-pipeline/
 │   └── app.py                          Streamlit app — Home · Analytics Dashboard · SAS → PySpark Converter
 │
 ├── tests/
-│   ├── test_sas_converter.py           39 pytest cases — all supported SAS patterns, Community and Enterprise modes
+│   ├── test_sas_converter.py           39 pytest cases — all supported SAS patterns, Free Edition and Enterprise modes
 │   └── test_scripts.py                 7 pytest cases for run_pipeline.py + download_gold.py
 │
 ├── jobs/
