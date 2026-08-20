@@ -344,8 +344,6 @@ serverless compute has no outbound internet access to call these APIs directly.
 
 ## Related
 
-## Related
-
 - Portfolio: [Financial Analytics Pipeline on Databricks](https://madhurima-nath.github.io/project_related_files/data_migration.html)
 - Dashboard: [Live Streamlit dashboard](https://financial-analytics-databricks.streamlit.app)
 - Medium (Part 1): [A SAS Migration on Databricks: A Hands-On Project](https://medium.com/@m.nath/a-sas-migration-on-databricks-a-hands-on-project-13582e8f7004)
